@@ -1,15 +1,11 @@
 name: Build Python Package
 
-on: workflow_call
-
-permissions:
-  contents: read
+on:
+  workflow_call:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
 
@@ -25,3 +21,11 @@ jobs:
 
     - name: Build package
       run: python -m build
+
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: release
+        path: |
+          dist/
+          swcgeom.egg-info/

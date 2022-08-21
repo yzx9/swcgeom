@@ -9,12 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
+    uses: ./.github/workflows/build.yml
 
+  release:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: ./.github/workflows/build.yml
+    - name: Download release
+      uses: actions/download-artifact@v3
+      with:
+        name: release
 
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29

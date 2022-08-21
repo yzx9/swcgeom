@@ -1,7 +1,4 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
-name: Upload Python Package To PyPI
+name: Release to GitHub
 
 on:
   push:
@@ -12,12 +9,16 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
+    uses: ./.github/workflows/build.yml
 
+  release:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: ./.github/workflows/build.yml
+    - name: Download release
+        uses: actions/download-artifact@v3
+        with:
+          name: release
 
     - name: Pack release
       run: tar czf swcgeom-${{ github.ref }}.tgz dist/ LICENSE README.md
