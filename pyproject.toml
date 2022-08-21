@@ -13,5 +13,9 @@ authors = [
 ]
 keywords = [ "neuron", "swc", "geom" ]
 dependencies = [
+  "matplotlib>=3.5.2",
+  "networkx>=2.8.2",
+  "numpy>=1.22.3",
+  "pandas>=1.4.2",
   "setuptools>=61.0.0",
 ]
