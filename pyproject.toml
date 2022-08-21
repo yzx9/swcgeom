@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -23,3 +23,6 @@ dependencies = [
 
 [project.urls]
 GitHub = "https://github.com/yzx9/swcgeom"
+
+[tool.setuptools_scm]
+write_to = "swcgeom/_version.py"
