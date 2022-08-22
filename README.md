@@ -8,6 +8,33 @@
 
 A neuron geometry library for swc format.
 
+## Usage
+
+See documents for details.
+
+## Development
+
+```bash
+# clone repo
+git clone git@github.com:yzx9/swcgeom.git
+cd swcgeom
+
+# install dependencies
+python -m pip install --upgrade pip
+pip install build
+
+# install editable version
+pip install --editable .
+```
+
+Static analysis don't support import hook used in editable install for [PEP660](https://peps.python.org/pep-0660/) since upgrade to setuptools v64+, detail infomation at [setuptools#3518](https://github.com/pypa/setuptools/issues/3518), a workaround for vscode with pylance:
+
+```json
+{
+    "python.analysis.extraPaths": ["/path/to/this/project"]
+}
+```
+
 ## LICENSE
 
 This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
