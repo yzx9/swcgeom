@@ -6,7 +6,7 @@ name: Release to Test PyPI
 on:
   push:
     tags:
-      - v*
+    - v*
 
 permissions:
   contents: read

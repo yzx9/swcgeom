@@ -3,7 +3,7 @@ name: Release to GitHub
 on:
   push:
     tags:
-      - v*
+    - v*
 
 permissions:
   contents: read
@@ -15,6 +15,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
+    - name: Get version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
     - name: Download release
       uses: actions/download-artifact@v3
       with:
@@ -29,6 +33,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./swcgeom-${{ github.ref }}.tgz
-        asset_name: swcgeom-${{ github.ref }}.tgz
+        asset_path: ./swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz
+        asset_name: swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz
         asset_content_type: application/gzip
