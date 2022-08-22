@@ -3,7 +3,10 @@
 
 name: Release to Test PyPI
 
-on: push
+on:
+  push:
+    tags:
+      - v*
 
 permissions:
   contents: read

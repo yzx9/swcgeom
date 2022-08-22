@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download release
-        uses: actions/download-artifact@v3
-        with:
-          name: release
+      uses: actions/download-artifact@v3
+      with:
+        name: release
 
     - name: Pack release
       run: tar czf swcgeom-${{ github.ref }}.tgz dist/ LICENSE README.md

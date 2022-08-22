@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build: 
-    - uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/build.yml
 
   release:
     runs-on: ubuntu-latest
