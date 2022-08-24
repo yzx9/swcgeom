@@ -1,6 +1,6 @@
 import copy
 import itertools
-from typing import Callable, overload
+from typing import Callable, Optional, overload
 
 from .Branch import Branch
 from .Tree import K, T, Tree
@@ -24,32 +24,22 @@ class BranchTree(Tree):
             self.data = copy.copy(p.data)
             return self
 
-    TraverseEnter = Callable[[Node, T | None], T]
+    TraverseEnter = Callable[[Node, Optional[T]], T]
     TraverseLeave = Callable[[Node, list[T]], T]
 
+    # fmt:off
     @overload
-    def traverse(self, enter: TraverseEnter[T]) -> None:
-        ...
-
+    def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
     @overload
-    def traverse(
-        self,
-        enter: TraverseEnter[T] | None = None,
-        leave: TraverseLeave[K] | None = None,
-    ) -> K:
-        ...
+    def traverse(self, *, enter: Optional[TraverseEnter[T]] = None, leave: TraverseLeave[K]) -> K: ...
+    # fmt:on
 
     def traverse(
         self,
-        enter: TraverseEnter[T] | None = None,
-        leave: TraverseLeave[K] | None = None,
+        *,
+        enter: Optional[TraverseEnter[T]] = None,
+        leave: Optional[TraverseLeave[K]] = None,
     ) -> K | None:
-        """Traverse each nodes.
-
-        See Also
-        --------
-        Tree.traverse
-        """
         return super().traverse(enter=enter, leave=leave)  # type: ignore
 
     def __getitem__(self, id: int) -> Node:
@@ -89,7 +79,7 @@ class BranchTree(Tree):
         self = cls()
         self._source = tree._source
 
-        def reducer(oldId: int, parentId: int | None) -> list[Tree.Node]:
+        def reducer(oldId: int, parentId: Optional[int]) -> list[Tree.Node]:
             node = cls.Node.from_parent(tree[oldId])
             neighbors = list(tree.G.neighbors(oldId))
             if (parentId is not None) and (len(neighbors) == 1):
@@ -97,7 +87,7 @@ class BranchTree(Tree):
                 branchNodes.append(node)
                 return branchNodes
 
-            node.id = len(self.G) + 1
+            node.id = len(self) + 1
             node.pid = parentId if parentId is not None else -1
             self._add_node(node)
             if parentId is not None:

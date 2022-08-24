@@ -1,21 +1,18 @@
-import copy
+import functools
 import os
 import random
-from functools import reduce
-from typing import Any, Callable, Iterator, TypeVar, cast, overload
+from typing import Any, Callable, Iterator, Optional, TypeVar, cast, overload
 
+import matplotlib.collections
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from matplotlib.collections import LineCollection
 
 from . import painter
 
-_DATA = "data"
-T = TypeVar("T")
-K = TypeVar("K")
+T, K = TypeVar("T"), TypeVar("K")
 
 
 class Tree:
@@ -70,14 +67,15 @@ class Tree:
 
         @classmethod
         def from_dataframe_row(cls, row: tuple[Any, ...]) -> "Tree.Node":
-            """Read node from row of pd.DataFrame"""
+            """Read node from row of `~pandas.DataFrame`"""
             keys = ("id", "type", "x", "y", "z", "r", "pid")
             return cls(*[getattr(row, key) for key in keys])
 
     root: int
     G: nx.DiGraph
+    nodes: dict[int, Node]
     scale: tuple[float, float, float, float]
-    _source: str | None = None
+    _source: Optional[str] = None
 
     def __init__(self):
         self.G = nx.DiGraph()
@@ -99,27 +97,30 @@ class Tree:
         Parameters
         ----------
         G : bool.
-            Skip copy G if false, default to true.
+            Skip copy G if false, default to True.
         """
         newTree = Tree()
         newTree._source = self._source
-        if G:
-            newTree.G = copy.deepcopy(self.G)
+        newTree.G = self.G.copy() if G else self.G
+        newTree.nodes = {k: v for k, v in self.nodes.items()} if G else self.nodes
         return newTree
 
     def draw(
-        self, color=painter.palette.momo, ax: plt.Axes | None = None, **kwargs
-    ) -> tuple[plt.Axes, LineCollection]:
+        self,
+        color: Optional[str] = painter.palette.momo,
+        ax: Optional[plt.Axes] = None,
+        **kwargs,
+    ) -> tuple[plt.Axes, matplotlib.collections.LineCollection]:
         """Draw neuron tree.
 
         Parameters
         ----------
-        color : str, default to painter.palette.momo.
-            Color of branch.
+        color : str, optional.
+            Color of branch. If None, the default color will be enabled.
         ax : ~matplotlib.axes.Axes, optional.
             A subplot of `~matplotlib`. If None, a new one will be created.
         **kwargs : dict[str, Unknown].
-            Forwarded to `matplotlib.collections.LineCollection`.
+            Forwarded to `~matplotlib.collections.LineCollection`.
 
         Returns
         -------
@@ -131,23 +132,21 @@ class Tree:
         edges = np.array([[self[a].xyz(), self[b].xyz()] for a, b in self.G.edges])
         return painter.draw_lines(edges, ax=ax, color=color, **kwargs)
 
-    TraverseEnter = Callable[[Node, T | None], T]
+    TraverseEnter = Callable[[Node, Optional[T]], T]
     TraverseLeave = Callable[[Node, list[T]], T]
 
     # fmt:off
     @overload
     def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
     @overload
-    def traverse(
-        self, *, enter: TraverseEnter[T] | None = None, leave: TraverseLeave[K]
-    ) -> K: ...
+    def traverse(self, *, enter: Optional[TraverseEnter[T]] = None, leave: TraverseLeave[K]) -> K: ...
     # fmt:on
 
     def traverse(
         self,
         *,
-        enter: TraverseEnter[T] | None = None,
-        leave: TraverseLeave[K] | None = None,
+        enter: Optional[TraverseEnter[T]] = None,
+        leave: Optional[TraverseLeave[K]] = None,
     ) -> K | None:
         """Traverse each nodes.
 
@@ -157,7 +156,7 @@ class Tree:
             The callback when entering each node, it accepts two parameters,
             the first parameter is the current node, the second parameter is
             the parent's information T, and the root node receives an None.
-        leave : Callable[[Node, T | None], T], optional.
+        leave : Callable[[Node, Optional[T]], T], optional.
             The callback when leaving each node. When leaving a node, subtree
             has already been traversed. Callback accepts two parameters, the
             first parameter is the current node, the second parameter is the
@@ -199,10 +198,12 @@ class Tree:
         return tree
 
     def normalize(self) -> None:
-        """Scale the `x`, `y`, `z`, `r` of nodes to 0-1"""
+        """Normalize neuron tree.
+
+        Scale the `x`, `y`, `z`, `r` of nodes to 0-1"""
 
         _min, _max = self.traverse(
-            leave=lambda a, children: reduce(
+            leave=lambda a, children: functools.reduce(
                 lambda acc, cur: (
                     np.min(np.stack([acc[0], cur[0]]).transpose(), axis=1),
                     np.max(np.stack([acc[1], cur[1]]).transpose(), axis=1),
@@ -220,33 +221,36 @@ class Tree:
         self.traverse(leave=scaler)
 
     def standardize(self) -> None:
-        """TODO"""
-        pass
+        raise NotImplementedError()
 
     def _add_edge(self, id: int, childId: int) -> None:
         self.G.add_edge(id, childId)
 
     def _add_node(self, node: Node) -> None:
-        self.G.add_node(node.id, **{_DATA: node})
+        self.G.add_node(node.id)
+        self.nodes[node.id] = node
 
     def _traverse(
         self,
-        enter: TraverseEnter[T] | None,
-        leave: TraverseLeave[K] | None,
+        enter: Optional[TraverseEnter[T]],
+        leave: Optional[TraverseLeave[K]],
         id: int,
-        pre: T | None,
+        pre: Optional[T],
     ) -> K | None:
         cur = enter(self[id], pre) if enter is not None else None
         children = [self._traverse(enter, leave, i, cur) for i in self.G.neighbors(id)]
         return leave(self[id], cast(list[K], children)) if leave is not None else None
 
     def __getitem__(self, id: int) -> Node:
-        return self.G.nodes.data()[id][_DATA]  # type: ignore
+        """Get node by id."""
+        return self.nodes[id]
 
     def __iter__(self) -> Iterator[Node]:
+        """Iter each nodes."""
         return (self[i] for i in self.G)
 
     def __len__(self) -> int:
+        """Get number of nodes."""
         return len(self.G)
 
     def __str__(self) -> str:
@@ -254,16 +258,18 @@ class Tree:
         return f"Neuron Tree with {nodes} nodes and {edges} edges"
 
     @classmethod
-    def from_swc(cls, swc_path: str) -> "Tree":
+    def from_swc(cls, swc_path: str, names: Optional[list[str]] = None) -> "Tree":
         """Read neuron tree from swc file."""
 
         self = cls()
         self._source = os.path.abspath(swc_path)
+
+        names = ["id", "type", "x", "y", "z", "r", "pid"] if names is None else names
         df = pd.read_csv(
             swc_path,
             sep=" ",
             comment="#",
-            names=["id", "type", "x", "y", "z", "r", "pid"],
+            names=names,
             dtype={
                 "id": np.int16,
                 "type": np.int8,
@@ -276,7 +282,8 @@ class Tree:
         )
 
         nodes = [cls.Node.from_dataframe_row(r) for r in df.itertuples()]
-        self.G.add_nodes_from([(n.id, {_DATA: n}) for n in nodes])
+        self.G.add_nodes_from([n.id for n in nodes])
         self.G.add_edges_from([(n.pid, n.id) for n in nodes if n.pid != -1])
+        self.nodes = {n.id: n for n in nodes}
         self.root = df.iloc[0]["id"]
         return self
