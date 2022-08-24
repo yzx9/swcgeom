@@ -1,5 +1,18 @@
 ## Unreleased
 
+- **data**: add downloader
+
+## v0.1.5 (2022-08-24)
+
+### Feat
+
+- convert node to dict
+- **data/torch**: add datasets
+
+### Refactor
+
+- manually manage node information
+
 ## v0.1.4 (2022-08-22)
 
 ### Fix
