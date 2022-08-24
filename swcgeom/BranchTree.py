@@ -1,4 +1,3 @@
-import copy
 import itertools
 from typing import Callable, Optional, overload
 
@@ -10,19 +9,25 @@ class BranchTree(Tree):
     """A branch tree that contains only soma, branch, and tip nodes."""
 
     class Node(Tree.Node):
-        branches: list[Branch]
+        # fmt:off
+        @property
+        def branches(self) -> list[Branch]: return self["branches"]
+        @branches.setter
+        def branches(self, v: list[Branch]): self["branches"] = v
+        # fmt:on
 
         def __init__(
-            self, id: int, type: int, x: float, y: float, z: float, r: float, pid: int
+            self,
+            id: int,
+            type: int,
+            x: float,
+            y: float,
+            z: float,
+            r: float,
+            pid: int,
+            **kwargs,
         ) -> None:
-            super().__init__(id, type, x, y, z, r, pid)
-            self.branches = []
-
-        @classmethod
-        def from_parent(cls, p: Tree.Node) -> "BranchTree.Node":
-            self = cls(p.id, p.type, p.x, p.y, p.z, p.r, p.pid)
-            self.data = copy.copy(p.data)
-            return self
+            super().__init__(id, type, x, y, z, r, pid, branches=[], **kwargs)
 
     TraverseEnter = Callable[[Node, Optional[T]], T]
     TraverseLeave = Callable[[Node, list[T]], T]
@@ -52,11 +57,12 @@ class BranchTree(Tree):
         Parameters
         ----------
         swc_path : str.
-            file path of *.swc.
+            Path of *.swc.
 
         Returns
         -------
-        BranchTree : A branch tree.
+        BranchTree : BranchTree.
+            A branch tree.
         """
 
         tree = super().from_swc(swc_path)
@@ -73,14 +79,15 @@ class BranchTree(Tree):
 
         Returns
         -------
-        BranchTree : A branch tree.
+        BranchTree : BranchTree.
+            A branch tree.
         """
 
         self = cls()
         self._source = tree._source
 
         def reducer(oldId: int, parentId: Optional[int]) -> list[Tree.Node]:
-            node = cls.Node.from_parent(tree[oldId])
+            node = cls.Node(**tree[oldId])  # make shallow copy
             neighbors = list(tree.G.neighbors(oldId))
             if (parentId is not None) and (len(neighbors) == 1):
                 branchNodes = reducer(neighbors[0], parentId)
@@ -105,6 +112,4 @@ class BranchTree(Tree):
         return self
 
     def get_branches(self) -> list[Branch]:
-        return self.traverse(
-            leave=lambda n, acc: list(itertools.chain(n.branches, *acc))
-        )
+        return self.traverse(leave=lambda n, p: list(itertools.chain(n.branches, *p)))

@@ -18,29 +18,52 @@ T, K = TypeVar("T"), TypeVar("K")
 class Tree:
     """A neuron tree, which should be a binary tree in most cases."""
 
-    class Node:
+    class Node(dict[str, Any]):
         """Node of neuron tree"""
 
-        id: int
-        type: int
-        x: float
-        y: float
-        z: float
-        r: float
-        pid: int
-        data: dict[str, Any]
-
         def __init__(
-            self, id: int, type: int, x: float, y: float, z: float, r: float, pid: int
+            self,
+            id: int,
+            type: int,
+            x: float,
+            y: float,
+            z: float,
+            r: float,
+            pid: int,
+            **kwargs,
         ) -> None:
-            self.id = id
-            self.type = type
-            self.x = x
-            self.y = y
-            self.z = z
-            self.r = r
-            self.pid = pid
-            self.data = {}
+            self = dict(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
+
+        # fmt: off
+        @property
+        def id(self) -> int: return self["id"]
+        @id.setter
+        def id(self, v: int): self["id"] = v
+        @property
+        def type(self) -> int: return self["type"]
+        @type.setter
+        def type(self, v: int): self["type"] = v
+        @property
+        def x(self) -> float: return self["x"]
+        @x.setter
+        def x(self, v: float): self["x"] = v
+        @property
+        def y(self) -> float: return self["y"]
+        @y.setter
+        def y(self, v: float): self["y"] = v
+        @property
+        def z(self) -> float: return self["z"]
+        @z.setter
+        def z(self, v: float): self["z"] = v
+        @property
+        def r(self) -> float: return self["r"]
+        @r.setter
+        def r(self, v: float): self["r"] = v
+        @property
+        def pid(self) -> int: return self["pid"]
+        @pid.setter
+        def pid(self, v: int): self["pid"] = v
+        # fmt: on
 
         def xyz(self) -> npt.NDArray[np.float64]:
             """Get the `x`, `y`, `z` of branch, shape of (3,)"""
@@ -54,16 +77,13 @@ class Tree:
             """Get the distance of two nodes."""
             return np.linalg.norm(self.xyz() - b.xyz()).item()
 
-        def __str__(self) -> str:
+        def format_swc(self) -> str:
             x, y, z, r = ["%.4f" % f for f in [self.x, self.y, self.z, self.r]]
             items = [self.id, self.type, x, y, z, r, self.pid]
             return " ".join(map(str, items))
 
-        def __setitem__(self, key: str, val: Any) -> None:
-            self.data[key] = val
-
-        def __getitem__(self, key: str) -> Any:
-            return self.data[key]
+        def __str__(self) -> str:
+            return self.format_swc()
 
         @classmethod
         def from_dataframe_row(cls, row: tuple[Any, ...]) -> "Tree.Node":
