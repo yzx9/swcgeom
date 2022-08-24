@@ -111,11 +111,7 @@ class Branch(list[Tree.Node]):
         else:
             raise Exception(f"unsupported reample mode '{mode}'")
 
-        nodes = [
-            Tree.Node(i, 0, x, y, z, r, i - 1)
-            for i, (x, y, z, r) in zip(range(new_xyzr.shape[0]), new_xyzr)
-        ]
-        return Branch(nodes)
+        return Branch.from_numpy(new_xyzr)
 
     def standardize(self) -> "Branch":
         """Standarize a branch.
@@ -125,11 +121,7 @@ class Branch(list[Tree.Node]):
         """
 
         new_xyzr, scale = self._standardize()
-        nodes = [
-            Tree.Node(i, 0, x, y, z, r, i - 1)
-            for i, (x, y, z, r) in zip(range(new_xyzr.shape[0]), new_xyzr)
-        ]
-        branch = Branch(nodes)
+        branch = Branch.from_numpy(new_xyzr)
         branch.scale = scale
         return branch
 
@@ -193,6 +185,30 @@ class Branch(list[Tree.Node]):
 
     def __str__(self):
         return f"Neuron branch with {len(self)} nodes."
+
+    @classmethod
+    def from_numpy(cls, xyzr: npt.NDArray[np.float64]) -> "Branch":
+        """Create a branch from ~numpy.ndarray.
+
+        Parameters
+        ----------
+        xyzr : npt.NDArray[np.float64].
+            Collection of nodes. If shape of (n, 4), both `x`, `y`, `z`, `r`
+            of nodes is enabled. If shape of (n, 3), only `x`, `y`, `z` is
+            enabled and `r` will fill by 1.
+        """
+        assert xyzr.ndim == 2
+        assert xyzr.shape[1] >= 3
+
+        if xyzr.shape[1] == 3:
+            ones = np.ones([xyzr.shape[0], 1])
+            xyzr = np.concatenate([xyzr, ones], axis=1)
+
+        nodes = [
+            Tree.Node(i, 0, x, y, z, r, i - 1)
+            for i, (x, y, z, r) in zip(range(xyzr.shape[0]), xyzr[:, 0:4])
+        ]
+        return cls(nodes)
 
     @classmethod
     def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float64]) -> list["Branch"]:
