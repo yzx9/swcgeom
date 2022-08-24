@@ -195,31 +195,30 @@ class Branch(list[Tree.Node]):
         return f"Neuron branch with {len(self)} nodes."
 
     @classmethod
-    def from_numpy(cls, xyzr: npt.NDArray[np.floating]) -> list["Branch"]:
-        """Create branch form tensor
+    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float64]) -> list["Branch"]:
+        """Create list of branch form ~numpy.ndarray.
 
         Parameters
         ----------
-        xyzr: npt.NDArray[np.floating].
-            Collection of nodes. If shape of (bs, n, 4) or (bs, 1, n, 4), both
-            XYZR of nodes is enabled. If shape of (bs, n, 3) or (bs, 1, n, 3),
-            only XYZ is enabled and R will fill by 1.
+        xyzr: npt.NDArray[np.float64].
+            Batch of collection of nodes. If shape of (bs, n, 4), both `x`,
+            `y`, `z`, `r` of nodes is enabled. If shape of (bs, n, 3), only
+            `x`, `y`, `z` is enabled and `r` will fill by 1.
         """
 
-        if xyzr.ndim == 4:
-            xyzr = xyzr[:, 0, :, :]
+        assert xyzr_batch.ndim == 3
+        assert xyzr_batch.shape[1] >= 3
 
-        if xyzr.shape[2] == 3:
-            ones = np.ones([xyzr.shape[0], xyzr.shape[1], 1])
-            xyzr = np.concatenate([xyzr, ones], axis=2)
+        if xyzr_batch.shape[2] == 3:
+            ones = np.ones([xyzr_batch.shape[0], xyzr_batch.shape[1], 1])
+            xyzr_batch = np.concatenate([xyzr_batch, ones], axis=2)
 
         branches = list[Branch]()
-        for a in xyzr:
-            nodes = list[Tree.Node]()
-            for i in range(xyzr.shape[1]):
-                x, y, z, r = a[i][0:4].tolist()
-                nodes.append(Tree.Node(i, 0, x, y, z, r, i - 1))
-
+        for xyzr in xyzr_batch:
+            nodes = [
+                Tree.Node(i, 0, x, y, z, r, i - 1)
+                for i, (x, y, z, r) in zip(range(xyzr.shape[0]), xyzr[:, 0:4])
+            ]
             branches.append(Branch(nodes))
 
         return branches
