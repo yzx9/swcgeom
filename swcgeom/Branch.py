@@ -105,11 +105,16 @@ class Branch(list[Tree.Node]):
             original node.
         """
 
+        xyzr = self.xyzr()
         if mode == "linear":
-            nodes = self._resample_linear(num)
+            new_xyzr = self.resample_linear(xyzr, num)
         else:
             raise Exception(f"unsupported reample mode '{mode}'")
 
+        nodes = [
+            Tree.Node(i, 0, x, y, z, r, i - 1)
+            for i, (x, y, z, r) in zip(range(new_xyzr.shape[0]), new_xyzr)
+        ]
         return Branch(nodes)
 
     def standardize(self) -> "Branch":
@@ -186,18 +191,6 @@ class Branch(list[Tree.Node]):
         sx, sy, sz, sr = self.scale
         return new_xyzr, (sx * s, sy * s, sz * s, sr * scale_r)
 
-    def _resample_linear(self, num: int) -> list[Tree.Node]:
-        xyzr = self.xyzr()
-        xp = np.cumsum(np.linalg.norm(xyzr[1:, :3] - xyzr[:-1, :3], axis=1))
-        xp = np.insert(xp, 0, 0)
-        xvals = np.linspace(0, xp[-1], num)
-
-        x = np.interp(xvals, xp, xyzr[:, 0])
-        y = np.interp(xvals, xp, xyzr[:, 1])
-        z = np.interp(xvals, xp, xyzr[:, 2])
-        r = np.interp(xvals, xp, xyzr[:, 3])
-        return [Tree.Node(i, 0, x[i], y[i], z[i], r[i], i - 1) for i in range(num)]
-
     def __str__(self):
         return f"Neuron branch with {len(self)} nodes."
 
@@ -230,3 +223,17 @@ class Branch(list[Tree.Node]):
             branches.append(Branch(nodes))
 
         return branches
+
+    @staticmethod
+    def resample_linear(
+        xyzr: npt.NDArray[np.float64], num: int
+    ) -> npt.NDArray[np.float64]:
+        xp = np.cumsum(np.linalg.norm(xyzr[1:, :3] - xyzr[:-1, :3], axis=1))
+        xp = np.insert(xp, 0, 0)
+        xvals = np.linspace(0, xp[-1], num)
+
+        x = np.interp(xvals, xp, xyzr[:, 0])
+        y = np.interp(xvals, xp, xyzr[:, 1])
+        z = np.interp(xvals, xp, xyzr[:, 2])
+        r = np.interp(xvals, xp, xyzr[:, 3])
+        return np.array([x, y, z, r])
