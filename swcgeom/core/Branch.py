@@ -6,7 +6,7 @@ import numpy.typing as npt
 from matplotlib.collections import LineCollection
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
-from . import painter, transforms
+from ..utils import painter, transforms
 from .Tree import Tree
 
 _Scale = tuple[float, float, float, float]

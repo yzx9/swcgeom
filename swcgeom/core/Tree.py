@@ -11,7 +11,7 @@ import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
-from . import painter
+from ..utils import painter
 
 T, K = TypeVar("T"), TypeVar("K")
 
