@@ -94,15 +94,15 @@ class BranchDataset(Dataset):
         old_settings = np.seterr(all="raise")
         for x, y in branchTrees:
             try:
-                tree_branches = x.get_branches()
+                brs = x.get_branches()
 
                 if standardize == True:
-                    tree_branches = [br.standardize() for br in tree_branches]
+                    brs = [br.standardize() for br in brs]
 
                 if resample is not None:
-                    tree_branches = [br.resample(resample) for br in tree_branches]
+                    brs = [br.resample("linear", num=resample) for br in brs]
 
-                branches.extend(tree_branches)
+                branches.extend(brs)
             except Exception as ex:
                 warn(f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}")
 

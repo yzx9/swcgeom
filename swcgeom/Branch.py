@@ -1,4 +1,4 @@
-from typing import Iterable, Literal
+from typing import Iterable, Literal, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +16,7 @@ class Branch(list[Tree.Node]):
     """A branch of neuron tree.
 
     Notes
-    -----
+    =====
     Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and
     `r`, but the `id` and `type` is usually invalid.
     """
@@ -61,18 +61,18 @@ class Branch(list[Tree.Node]):
         """Draw neuron branch.
 
         Parameters
-        ----------
-        color : str, default to painter.palette.mizugaki.
-            Color of branch.
+        ==========
+        color : str, optional.
+            Color of branch. If `None`, the default color will be enabled.
         ax : ~matplotlib.axes.Axes, optional.
-            A subplot. If None, a new one will be created.
-        standardize : bool.
+            A subplot. If `None`, a new one will be created.
+        standardize : bool, default to `True`.
             Standardize branch, see also self.standardize.
         **kwargs : dict[str, Unknown].
             Forwarded to `matplotlib.collections.LineCollection`.
 
         Returns
-        -------
+        =======
         ax : ~matplotlib.axes.Axes.
             If provided, return as-is.
         collection : ~matplotlib.collections.LineCollection.
@@ -88,27 +88,39 @@ class Branch(list[Tree.Node]):
         lines = np.array([xyz[:-1], xyz[1:]]).swapaxes(0, 1)
         return painter.draw_lines(lines, color=color, ax=ax, **kwargs)
 
-    def resample(self, num: int, mode: Literal["linear"] = "linear") -> Self:
+    # fmt:off
+    @overload
+    def resample(self, *, num: int) -> Self: pass
+    @overload
+    def resample(self, mode: Literal["linear"], *, num: int) -> Self: pass
+    # fmt:on
+
+    def resample(self, mode: str = "linear", **kwargs) -> Self:
         """Resample branch to special num of nodes.
 
         Parameters
-        ----------
-        num : int.
-            Num of nodes after resample.
-        mode : str, optional.
-            Resample mode, only `linear` mode supported now, default to
-            `linear`.
+        ==========
+        mode : str, default to `linear`.
+            Resample mode.
 
         Modes
-        -----
-        linear : Linear interpolation.
-            Resample by inserting new nodes betweens nodes, DO NOT keep
-            original node.
+        =====
+
+        Linear
+        ------
+        Resampling by linear interpolation, DO NOT keep original node.
+
+        num : int.
+            Number of nodes after resample.
+
+        See Also
+        ========
+        cls.resample_linear
         """
 
         xyzr = self.xyzr()
         if mode == "linear":
-            new_xyzr = self.resample_linear(xyzr, num)
+            new_xyzr = self.resample_linear(xyzr, **kwargs)
         else:
             raise Exception(f"unsupported reample mode '{mode}'")
 
@@ -192,7 +204,7 @@ class Branch(list[Tree.Node]):
         """Create a branch from ~numpy.ndarray.
 
         Parameters
-        ----------
+        ==========
         xyzr : npt.NDArray[np.float64].
             Collection of nodes. If shape of (n, 4), both `x`, `y`, `z`, `r`
             of nodes is enabled. If shape of (n, 3), only `x`, `y`, `z` is
@@ -216,7 +228,7 @@ class Branch(list[Tree.Node]):
         """Create list of branch form ~numpy.ndarray.
 
         Parameters
-        ----------
+        ==========
         xyzr: npt.NDArray[np.float64].
             Batch of collection of nodes. If shape of (bs, n, 4), both `x`,
             `y`, `z`, `r` of nodes is enabled. If shape of (bs, n, 3), only
@@ -244,6 +256,14 @@ class Branch(list[Tree.Node]):
     def resample_linear(
         xyzr: npt.NDArray[np.float64], num: int
     ) -> npt.NDArray[np.float64]:
+        """Resampling by linear interpolation, DO NOT keep original node.
+
+        Parameters
+        ==========
+        num : int.
+            Number of nodes after resample.
+        """
+
         xp = np.cumsum(np.linalg.norm(xyzr[1:, :3] - xyzr[:-1, :3], axis=1))
         xp = np.insert(xp, 0, 0)
         xvals = np.linspace(0, xp[-1], num)
