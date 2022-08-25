@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from ... import Branch
-from . import BranchTreeFolderDataset
+from .BranchTreeFolderDataset import BranchTreeFolderDataset
 
 
 class BranchDataset(Dataset):
@@ -107,7 +107,4 @@ class BranchDataset(Dataset):
                 warn(f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}")
 
         np.seterr(**old_settings)
-        return [
-            torch.from_numpy(np.array(br.xyz())).transpose(0, 1).float()
-            for br in branches
-        ]
+        return [torch.from_numpy(br.xyz().T).float() for br in branches]

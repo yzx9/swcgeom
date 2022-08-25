@@ -1,5 +1,5 @@
 from ... import BranchTree
-from . import TreeFolderDataset
+from .TreeFolderDataset import TreeFolderDataset
 
 
 class BranchTreeFolderDataset(TreeFolderDataset):

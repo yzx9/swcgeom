@@ -11,10 +11,7 @@ class TreeFolderDataset(torch.utils.data.Dataset):
     swc_dir: str
     swcs: list[str]
 
-    def __init__(
-        self,
-        swc_dir: str,
-    ) -> None:
+    def __init__(self, swc_dir: str) -> None:
         """Create tree dataset.
 
         Parameters
