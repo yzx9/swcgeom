@@ -52,13 +52,13 @@ def download_all(
     E.g: `https://download.brainimagelibrary.org/biccn/zeng/luo/fMOST/cells/`
 
     Parameters
-    ----------
+    ==========
     index_url : str.
         URL of index page.
     dist : str.
         Path of target directory.
-    override : bool, default to False.
-        Override existing file, skip file if False.
+    override : bool, default to `False`.
+        Override existing file, skip file if `False`.
     multiprocess : int, default to 4.
         How many process are available for download.
     """
@@ -78,12 +78,12 @@ def download_all(
             os.remove(file_dist)
 
         try:
-            logging.info(f"downloader: downloading `{url}` to `{dir}`")
+            logging.info(f"{_MODULE}: downloading `{url}` to `{dir}`")
             download_file(dir, url)
 
-            logging.info(f"downloader: download `{url}` to `{dir}`")
+            logging.info(f"{_MODULE}: download `{url}` to `{dir}`")
         except Exception as ex:
-            logging.info(f"downloader: fails to download `{url}`, except `{ex}`")
+            logging.info(f"{_MODULE}: fails to download `{url}`, except `{ex}`")
 
     with multiprocessing.Pool(multiprocess) as p:
         p.map(lambda url: download(dist, url), all_file_urls)

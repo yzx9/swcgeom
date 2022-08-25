@@ -15,7 +15,7 @@ class TreeFolderDataset(torch.utils.data.Dataset):
         """Create tree dataset.
 
         Parameters
-        ----------
+        ==========
         swc_dir : str.
             Path of SWC file directory.
         """
@@ -30,7 +30,7 @@ class TreeFolderDataset(torch.utils.data.Dataset):
         """Get a tree.
 
         Returns
-        -------
+        =======
         x : Tree.
             A tree from swc format.
         y : int.

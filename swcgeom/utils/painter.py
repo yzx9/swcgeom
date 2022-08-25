@@ -21,17 +21,17 @@ def draw_lines(
     """Draw lines.
 
     Parameters
-    ----------
+    ==========
     lines : A collection of coords of lines.
         Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
         and the axis-3 holds the coordinates (x, y, z).
     ax : ~matplotlib.axes.Axes, optional.
-        A subplot. If None, a new one will be created.
+        A subplot. If `None`, a new one will be created.
     **kwargs : dict[str, Unknown].
         Forwarded to `~matplotlib.collections.LineCollection`.
 
     Returns
-    -------
+    =======
     ax : ~matplotlib.axes.Axes.
         If provided, return as-is.
     collection : ~matplotlib.collections.LineCollection.

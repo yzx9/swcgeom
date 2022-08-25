@@ -60,12 +60,12 @@ class BranchTree(Tree):
         """Generating a branch tree from swc file.
 
         Parameters
-        ----------
+        ==========
         swc_path : str.
             Path of *.swc.
 
         Returns
-        -------
+        =======
         BranchTree : BranchTree.
             A branch tree.
         """
@@ -78,12 +78,12 @@ class BranchTree(Tree):
         """Generating a branch tree from tree.
 
         Parameters
-        ----------
+        ==========
         tree : Tree.
             A neuron tree.
 
         Returns
-        -------
+        =======
         BranchTree : BranchTree.
             A branch tree.
         """

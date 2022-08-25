@@ -116,9 +116,9 @@ class Tree:
         """Make a copy.
 
         Parameters
-        ----------
+        ==========
         G : bool.
-            Skip copy G if false, default to True.
+            Skip copy G if false, default to `True`.
         """
         newTree = Tree()
         newTree._source = self._source
@@ -135,16 +135,16 @@ class Tree:
         """Draw neuron tree.
 
         Parameters
-        ----------
+        ==========
         color : str, optional.
-            Color of branch. If None, the default color will be enabled.
+            Color of branch. If `None`, the default color will be enabled.
         ax : ~matplotlib.axes.Axes, optional.
-            A subplot of `~matplotlib`. If None, a new one will be created.
+            A subplot of `~matplotlib`. If `None`, a new one will be created.
         **kwargs : dict[str, Unknown].
             Forwarded to `~matplotlib.collections.LineCollection`.
 
         Returns
-        -------
+        =======
         ax : ~matplotlib.axes.Axes.
             If provided, return as-is.
         collection : ~matplotlib.collections.LineCollection.
@@ -172,7 +172,7 @@ class Tree:
         """Traverse each nodes.
 
         Parameters
-        ----------
+        ==========
         enter : Callable[[Node, list[T]], T], optional.
             The callback when entering each node, it accepts two parameters,
             the first parameter is the current node, the second parameter is
@@ -196,12 +196,12 @@ class Tree:
         """Random cut tree.
 
         Parameters
-        ----------
+        ==========
         keep_percent : float.
             The percent of preserved segment length.
 
         Returns
-        -------
+        =======
         tree : Tree.
             A new tree.
         """

@@ -9,7 +9,7 @@ class BranchTreeFolderDataset(TreeFolderDataset):
         """Get a branch tree.
 
         Returns
-        -------
+        =======
         x : BranchTree.
             A branch tree from swc format.
         y : int.

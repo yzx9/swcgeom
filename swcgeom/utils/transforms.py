@@ -6,7 +6,7 @@ def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
     """Get the agnle of vectors.
 
     Returns
-    -------
+    =======
     angle : angle in radians.
     """
     a, b = np.array(a), np.array(b)
@@ -19,7 +19,7 @@ def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float64]:
     """Get the 3D scale transfomation matrix.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
@@ -38,7 +38,7 @@ def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float64]:
     """Get the 3D translate transfomation matrix.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
@@ -71,14 +71,14 @@ def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float64]:
         \end{pmatrix}
 
     Parameters
-    ----------
+    ==========
     n : ArrayLike.
         Rotation axis.
     theta : float.
         Rotation angle in radians.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
@@ -108,12 +108,12 @@ def rotate3d_x(theta: float) -> npt.NDArray[np.float64]:
     hand rule.
 
     Parameters
-    ----------
+    ==========
     theta : float.
         Rotation angle in radians.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
@@ -136,12 +136,12 @@ def rotate3d_y(theta: float) -> npt.NDArray[np.float64]:
     hand rule.
 
     Parameters
-    ----------
+    ==========
     theta : float.
         Rotation angle in radians.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
@@ -163,12 +163,12 @@ def rotate3d_z(theta: float) -> npt.NDArray[np.float64]:
     hand rule.
 
     Parameters
-    ----------
+    ==========
     theta : float.
         Rotation angle in radians.
 
     Returns
-    -------
+    =======
     T : np.NDArray.
         The homogeneous transfomation matrix, shape of (4, 4).
     """
