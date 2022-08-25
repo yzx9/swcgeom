@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
 from matplotlib.collections import LineCollection
+from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from . import painter, transforms
 from .Tree import Tree
@@ -87,7 +88,7 @@ class Branch(list[Tree.Node]):
         lines = np.array([xyz[:-1], xyz[1:]]).swapaxes(0, 1)
         return painter.draw_lines(lines, color=color, ax=ax, **kwargs)
 
-    def resample(self, num: int, mode: Literal["linear"] = "linear") -> "Branch":
+    def resample(self, num: int, mode: Literal["linear"] = "linear") -> Self:
         """Resample branch to special num of nodes.
 
         Parameters
@@ -113,7 +114,7 @@ class Branch(list[Tree.Node]):
 
         return Branch.from_numpy(new_xyzr)
 
-    def standardize(self) -> "Branch":
+    def standardize(self) -> Self:
         """Standarize a branch.
 
         Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
@@ -183,11 +184,11 @@ class Branch(list[Tree.Node]):
         sx, sy, sz, sr = self.scale
         return new_xyzr, (sx * s, sy * s, sz * s, sr * scale_r)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
 
     @classmethod
-    def from_numpy(cls, xyzr: npt.NDArray[np.float64]) -> "Branch":
+    def from_numpy(cls, xyzr: npt.NDArray[np.float64]) -> Self:
         """Create a branch from ~numpy.ndarray.
 
         Parameters
@@ -211,7 +212,7 @@ class Branch(list[Tree.Node]):
         return cls(nodes)
 
     @classmethod
-    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float64]) -> list["Branch"]:
+    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float64]) -> list[Self]:
         """Create list of branch form ~numpy.ndarray.
 
         Parameters

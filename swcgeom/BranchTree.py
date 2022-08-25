@@ -1,6 +1,8 @@
 import itertools
 from typing import Callable, Optional, overload
 
+from typing_extensions import Self  # TODO: move to typing in python 3.11
+
 from .Branch import Branch
 from .Tree import K, T, Tree
 
@@ -32,6 +34,9 @@ class BranchTree(Tree):
     TraverseEnter = Callable[[Node, Optional[T]], T]
     TraverseLeave = Callable[[Node, list[T]], T]
 
+    def get_branches(self) -> list[Branch]:
+        return self.traverse(leave=lambda n, p: list(itertools.chain(n.branches, *p)))
+
     # fmt:off
     @overload
     def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
@@ -51,7 +56,7 @@ class BranchTree(Tree):
         return super().__getitem__(id)  # type: ignore
 
     @classmethod
-    def from_swc(cls, swc_path: str) -> "BranchTree":
+    def from_swc(cls, swc_path: str) -> Self:
         """Generating a branch tree from swc file.
 
         Parameters
@@ -69,7 +74,7 @@ class BranchTree(Tree):
         return cls.from_tree(tree)
 
     @classmethod
-    def from_tree(cls, tree: Tree) -> "BranchTree":
+    def from_tree(cls, tree: Tree) -> Self:
         """Generating a branch tree from tree.
 
         Parameters
@@ -110,6 +115,3 @@ class BranchTree(Tree):
 
         reducer(self.root, None)
         return self
-
-    def get_branches(self) -> list[Branch]:
-        return self.traverse(leave=lambda n, p: list(itertools.chain(n.branches, *p)))

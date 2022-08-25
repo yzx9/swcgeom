@@ -9,6 +9,7 @@ import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from . import painter
 
@@ -86,7 +87,7 @@ class Tree:
             return self.format_swc()
 
         @classmethod
-        def from_dataframe_row(cls, row: tuple[Any, ...]) -> "Tree.Node":
+        def from_dataframe_row(cls, row: tuple[Any, ...]) -> Self:
             """Read node from row of `~pandas.DataFrame`"""
             keys = ("id", "type", "x", "y", "z", "r", "pid")
             return cls(*[getattr(row, key) for key in keys])
@@ -97,7 +98,7 @@ class Tree:
     scale: tuple[float, float, float, float]
     _source: Optional[str] = None
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.G = nx.DiGraph()
         self.root = 1  # default to 1
         self.scale = (1, 1, 1, 1)
@@ -111,7 +112,7 @@ class Tree:
             f.write("# id type x y z r pid\n")
             f.writelines((str(n) + "\n" for n in self))
 
-    def copy(self, G: bool = True) -> "Tree":
+    def copy(self, G: bool = True) -> Self:
         """Make a copy.
 
         Parameters
@@ -191,7 +192,7 @@ class Tree:
             + sum(map(lambda b: n.distance(self[b]), self.G.neighbors(n.id)))
         )
 
-    def random_cut(self, keep_percent: float) -> "Tree":
+    def random_cut(self, keep_percent: float) -> Self:
         """Random cut tree.
 
         Parameters
@@ -278,7 +279,7 @@ class Tree:
         return f"Neuron Tree with {nodes} nodes and {edges} edges"
 
     @classmethod
-    def from_swc(cls, swc_path: str, names: Optional[list[str]] = None) -> "Tree":
+    def from_swc(cls, swc_path: str, names: Optional[list[str]] = None) -> Self:
         """Read neuron tree from swc file."""
 
         self = cls()
