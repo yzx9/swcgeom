@@ -33,7 +33,7 @@ class Tree:
             pid: int,
             **kwargs,
         ) -> None:
-            self = dict(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
+            self.update(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
 
         # fmt: off
         @property
@@ -102,6 +102,7 @@ class Tree:
         self.G = nx.DiGraph()
         self.root = 1  # default to 1
         self.scale = (1, 1, 1, 1)
+        self.nodes = {}
 
     def to_swc(self, swc_path: str) -> None:
         """Write swc file."""

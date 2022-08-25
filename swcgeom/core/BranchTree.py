@@ -29,7 +29,8 @@ class BranchTree(Tree):
             pid: int,
             **kwargs,
         ) -> None:
-            super().__init__(id, type, x, y, z, r, pid, branches=[], **kwargs)
+            kwargs.setdefault("branches", [])
+            super().__init__(id, type, x, y, z, r, pid, **kwargs)
 
     TraverseEnter = Callable[[Node, Optional[T]], T]
     TraverseLeave = Callable[[Node, list[T]], T]
