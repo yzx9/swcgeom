@@ -8,7 +8,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from ... import Branch
-from .BranchTreeFolderDataset import BranchTreeFolderDataset
+from .branch_tree_folder_dataset import BranchTreeFolderDataset
 
 
 class BranchDataset(Dataset):
