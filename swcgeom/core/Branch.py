@@ -262,6 +262,11 @@ class Branch(list[Tree.Node]):
         ==========
         num : int.
             Number of nodes after resample.
+
+        Returns
+        =======
+        coords : ~numpy.NDArray[float64]
+            An array of shape (num, 4).
         """
 
         xp = np.cumsum(np.linalg.norm(xyzr[1:, :3] - xyzr[:-1, :3], axis=1))
@@ -272,4 +277,4 @@ class Branch(list[Tree.Node]):
         y = np.interp(xvals, xp, xyzr[:, 1])
         z = np.interp(xvals, xp, xyzr[:, 2])
         r = np.interp(xvals, xp, xyzr[:, 3])
-        return np.array([x, y, z, r])
+        return np.stack([x, y, z, r], axis=1)
