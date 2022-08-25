@@ -7,7 +7,7 @@ from matplotlib.collections import LineCollection
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import painter, transforms
-from .Tree import Tree
+from .tree import Tree
 
 _Scale = tuple[float, float, float, float]
 
@@ -90,9 +90,9 @@ class Branch(list[Tree.Node]):
 
     # fmt:off
     @overload
-    def resample(self, *, num: int) -> Self: pass
+    def resample(self, *, num: int) -> Self: ...
     @overload
-    def resample(self, mode: Literal["linear"], *, num: int) -> Self: pass
+    def resample(self, mode: Literal["linear"], *, num: int) -> Self: ...
     # fmt:on
 
     def resample(self, mode: str = "linear", **kwargs) -> Self:

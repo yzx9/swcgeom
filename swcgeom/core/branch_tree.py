@@ -3,8 +3,8 @@ from typing import Callable, Optional, overload
 
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
-from .Branch import Branch
-from .Tree import K, T, Tree
+from .branch import Branch
+from .tree import K, T, Tree
 
 
 class BranchTree(Tree):
@@ -53,8 +53,8 @@ class BranchTree(Tree):
     ) -> K | None:
         return super().traverse(enter=enter, leave=leave)  # type: ignore
 
-    def __getitem__(self, id: int) -> Node:
-        return super().__getitem__(id)  # type: ignore
+    def __getitem__(self, idx: int) -> Node:
+        return super().__getitem__(idx)  # type: ignore
 
     @classmethod
     def from_swc(cls, swc_path: str) -> Self:
@@ -92,25 +92,25 @@ class BranchTree(Tree):
         self = cls()
         self._source = tree._source
 
-        def reducer(oldId: int, parentId: Optional[int]) -> list[Tree.Node]:
-            node = cls.Node(**tree[oldId])  # make shallow copy
-            neighbors = list(tree.G.neighbors(oldId))
-            if (parentId is not None) and (len(neighbors) == 1):
-                branchNodes = reducer(neighbors[0], parentId)
-                branchNodes.append(node)
-                return branchNodes
+        def reducer(old_id: int, parent_id: Optional[int]) -> list[Tree.Node]:
+            node = cls.Node(**tree[old_id])  # make shallow copy
+            neighbors = list(tree.G.neighbors(old_id))
+            if (parent_id is not None) and (len(neighbors) == 1):
+                branch_nodes = reducer(neighbors[0], parent_id)
+                branch_nodes.append(node)
+                return branch_nodes
 
             node.id = len(self) + 1
-            node.pid = parentId if parentId is not None else -1
+            node.pid = parent_id if parent_id is not None else -1
             self._add_node(node)
-            if parentId is not None:
-                self._add_edge(parentId, node.id)
+            if parent_id is not None:
+                self._add_edge(parent_id, node.id)
 
             for n in neighbors:
-                branchNodes = reducer(n, node.id)
-                branchNodes.append(node)
-                branchNodes.reverse()
-                node.branches.append(Branch(branchNodes))
+                branch_nodes = reducer(n, node.id)
+                branch_nodes.append(node)
+                branch_nodes.reverse()
+                node.branches.append(Branch(branch_nodes))
 
             return [node]
 

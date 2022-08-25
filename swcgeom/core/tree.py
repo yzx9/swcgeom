@@ -245,8 +245,8 @@ class Tree:
     def standardize(self) -> None:
         raise NotImplementedError()
 
-    def _add_edge(self, id: int, childId: int) -> None:
-        self.G.add_edge(id, childId)
+    def _add_edge(self, id: int, child_id: int) -> None:
+        self.G.add_edge(id, child_id)
 
     def _add_node(self, node: Node) -> None:
         self.G.add_node(node.id)
@@ -256,16 +256,16 @@ class Tree:
         self,
         enter: Optional[TraverseEnter[T]],
         leave: Optional[TraverseLeave[K]],
-        id: int,
+        idx: int,
         pre: Optional[T],
     ) -> K | None:
-        cur = enter(self[id], pre) if enter is not None else None
-        children = [self._traverse(enter, leave, i, cur) for i in self.G.neighbors(id)]
-        return leave(self[id], cast(list[K], children)) if leave is not None else None
+        cur = enter(self[idx], pre) if enter is not None else None
+        children = [self._traverse(enter, leave, i, cur) for i in self.G.neighbors(idx)]
+        return leave(self[idx], cast(list[K], children)) if leave is not None else None
 
-    def __getitem__(self, id: int) -> Node:
+    def __getitem__(self, idx: int) -> Node:
         """Get node by id."""
-        return self.nodes[id]
+        return self.nodes[idx]
 
     def __iter__(self) -> Iterator[Node]:
         """Iter each nodes."""
