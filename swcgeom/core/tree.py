@@ -33,7 +33,7 @@ class Tree:
             pid: int,
             **kwargs,
         ) -> None:
-            self.update(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
+            super().__init__(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
 
         # fmt: off
         @property
