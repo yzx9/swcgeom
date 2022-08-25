@@ -52,14 +52,14 @@ def download_all(
     E.g: `https://download.brainimagelibrary.org/biccn/zeng/luo/fMOST/cells/`
 
     Parameters
-    ==========
-    index_url : str.
+    ----------
+    index_url : str
         URL of index page.
-    dist : str.
+    dist : str
         Path of target directory.
-    override : bool, default to `False`.
+    override : bool, default `False`
         Override existing file, skip file if `False`.
-    multiprocess : int, default to 4.
+    multiprocess : int, default `4`
         How many process are available for download.
     """
 

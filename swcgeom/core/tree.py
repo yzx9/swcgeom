@@ -67,11 +67,11 @@ class Tree:
         # fmt: on
 
         def xyz(self) -> npt.NDArray[np.float64]:
-            """Get the `x`, `y`, `z` of branch, shape of (3,)"""
+            """Get the `x`, `y`, `z` of branch, an array of shape (3,)"""
             return np.array([self.x, self.y, self.z], dtype=np.float64)
 
         def xyzr(self) -> npt.NDArray[np.float64]:
-            """Get the `x`, `y`, `z`, `r` of branch, shape of (4,)"""
+            """Get the `x`, `y`, `z`, `r` of branch, an array of shape (4,)"""
             return np.array([self.x, self.y, self.z, self.r], dtype=np.float64)
 
         def distance(self, b: "Tree.Node") -> float:
@@ -79,6 +79,7 @@ class Tree:
             return np.linalg.norm(self.xyz() - b.xyz()).item()
 
         def format_swc(self) -> str:
+            """Get the SWC format string."""
             x, y, z, r = ["%.4f" % f for f in [self.x, self.y, self.z, self.r]]
             items = [self.id, self.type, x, y, z, r, self.pid]
             return " ".join(map(str, items))
@@ -117,9 +118,9 @@ class Tree:
         """Make a copy.
 
         Parameters
-        ==========
-        G : bool.
-            Skip copy G if false, default to `True`.
+        ----------
+        G : bool, default `True`
+            Skip copy G if false.
         """
         newTree = Tree()
         newTree._source = self._source
@@ -136,19 +137,19 @@ class Tree:
         """Draw neuron tree.
 
         Parameters
-        ==========
-        color : str, optional.
+        ----------
+        color : str, optional
             Color of branch. If `None`, the default color will be enabled.
-        ax : ~matplotlib.axes.Axes, optional.
+        ax : ~matplotlib.axes.Axes, optional
             A subplot of `~matplotlib`. If `None`, a new one will be created.
-        **kwargs : dict[str, Unknown].
+        **kwargs : dict[str, Unknown]
             Forwarded to `~matplotlib.collections.LineCollection`.
 
         Returns
-        =======
-        ax : ~matplotlib.axes.Axes.
+        -------
+        ax : ~matplotlib.axes.Axes
             If provided, return as-is.
-        collection : ~matplotlib.collections.LineCollection.
+        collection : ~matplotlib.collections.LineCollection
             Drawn line collection.
         """
         edges = np.array([[self[a].xyz(), self[b].xyz()] for a, b in self.G.edges])
@@ -173,12 +174,12 @@ class Tree:
         """Traverse each nodes.
 
         Parameters
-        ==========
-        enter : Callable[[Node, list[T]], T], optional.
+        ----------
+        enter : Callable[[Node, list[T]], T], optional
             The callback when entering each node, it accepts two parameters,
             the first parameter is the current node, the second parameter is
             the parent's information T, and the root node receives an None.
-        leave : Callable[[Node, Optional[T]], T], optional.
+        leave : Callable[[Node, Optional[T]], T], optional
             The callback when leaving each node. When leaving a node, subtree
             has already been traversed. Callback accepts two parameters, the
             first parameter is the current node, the second parameter is the
@@ -197,13 +198,13 @@ class Tree:
         """Random cut tree.
 
         Parameters
-        ==========
-        keep_percent : float.
+        ----------
+        keep_percent : float
             The percent of preserved segment length.
 
         Returns
-        =======
-        tree : Tree.
+        -------
+        Tree
             A new tree.
         """
         tree = self.copy()
@@ -222,7 +223,8 @@ class Tree:
     def normalize(self) -> None:
         """Normalize neuron tree.
 
-        Scale the `x`, `y`, `z`, `r` of nodes to 0-1"""
+        Scale the `x`, `y`, `z`, `r` of nodes to 0-1
+        """
 
         _min, _max = self.traverse(
             leave=lambda a, children: functools.reduce(

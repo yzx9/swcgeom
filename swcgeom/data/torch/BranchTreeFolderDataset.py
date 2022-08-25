@@ -9,10 +9,10 @@ class BranchTreeFolderDataset(TreeFolderDataset):
         """Get a branch tree.
 
         Returns
-        =======
-        x : BranchTree.
+        -------
+        x : BranchTree
             A branch tree from swc format.
-        y : int.
+        y : int
             Label of x.
         """
         x, y = super()[idx]

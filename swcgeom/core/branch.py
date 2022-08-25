@@ -16,7 +16,7 @@ class Branch(list[Tree.Node]):
     """A branch of neuron tree.
 
     Notes
-    =====
+    -----
     Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and
     `r`, but the `id` and `type` is usually invalid.
     """
@@ -28,27 +28,63 @@ class Branch(list[Tree.Node]):
         self.scale = (1, 1, 1, 1)
 
     def x(self) -> npt.NDArray[np.float64]:
-        """Get the `x` of branch, shape of (n_sample,)"""
+        """Get the `x` of branch.
+
+        Returns
+        -------
+        x : np.ndarray[np.float64]
+            An array of shape (n_sample,).
+        """
         return np.array([n.x for n in self], dtype=np.float64)
 
     def y(self) -> npt.NDArray[np.float64]:
-        """Get the `y` of branch, shape of (n_sample,)"""
+        """Get the `y` of branch.
+
+        Returns
+        -------
+        y : np.ndarray[np.float64]
+            An array of shape (n_sample,).
+        """
         return np.array([n.y for n in self], dtype=np.float64)
 
     def z(self) -> npt.NDArray[np.float64]:
-        """Get the `z` of branch, shape of (n_sample,)"""
+        """Get the `z` of branch.
+
+        Returns
+        -------
+        z : np.ndarray[np.float64]
+            An array of shape (n_sample,).
+        """
         return np.array([n.z for n in self], dtype=np.float64)
 
     def r(self) -> npt.NDArray[np.float64]:
-        """Get the `r` of branch, shape of (n_sample,)"""
+        """Get the `r` of branch.
+
+        Returns
+        -------
+        r : np.ndarray[np.float64]
+            An array of shape (n_sample,).
+        """
         return np.array([n.r for n in self], dtype=np.float64)
 
     def xyz(self) -> npt.NDArray[np.float64]:
-        """Get the `x`, `y`, `z` of branch, shape of (n_sample, 3)"""
+        """Get the `x`, `y`, `z` of branch.
+
+        Returns
+        -------
+        xyz : np.ndarray[np.float64]
+            An array of shape (n_sample, 3).
+        """
         return np.array([n.xyz() for n in self], dtype=np.float64)
 
     def xyzr(self) -> npt.NDArray[np.float64]:
-        """Get the `x`, `y`, `z`, `r` of branch, shape of (n_sample, 4)"""
+        """Get the `x`, `y`, `z`, `r` of branch.
+
+        Returns
+        -------
+        xyzr : np.ndarray[np.float64]
+            An array of shape (n_sample, 4).
+        """
         return np.array([n.xyzr() for n in self], dtype=np.float64)
 
     def draw(
@@ -61,21 +97,21 @@ class Branch(list[Tree.Node]):
         """Draw neuron branch.
 
         Parameters
-        ==========
-        color : str, optional.
+        ----------
+        color : str, optional
             Color of branch. If `None`, the default color will be enabled.
-        ax : ~matplotlib.axes.Axes, optional.
+        ax : ~matplotlib.axes.Axes, optional
             A subplot. If `None`, a new one will be created.
-        standardize : bool, default to `True`.
+        standardize : bool, default `True`
             Standardize branch, see also self.standardize.
-        **kwargs : dict[str, Unknown].
+        **kwargs : dict[str, Any]
             Forwarded to `matplotlib.collections.LineCollection`.
 
         Returns
-        =======
-        ax : ~matplotlib.axes.Axes.
+        -------
+        ax : ~matplotlib.axes.Axes
             If provided, return as-is.
-        collection : ~matplotlib.collections.LineCollection.
+        collection : ~matplotlib.collections.LineCollection
             Drawn line collection.
         """
 
@@ -99,23 +135,19 @@ class Branch(list[Tree.Node]):
         """Resample branch to special num of nodes.
 
         Parameters
-        ==========
-        mode : str, default to `linear`.
+        ----------
+        mode : str, default `linear`
             Resample mode.
 
-        Modes
-        =====
+            Linear mode :
+                Resampling by linear interpolation, DO NOT keep original node.
 
-        Linear
-        ------
-        Resampling by linear interpolation, DO NOT keep original node.
-
-        num : int.
-            Number of nodes after resample.
+                num : int
+                    Number of nodes after resample.
 
         See Also
-        ========
-        cls.resample_linear
+        --------
+        cls.resample_linear : linear mode.
         """
 
         xyzr = self.xyzr()
@@ -204,11 +236,11 @@ class Branch(list[Tree.Node]):
         """Create a branch from ~numpy.ndarray.
 
         Parameters
-        ==========
-        xyzr : npt.NDArray[np.float64].
-            Collection of nodes. If shape of (n, 4), both `x`, `y`, `z`, `r`
-            of nodes is enabled. If shape of (n, 3), only `x`, `y`, `z` is
-            enabled and `r` will fill by 1.
+        ----------
+        xyzr : npt.NDArray[np.float64]
+            Collection of nodes. If shape (n, 4), both `x`, `y`, `z`, `r` of
+            nodes is enabled. If shape (n, 3), only `x`, `y`, `z` is enabled
+            and `r` will fill by 1.
         """
         assert xyzr.ndim == 2
         assert xyzr.shape[1] >= 3
@@ -228,11 +260,11 @@ class Branch(list[Tree.Node]):
         """Create list of branch form ~numpy.ndarray.
 
         Parameters
-        ==========
-        xyzr: npt.NDArray[np.float64].
-            Batch of collection of nodes. If shape of (bs, n, 4), both `x`,
-            `y`, `z`, `r` of nodes is enabled. If shape of (bs, n, 3), only
-            `x`, `y`, `z` is enabled and `r` will fill by 1.
+        ----------
+        xyzr : npt.NDArray[np.float64]
+            Batch of collection of nodes. If shape (bs, n, 4), both `x`, `y`,
+            `z`, `r` of nodes is enabled. If shape (bs, n, 3), only `x`, `y`,
+            `z` is enabled and `r` will fill by 1.
         """
 
         assert xyzr_batch.ndim == 3
@@ -259,12 +291,12 @@ class Branch(list[Tree.Node]):
         """Resampling by linear interpolation, DO NOT keep original node.
 
         Parameters
-        ==========
-        num : int.
+        ----------
+        num : int
             Number of nodes after resample.
 
         Returns
-        =======
+        -------
         coords : ~numpy.NDArray[float64]
             An array of shape (num, 4).
         """

@@ -31,15 +31,15 @@ class BranchDataset(Dataset):
         """Create branch dataset.
 
         Parameters
-        ==========
-        swc_dir : str.
+        ----------
+        swc_dir : str
             Path of SWC file directory.
-        save : Union[str, bool], default to `True`.
+        save : Union[str, bool], default `True`
             Save branch data to file if not False. If `True`, automatically
             generate file name.
-        standardize : bool, default to `True`.
+        standardize : bool, default `True`
             See also ~neuron.Branch.standardize.
-        resample : Union[int, None], default to `None`.
+        resample : Union[int, None], default `None`
             Resampling branch to N points if not `None`.
         """
         self.swc_dir = swc_dir
@@ -76,10 +76,10 @@ class BranchDataset(Dataset):
         """Get branch.
 
         Returns
-        =======
-        x : ~torch.Tensor.
-            Tensor shape of (3, branch_length).
-        y : int.
+        -------
+        x : ~torch.Tensor
+            Tensor of shape (3, branch_length).
+        y : int
             Label of x.
         """
         return self.branches[idx], 0
