@@ -1,4 +1,4 @@
-from typing import Iterable, Literal, overload
+from typing import Iterable, Literal, NamedTuple, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -9,7 +9,7 @@ from typing_extensions import Self  # TODO: move to typing in python 3.11
 from ..utils import painter, transforms
 from .tree import Tree
 
-_Scale = tuple[float, float, float, float]
+Scale = NamedTuple("Scale", x=float, y=float, z=float, r=float)
 
 
 class Branch(list[Tree.Node]):
@@ -21,11 +21,11 @@ class Branch(list[Tree.Node]):
     `r`, but the `id` and `type` is usually invalid.
     """
 
-    scale: _Scale
+    scale: Scale
 
     def __init__(self, nodes: Iterable[Tree.Node]) -> None:
         super().__init__(nodes)
-        self.scale = (1, 1, 1, 1)
+        self.scale = Scale(1, 1, 1, 1)
 
     def x(self) -> npt.NDArray[np.float64]:
         """Get the `x` of branch.
@@ -179,54 +179,17 @@ class Branch(list[Tree.Node]):
         """Distance between start point and end point."""
         return float(np.linalg.norm(self[-1].xyz() - self[0].xyz()))
 
-    def _standardize(self) -> tuple[npt.NDArray[np.float64], _Scale]:
+    def _standardize(self) -> tuple[npt.NDArray[np.float64], Scale]:
         xyzr = self.xyzr()
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
-        T = np.identity(4)
-        v = np.concatenate([self[-1].xyz() - self[0].xyz(), np.zeros((1))])[:, None]
+        T, s = self.get_standardize_matrix(xyzr)
 
-        # translate to the origin
-        translate = transforms.translate3d(-self[0].x, -self[0].y, -self[0].z)
-        T = np.dot(translate, T)
-
-        # scale to unit vector
-        s = 1 / self.straight_line_distance()
-        scale = transforms.scale3d(s, s, s)
-        T = np.dot(scale, T)
-
-        # rotate v to the xz-plane, v should be (x, 0, z) now
-        vy = np.dot(T, v)[:, 0]
-        # when looking at the xz-plane along the positive y-axis, the
-        # coordinates should be (z, x)
-        rotate_y = transforms.rotate3d_y(transforms.angle([vy[2], vy[0]], [0, 1]))
-        T = np.dot(rotate_y, T)
-
-        # rotate v to the x-axis, v should be (1, 0, 0) now
-        vx = np.dot(T, v)[:, 0]
-        rotate_z = transforms.rotate3d_z(transforms.angle([vx[0], vx[1]], [1, 0]))
-        T = np.dot(rotate_z, T)
-
-        # rotate the farthest point to the xy-plane
         ones = np.ones([xyz.shape[0], 1])
         xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
-        if xyz.shape[0] > 2:
-            new_xyz4 = np.dot(T, xyz4)  # (4, N)
-            max_index = np.argmax(np.linalg.norm(new_xyz4[1:3, :], axis=0)[1:-1]) + 1
-            max_xyz4 = xyz4[:, max_index].reshape(4, 1)
-            max_xyz4_t = np.dot(T, max_xyz4)  # (4, 1)
-            angle_x = transforms.angle(max_xyz4_t[1:3, 0], [1, 0])
-            rotate_x = transforms.rotate3d_x(angle_x)
-            T = np.dot(rotate_x, T)
-
-        # scale max radius to 1
-        scale_r = 1 / r.max()
-
-        # generate new branch
         new_xyz = np.dot(T, xyz4)[0:3, :].transpose()
-        new_r = r * scale_r
-        new_xyzr = np.concatenate([new_xyz, new_r], axis=1)
-        sx, sy, sz, sr = self.scale
-        return new_xyzr, (sx * s, sy * s, sz * s, sr * scale_r)
+        new_xyzr = np.concatenate([new_xyz, r * s.r], axis=1)
+
+        return new_xyzr, Scale(*np.multiply(s, self.scale))
 
     def __str__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
@@ -292,6 +255,8 @@ class Branch(list[Tree.Node]):
 
         Parameters
         ----------
+        xyzr : np.ndarray[np.float64]
+            The array of shape (N, 4).
         num : int
             Number of nodes after resample.
 
@@ -310,3 +275,69 @@ class Branch(list[Tree.Node]):
         z = np.interp(xvals, xp, xyzr[:, 2])
         r = np.interp(xvals, xp, xyzr[:, 3])
         return np.stack([x, y, z, r], axis=1)
+
+    @staticmethod
+    def get_standardize_matrix(
+        xyzr: npt.NDArray[np.float64],
+    ) -> tuple[npt.NDArray[np.float64], Scale]:
+        """Get standarize transformation matrix.
+
+        Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
+        and scale max radius to 1.
+
+        Parameters
+        ----------
+        xyzr : np.ndarray[np.float64]
+            The `x`, `y`, `z`, `r` matrix of shape (N, 4) of branch.
+
+        Returns
+        -------
+        T : np.ndarray[np.float64]
+            An homogeneous transfomation matrix of shape (4, 4).
+        scale : float
+            Scale ratio.
+        """
+        assert xyzr.ndim == 2
+        assert xyzr.shape[1] == 4
+
+        xyz, r = xyzr[:, :3], xyzr[:, 3:]
+        T = np.identity(4)
+        v = np.concatenate([xyz[-1] - xyz[0], np.zeros((1))])[:, None]
+
+        # translate to the origin
+        translate = transforms.translate3d(-xyz[0, 0], -xyz[0, 1], -xyz[0, 2])
+        T = np.dot(translate, T)
+
+        # scale to unit vector
+        s = float(1 / np.linalg.norm(v[:3, 0]))
+        scale = transforms.scale3d(s, s, s)
+        T = np.dot(scale, T)
+
+        # rotate v to the xz-plane, v should be (x, 0, z) now
+        vy = np.dot(T, v)[:, 0]
+        # when looking at the xz-plane along the positive y-axis, the
+        # coordinates should be (z, x)
+        rotate_y = transforms.rotate3d_y(transforms.angle([vy[2], vy[0]], [0, 1]))
+        T = np.dot(rotate_y, T)
+
+        # rotate v to the x-axis, v should be (1, 0, 0) now
+        vx = np.dot(T, v)[:, 0]
+        rotate_z = transforms.rotate3d_z(transforms.angle([vx[0], vx[1]], [1, 0]))
+        T = np.dot(rotate_z, T)
+
+        # rotate the farthest point to the xy-plane
+        if xyz.shape[0] > 2:
+            ones = np.ones([xyz.shape[0], 1])
+            xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
+            new_xyz4 = np.dot(T, xyz4)  # (4, N)
+            max_index = np.argmax(np.linalg.norm(new_xyz4[1:3, :], axis=0)[1:-1]) + 1
+            max_xyz4 = xyz4[:, max_index].reshape(4, 1)
+            max_xyz4_t = np.dot(T, max_xyz4)  # (4, 1)
+            angle_x = transforms.angle(max_xyz4_t[1:3, 0], [1, 0])
+            rotate_x = transforms.rotate3d_x(angle_x)
+            T = np.dot(rotate_x, T)
+
+        # scale max radius to 1
+        sr = 1 / r.max()
+
+        return T, Scale(s, s, s, sr)
