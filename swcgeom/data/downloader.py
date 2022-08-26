@@ -7,8 +7,6 @@ from urllib.parse import urljoin
 import bs4
 import urllib3
 
-_MODULE = "downloader"
-
 
 def get_page_soup(url: str) -> bs4.BeautifulSoup:
     """Get page."""
@@ -64,7 +62,9 @@ def download_all(
     """
 
     all_file_urls = get_all_file_urls(index_url)
-    logging.info(f"{_MODULE}: search `{index_url}`, found {len(all_file_urls)} files.")
+    logging.info(
+        "downloader: search `{}`, found {} files.", index_url, len(all_file_urls)
+    )
 
     def download(dist: str, url: str) -> None:
         file_dist = url.removeprefix(index_url)
@@ -74,16 +74,16 @@ def download_all(
             if not override:
                 return
 
-            logging.info(f"{_MODULE}: file `{dir}` exits, deleted.")
+            logging.info("downloader: file `{}` exits, deleted.", dir)
             os.remove(file_dist)
 
         try:
-            logging.info(f"{_MODULE}: downloading `{url}` to `{dir}`")
+            logging.info("downloader: downloading `{}` to `{}`", url, dir)
             download_file(dir, url)
 
-            logging.info(f"{_MODULE}: download `{url}` to `{dir}`")
+            logging.info("downloader: download `{}` to `{}`", url, dir)
         except Exception as ex:
-            logging.info(f"{_MODULE}: fails to download `{url}`, except `{ex}`")
+            logging.info("downloader: fails to download `{}`, except `{}`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
         p.map(lambda url: download(dist, url), all_file_urls)
