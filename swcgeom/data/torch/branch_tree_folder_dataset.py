@@ -15,5 +15,5 @@ class BranchTreeFolderDataset(TreeFolderDataset):
         y : int
             Label of x.
         """
-        x, y = super()[idx]
+        x, y = super().__getitem__(idx)
         return BranchTree.from_tree(x), y
