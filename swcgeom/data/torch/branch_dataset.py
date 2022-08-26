@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from warnings import warn
 
 import numpy as np
@@ -19,14 +20,14 @@ class BranchDataset(Dataset):
     resample: int | None
     standardize: bool
 
-    branches: list[Tensor]
+    branches: list[Tensor]  # list of shape (N, 3)
 
     def __init__(
         self,
         swc_dir: str,
         save: str | bool = True,
         standardize: bool = True,
-        resample: int | None = 20,
+        resample: Optional[int] = None,
     ) -> None:
         """Create branch dataset.
 
@@ -39,38 +40,27 @@ class BranchDataset(Dataset):
             generate file name.
         standardize : bool, default `True`
             See also ~neuron.Branch.standardize.
-        resample : Union[int, None], default `None`
+        resample : Optional[int], optional
             Resampling branch to N points if not `None`.
         """
         self.swc_dir = swc_dir
         self.standardize = standardize
         self.resample = resample
 
-        if save != False:
-            if isinstance(save, str):
-                self.save = save
-            else:
-                self.save = os.path.join(
-                    swc_dir,
-                    "branches"
-                    + (f"_resample{resample}" if resample is not None else "")
-                    + ("_standardized" if standardize else "")
-                    + ".pt",
-                )
-
-            if os.path.exists(os.path.join(swc_dir, self.save)):
-                self.branches = torch.load(self.save)
-                return
+        if isinstance(save, str):
+            self.save = save
+        elif save:
+            self.save = os.path.join(swc_dir, self.get_filename())
         else:
             self.save = None
 
-        self.branches = self.get_branches(swc_dir, standardize, resample)
-        if self.save is not None:
-            torch.save(self.branches, self.save)
+        if self.save and os.path.exists(self.save):
+            self.branches = torch.load(self.save)
+            return
 
-    def __len__(self) -> int:
-        """Get length of branches."""
-        return len(self.branches)
+        self.branches = self.get_branches()
+        if self.save:
+            torch.save(self.branches, self.save)
 
     def __getitem__(self, idx: int) -> tuple[Tensor, int]:
         """Get branch.
@@ -84,23 +74,34 @@ class BranchDataset(Dataset):
         """
         return self.branches[idx], 0
 
-    @classmethod
-    def get_branches(
-        cls, swc_dir: str, standardize: bool = True, resample: int | None = None
-    ) -> list[Tensor]:
+    def __len__(self) -> int:
+        """Get length of branches."""
+        return len(self.branches)
+
+    def get_filename(self) -> str:
+        names = [
+            "branches",
+            (f"_resample{self.resample}" if self.resample is not None else ""),
+            ("_standardized" if self.standardize else ""),
+            ".pt",
+        ]
+        return "".join(names)
+
+    def get_branches(self) -> list[Tensor]:
         """Get all branches."""
-        branchTrees = BranchTreeFolderDataset(swc_dir)
+        branch_trees = BranchTreeFolderDataset(self.swc_dir)
         branches = list[Branch]()
         old_settings = np.seterr(all="raise")
-        for x, y in branchTrees:
+        for x, y in branch_trees:
             try:
                 brs = x.get_branches()
 
-                if standardize == True:
-                    brs = [br.standardize() for br in brs]
+                if self.standardize:
+                    brs = map(lambda br: br.standardize(), brs)
 
-                if resample is not None:
-                    brs = [br.resample("linear", num=resample) for br in brs]
+                if self.resample:
+                    resample = self.resample
+                    brs = map(lambda br: br.resample("linear", num=resample), brs)
 
                 branches.extend(brs)
             except Exception as ex:
