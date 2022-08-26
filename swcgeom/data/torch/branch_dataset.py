@@ -1,6 +1,6 @@
 import os
+import warnings
 from typing import Optional
-from warnings import warn
 
 import numpy as np
 
@@ -9,6 +9,7 @@ from torch import Tensor
 from torch.utils.data import Dataset
 
 from ... import Branch
+from ..transforms import Transforms
 from .branch_tree_folder_dataset import BranchTreeFolderDataset
 
 
@@ -17,8 +18,7 @@ class BranchDataset(Dataset):
 
     swc_dir: str
     save: str | None
-    resample: int | None
-    standardize: bool
+    transforms: Transforms[Branch, Branch] | None
 
     branches: list[Tensor]  # list of shape (N, 3)
 
@@ -26,8 +26,7 @@ class BranchDataset(Dataset):
         self,
         swc_dir: str,
         save: str | bool = True,
-        standardize: bool = True,
-        resample: Optional[int] = None,
+        transforms: Optional[Transforms[Branch, Branch]] = None,
     ) -> None:
         """Create branch dataset.
 
@@ -44,8 +43,7 @@ class BranchDataset(Dataset):
             Resampling branch to N points if not `None`.
         """
         self.swc_dir = swc_dir
-        self.standardize = standardize
-        self.resample = resample
+        self.transforms = transforms
 
         if isinstance(save, str):
             self.save = save
@@ -79,13 +77,9 @@ class BranchDataset(Dataset):
         return len(self.branches)
 
     def get_filename(self) -> str:
-        names = [
-            "branches",
-            (f"_resample{self.resample}" if self.resample is not None else ""),
-            ("_standardized" if self.standardize else ""),
-            ".pt",
-        ]
-        return "".join(names)
+        names = self.transforms.get_names() if self.transforms else []
+        name = "_".join(["branch_dataset", *names])
+        return f"{name}.pt"
 
     def get_branches(self) -> list[Tensor]:
         """Get all branches."""
@@ -95,17 +89,12 @@ class BranchDataset(Dataset):
         for x, y in branch_trees:
             try:
                 brs = x.get_branches()
-
-                if self.standardize:
-                    brs = map(lambda br: br.standardize(), brs)
-
-                if self.resample:
-                    resample = self.resample
-                    brs = map(lambda br: br.resample("linear", num=resample), brs)
-
+                brs = self.transforms.apply_batch(brs) if self.transforms else brs
                 branches.extend(brs)
             except Exception as ex:
-                warn(f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}")
+                warnings.warn(
+                    f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}"
+                )
 
         np.seterr(**old_settings)
         return [torch.from_numpy(br.xyz().T).float() for br in branches]
