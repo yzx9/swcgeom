@@ -1,3 +1,5 @@
+import torch
+
 from ....core import Branch
 from ...transforms import Transform
 
@@ -24,3 +26,19 @@ class BranchStandardize(Transform[Branch, Branch]):
 
     def get_name(self) -> str:
         return "standardized"
+
+
+class BranchToTensor(Transform[Branch, torch.Tensor]):
+    """Transform branch to ~torch.Tensor.
+
+    Returns
+    -------
+    x : ~torch.Tensor
+        An tensor of shape (3, N).
+    """
+
+    def __call__(self, x: Branch) -> torch.Tensor:
+        return torch.from_numpy(x.xyz().T).float()
+
+    def get_name(self) -> str:
+        return "tensor"
