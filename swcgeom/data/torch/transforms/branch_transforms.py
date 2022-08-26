@@ -1,8 +1,10 @@
-from ...core.branch import Branch
-from .transform import Transform
+from ....core import Branch
+from ...transforms import Transform
 
 
 class BranchResampler(Transform[Branch, Branch]):
+    """Resample branch."""
+
     def __init__(self, num: int) -> None:
         super().__init__()
         self.num = num
@@ -15,6 +17,8 @@ class BranchResampler(Transform[Branch, Branch]):
 
 
 class BranchStandardize(Transform[Branch, Branch]):
+    """Standarize branch."""
+
     def __call__(self, x: Branch) -> Branch:
         return x.standardize()
 
