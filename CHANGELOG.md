@@ -4,13 +4,36 @@
 
 - **data**: add downloader
 
+## v0.1.7 (2022-08-28)
+
+### Feat
+
+- **data/torch**: support tree transfroms
+- **data/torch**: expose `BranchToTensor` transform, and support more options
+- **data/transforms**: add branch transforms
+- **core**: expose branch standardize method
+
+### Fix
+
+- **data/torch**: super object is not subscriptable
+- **core**: stack arrays to get the correct shape
+- **core**: update node correctly
+
+### Refactor
+
+- **core**: initial dict
+
+### Perf
+
+- **data**: delay log formatting
+
 ## v0.1.6 (2022-08-25)
 
 ### BREAKING CHANGE
 
 - resample args should be named arguments now
 - rename `Branch.from_numpy` to `Branch.from_numpy_batch`, and drop the support
-for squezed input
+for squeezed input
 
 ### Feat
 
