@@ -8,8 +8,8 @@ import torch
 import torch.utils.data
 
 from ...core import Branch
-from .branch_tree_folder_dataset import BranchTreeFolderDataset
-from .transforms import Transforms
+from .transforms import ToBranchTree, Transforms
+from .tree_folder_dataset import TreeFolderDataset
 
 T = TypeVar("T")
 
@@ -38,10 +38,13 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         save : Union[str, bool], default `True`
             Save branch data to file if not False. If `True`, automatically
             generate file name.
-        standardize : bool, default `True`
-            See also ~neuron.Branch.standardize.
-        resample : Optional[int], optional
-            Resampling branch to N points if not `None`.
+        transfroms : Transfroms[Branch, T], optional
+            Branch transformations.
+
+        See Also
+        --------
+        ~swcgeom.data.torch.transforms : module
+            Preset transform set.
         """
 
         self.swc_dir = swc_dir
@@ -86,7 +89,8 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_branches(self) -> list[T]:
         """Get all branches."""
-        branch_trees = BranchTreeFolderDataset(self.swc_dir)
+        transforms = Transforms(ToBranchTree())
+        branch_trees = TreeFolderDataset(self.swc_dir, transforms=transforms)
         branches = list[T]()
         old_settings = np.seterr(all="raise")
         for x, y in branch_trees:
