@@ -10,24 +10,21 @@ class BranchResampler(Transform[Branch, Branch]):
     """Resample branch."""
 
     def __init__(self, num: int) -> None:
-        super().__init__()
+        super().__init__(f"resample{self.num}")
         self.num = num
 
-    def __call__(self, x: Branch) -> Branch:
+    def apply(self, x: Branch) -> Branch:
         return x.resample("linear", num=self.num)
-
-    def get_name(self) -> str:
-        return f"resample{self.num}"
 
 
 class BranchStandardize(Transform[Branch, Branch]):
     """Standarize branch."""
 
-    def __call__(self, x: Branch) -> Branch:
-        return x.standardize()
+    def __init__(self) -> None:
+        super().__init__("standardized")
 
-    def get_name(self) -> str:
-        return "standardized"
+    def apply(self, x: Branch) -> Branch:
+        return x.standardize()
 
 
 class BranchToTensor(Transform[Branch, torch.Tensor]):
@@ -52,7 +49,7 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
             shape (N, C).
         """
 
-        super().__init__()
+        super().__init__("tensor")
         self.channels = channels
         self.channel_first = channel_first
 
@@ -64,9 +61,6 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
             case _:
                 raise ValueError("invalid channel.")
 
-    def __call__(self, x: Branch) -> torch.Tensor:
+    def apply(self, x: Branch) -> torch.Tensor:
         output = self.fn(x)
         return output.T if self.channel_first else output
-
-    def get_name(self) -> str:
-        return "tensor"

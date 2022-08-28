@@ -7,14 +7,42 @@ T4, T5, T6 = TypeVar("T4"), TypeVar("T5"), TypeVar("T6")
 
 
 class Transform(Generic[T, K]):
+    """An abstract class representing a :class:`Transform`.
+
+    All transforms that represent a map from `T` to `K`. All subclasses should
+    overwrite :meth:`apply`, supporting applying transform in `x`. Subclasses
+    could also optionally overwrite :meth:`apply_batch`, which is expected to
+    applying transform a batch of input, manual implementation usually gives
+    better performance.
+    """
+
+    name: str
+
+    def __init__(self, name: str) -> None:
+        """"""
+        super().__init__()
+        self.name = name
+
     def __call__(self, x: T) -> K:
+        """Apply transform."""
+        return self.apply(x)
+
+    def apply(self, x: T) -> K:
+        """Apply transform."""
         raise NotImplementedError()
 
+    def apply_batch(self, batch: Iterable[T]) -> Iterable[K]:
+        """Apply transform in batch."""
+        return map(self.apply, batch)
+
     def get_name(self) -> str:
-        raise NotImplementedError()
+        """Get transform name."""
+        return self.name
 
 
 class Transforms(list[Transform[Any, Any]], Generic[T, K]):
+    """A simple typed wrapper for transforms."""
+
     # fmt:off
     @overload
     def __init__(self, t1: Transform[T, K], /) -> None: ...
@@ -44,14 +72,38 @@ class Transforms(list[Transform[Any, Any]], Generic[T, K]):
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
         super().__init__(transforms)
 
+    def __call__(self, x: T) -> K:
+        """Apply transforms."""
+        return self.apply(x)
+
     def apply(self, x: T) -> K:
+        """Apply transforms."""
         for transform in self:
-            x = transform(x)
+            x = transform.apply(x)
 
         return cast(K, x)
 
     def apply_batch(self, batch: Iterable[T]) -> Iterable[K]:
-        return map(self.apply, batch)
+        """Apply transforms in batch."""
+        for transform in self:
+            batch = transform.apply_batch(batch)
+
+        return cast(Iterable[K], batch)
+
+    def get_name(self, separator: str = "_") -> str:
+        """Get name of transforms.
+
+        Parameters
+        ----------
+        separator : str, default `_`
+
+        Returns
+        -------
+        name : str
+            Name which join separator to the names.
+        """
+        return separator.join(self.get_names())
 
     def get_names(self) -> Iterable[str]:
+        """Get names of transforms."""
         return (transform.get_name() for transform in self)
