@@ -1,11 +1,10 @@
 import os
 from typing import Generic, TypeVar, cast
 
-from swcgeom.data.transforms import Transforms
-
 import torch.utils.data
 
-from ... import Tree
+from ...core import Tree
+from ...transforms import Transforms
 
 T = TypeVar("T")
 

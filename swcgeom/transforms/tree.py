@@ -1,5 +1,5 @@
-from ....core import BranchTree, Tree
-from ...transforms import Transform
+from ..core import BranchTree, Tree
+from .base import Transform
 
 
 class ToBranchTree(Transform[Tree, BranchTree]):

@@ -1,8 +1,5 @@
-from swcgeom.core.tree import Tree
-from swcgeom.data.torch.transforms.tree_transforms import ToBranchTree
-from swcgeom.data.transforms import Transforms
-
-from ... import BranchTree
+from ...core import BranchTree, Tree
+from ...transforms import ToBranchTree, Transforms
 from .tree_folder_dataset import TreeFolderDataset
 
 

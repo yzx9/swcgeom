@@ -3,12 +3,11 @@ import warnings
 from typing import Generic, Iterable, Optional, TypeVar, cast
 
 import numpy as np
-
 import torch
 import torch.utils.data
 
 from ...core import Branch
-from .transforms import ToBranchTree, Transforms
+from ...transforms import ToBranchTree, Transforms
 from .tree_folder_dataset import TreeFolderDataset
 
 T = TypeVar("T")
@@ -43,7 +42,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
         See Also
         --------
-        ~swcgeom.data.torch.transforms : module
+        ~swcgeom.transforms : module
             Preset transform set.
         """
 
