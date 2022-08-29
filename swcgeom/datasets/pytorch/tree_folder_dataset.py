@@ -52,7 +52,7 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
             Label of x, always 0.
         """
         tree = Tree.from_swc(self.swcs[idx])
-        x = self.transforms.apply(tree) if self.transforms else tree
+        x = self.transforms(tree) if self.transforms else tree
         return cast(T, x), 0
 
     def __len__(self) -> int:

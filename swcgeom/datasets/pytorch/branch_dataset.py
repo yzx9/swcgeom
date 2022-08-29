@@ -82,7 +82,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_filename(self) -> str:
         """Get filename."""
-        names = self.transforms.get_names() if self.transforms else []
+        names = [str(t) for t in self.transforms] if self.transforms else []
         name = "_".join(["branch_dataset", *names])
         return f"{name}.pt"
 
@@ -95,7 +95,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         for x, y in branch_trees:
             try:
                 brs = x.get_branches()
-                brs = self.transforms.apply_batch(brs) if self.transforms else brs
+                brs = [self.transforms(br) for br in brs] if self.transforms else brs
                 branches.extend(cast(Iterable[T], brs))
             except Exception as ex:
                 warnings.warn(
