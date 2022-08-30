@@ -30,7 +30,7 @@ class Transform(Generic[T, K]):
         return self.__class__.__name__
 
 
-class Transforms(list[Transform[Any, Any]], Generic[T, K]):
+class Transforms(Transform[T, K]):
     """A simple typed wrapper for transforms."""
 
     # fmt:off
@@ -59,16 +59,23 @@ class Transforms(list[Transform[Any, Any]], Generic[T, K]):
                        t7: Transform[T6, Any], /, *transforms: Transform[Any, Any]) -> None: ...
     # fmt:on
 
+    transforms: list[Transform[Any, Any]]
+
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
-        super().__init__(transforms)
+        self.transforms = list(transforms)
 
     def __call__(self, x: T) -> K:
         """Apply transforms."""
-        for transform in self:
+        for transform in self.transforms:
             x = transform(x)
 
         return cast(K, x)
 
+    def __getitem__(self, idx: int) -> Transform[Any, Any]:
+        return self.transforms[idx]
+
     def __repr__(self) -> str:
-        r"""Get name of transforms."""
         return "_".join([str(transform) for transform in self])
+
+    def __len__(self) -> int:
+        return len(self.transforms)

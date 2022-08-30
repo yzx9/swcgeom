@@ -4,7 +4,7 @@ from typing import Generic, TypeVar, cast
 import torch.utils.data
 
 from ...core import Tree
-from ...transforms import Transforms
+from ...transforms import Transform
 
 T = TypeVar("T")
 
@@ -15,12 +15,12 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
     swc_dir: str
     swcs: list[str]
 
-    transforms: Transforms[Tree, T] | None
+    transform: Transform[Tree, T] | None
 
     def __init__(
         self,
         swc_dir: str,
-        transforms: Transforms[Tree, T] | None = None,
+        transform: Transform[Tree, T] | None = None,
     ) -> None:
         """Create tree dataset.
 
@@ -39,7 +39,7 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
         super().__init__()
         self.swc_dir = swc_dir
         self.swcs = self.find_swcs(swc_dir)
-        self.transforms = transforms
+        self.transform = transform
 
     def __getitem__(self, idx: int) -> tuple[T, int]:
         """Get a tree data.
@@ -52,7 +52,7 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
             Label of x, always 0.
         """
         tree = Tree.from_swc(self.swcs[idx])
-        x = self.transforms(tree) if self.transforms else tree
+        x = self.transform(tree) if self.transform else tree
         return cast(T, x), 0
 
     def __len__(self) -> int:

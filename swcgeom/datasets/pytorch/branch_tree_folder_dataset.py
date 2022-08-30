@@ -1,5 +1,5 @@
-from ...core import BranchTree, Tree
-from ...transforms import ToBranchTree, Transforms
+from ...core import BranchTree
+from ...transforms import ToBranchTree
 from .tree_folder_dataset import TreeFolderDataset
 
 
@@ -21,8 +21,7 @@ class BranchTreeFolderDataset(TreeFolderDataset):
         swc_dir : str
             Path of SWC file directory.
         """
-        transforms = Transforms[Tree, BranchTree](ToBranchTree())
-        super().__init__(swc_dir, transforms=transforms)
+        super().__init__(swc_dir, transform=ToBranchTree())
 
     def __getitem__(self, idx: int) -> tuple[BranchTree, int]:
         """Get a branch tree.

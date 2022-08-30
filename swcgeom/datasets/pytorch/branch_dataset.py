@@ -88,8 +88,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_branches(self) -> list[T]:
         """Get all branches."""
-        transforms = Transforms(ToBranchTree())
-        branch_trees = TreeFolderDataset(self.swc_dir, transforms=transforms)
+        branch_trees = TreeFolderDataset(self.swc_dir, transform=ToBranchTree())
         branches = list[T]()
         old_settings = np.seterr(all="raise")
         for x, y in branch_trees:
