@@ -1,5 +1,7 @@
 from typing import Callable, Literal
 
+import numpy as np
+import numpy.typing as npt
 import torch
 
 from ...core import Branch
@@ -12,7 +14,7 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
     channels: str
     channel_first: bool
 
-    fn: Callable[[Branch], torch.Tensor]
+    get_channels: Callable[[Branch], npt.NDArray[np.float64]]
 
     def __init__(
         self, channels: Literal["xyz", "xyzr"] = "xyz", channel_first: bool = True
@@ -28,18 +30,22 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
             shape (N, C).
         """
 
-        super().__init__("tensor")
+        super().__init__()
         self.channels = channels
         self.channel_first = channel_first
 
         match self.channels:
             case "xyz":
-                self.fn = lambda x: torch.from_numpy(x.xyz()).float()
+                self.get_channels = lambda x: x.xyz()
             case "xyzr":
-                self.fn = lambda x: torch.from_numpy(x.xyzr()).float()
+                self.get_channels = lambda x: x.xyzr()
             case _:
-                raise ValueError("invalid channel.")
+                raise ValueError("unsupported channels.")
 
-    def apply(self, x: Branch) -> torch.Tensor:
-        output = self.fn(x)
-        return output.T if self.channel_first else output
+    def __repr__(self) -> str:
+        return f"BranchToTensor-{self.channels}{'-ChannelFirst' if self.channel_first else ''}"
+
+    def __call__(self, x: Branch) -> torch.Tensor:
+        channels = self.get_channels(x)  # (N, C)
+        tensor = torch.from_numpy(channels).float()
+        return tensor.T if self.channel_first else tensor
