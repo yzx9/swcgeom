@@ -7,7 +7,7 @@ import torch
 import torch.utils.data
 
 from ...core import Branch
-from ...transforms import ToBranchTree, Transforms
+from ...transforms import ToBranchTree, Transform
 from .tree_folder_dataset import TreeFolderDataset
 
 T = TypeVar("T")
@@ -18,7 +18,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     swc_dir: str
     save: str | None
-    transforms: Transforms[Branch, T] | None
+    transform: Transform[Branch, T] | None
 
     branches: list[T]
 
@@ -26,7 +26,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         self,
         swc_dir: str,
         save: str | bool = True,
-        transforms: Optional[Transforms[Branch, T]] = None,
+        transform: Transform[Branch, T] | None = None,
     ) -> None:
         """Create branch dataset.
 
@@ -47,7 +47,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         """
 
         self.swc_dir = swc_dir
-        self.transforms = transforms
+        self.transform = transform
 
         if isinstance(save, str):
             self.save = save
@@ -82,9 +82,8 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_filename(self) -> str:
         """Get filename."""
-        names = [str(t) for t in self.transforms] if self.transforms else []
-        name = "_".join(["branch_dataset", *names])
-        return f"{name}.pt"
+        trans_name = f"_{self.transform}" if self.transform else ""
+        return f"BranchDataset{trans_name}.pt"
 
     def get_branches(self) -> list[T]:
         """Get all branches."""
@@ -94,7 +93,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         for x, y in branch_trees:
             try:
                 brs = x.get_branches()
-                brs = [self.transforms(br) for br in brs] if self.transforms else brs
+                brs = [self.transform(br) for br in brs] if self.transform else brs
                 branches.extend(cast(Iterable[T], brs))
             except Exception as ex:
                 warnings.warn(
