@@ -1,9 +1,9 @@
 from typing import Iterable, Literal, NamedTuple, overload
 
-import matplotlib.pyplot as plt
+import matplotlib.axes
+import matplotlib.collections
 import numpy as np
 import numpy.typing as npt
-from matplotlib.collections import LineCollection
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import painter, transforms
@@ -90,10 +90,10 @@ class Branch(list[Tree.Node]):
     def draw(
         self,
         color: str = painter.palette.mizugaki,
-        ax: plt.Axes | None = None,
+        ax: matplotlib.axes.Axes | None = None,
         standardize: bool = True,
         **kwargs,
-    ) -> tuple[plt.Axes, LineCollection]:
+    ) -> tuple[matplotlib.axes.Axes, matplotlib.collections.LineCollection]:
         """Draw neuron branch.
 
         Parameters

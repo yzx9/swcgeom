@@ -3,8 +3,8 @@ import os
 import random
 from typing import Any, Callable, Iterator, Optional, TypeVar, cast, overload
 
+import matplotlib.axes
 import matplotlib.collections
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 import numpy.typing as npt
@@ -131,9 +131,9 @@ class Tree:
     def draw(
         self,
         color: Optional[str] = painter.palette.momo,
-        ax: Optional[plt.Axes] = None,
+        ax: Optional[matplotlib.axes.Axes] = None,
         **kwargs,
-    ) -> tuple[plt.Axes, matplotlib.collections.LineCollection]:
+    ) -> tuple[matplotlib.axes.Axes, matplotlib.collections.LineCollection]:
         """Draw neuron tree.
 
         Parameters
