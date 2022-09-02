@@ -90,7 +90,7 @@ class BranchTree(Tree):
         """
 
         self = cls()
-        self._source = tree._source
+        self.source = tree.source
 
         def reducer(old_id: int, parent_id: Optional[int]) -> list[Tree.Node]:
             node = cls.Node(**tree[old_id])  # make shallow copy

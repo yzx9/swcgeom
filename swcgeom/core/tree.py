@@ -1,17 +1,16 @@
-import functools
 import os
-import random
-from typing import Any, Callable, Iterator, Optional, TypeVar, cast, overload
+from typing import Callable, TypedDict, TypeVar, cast, overload
 
 import matplotlib.axes
 import matplotlib.collections
-import networkx as nx
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import painter
+from .node import Node
+
+__all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
@@ -19,119 +18,94 @@ T, K = TypeVar("T"), TypeVar("K")
 class Tree:
     """A neuron tree, which should be a binary tree in most cases."""
 
-    class Node(dict[str, Any]):
-        """Node of neuron tree"""
+    ndata: dict[str, npt.NDArray]
+    # Need edata?
 
-        def __init__(
-            self,
-            id: int,
-            type: int,
-            x: float,
-            y: float,
-            z: float,
-            r: float,
-            pid: int,
+    source: str | None
+
+    def __init__(
+        self,
+        *,
+        ids: npt.NDArray[np.int32] | None = None,
+        types: npt.NDArray[np.int32] | None = None,
+        x: npt.NDArray[np.float64] | None = None,
+        y: npt.NDArray[np.float64] | None = None,
+        z: npt.NDArray[np.float64] | None = None,
+        r: npt.NDArray[np.float64] | None = None,
+        pid: npt.NDArray[np.int32] | None = None,
+        **kwargs: npt.NDArray,
+    ) -> None:
+        n_nodes = self.number_of_nodes()
+        self.ndata = {
+            "id": np.zeros(n_nodes, dtype=np.int32) if ids is None else ids,
+            "type": np.zeros(n_nodes, dtype=np.int32) if types is None else types,
+            "x": np.zeros(n_nodes, dtype=np.float64) if x is None else x,
+            "y": np.zeros(n_nodes, dtype=np.float64) if y is None else y,
+            "z": np.zeros(n_nodes, dtype=np.float64) if z is None else z,
+            "r": np.ones(n_nodes, dtype=np.float64) if r is None else r,
+            "pid": np.ones(n_nodes, dtype=np.int32) if pid is None else pid,
             **kwargs,
-        ) -> None:
-            super().__init__(id=id, type=type, x=x, y=y, z=z, r=r, pid=pid, **kwargs)
+        }
 
-        # fmt: off
-        @property
-        def id(self) -> int: return self["id"]
-        @id.setter
-        def id(self, v: int): self["id"] = v
-        @property
-        def type(self) -> int: return self["type"]
-        @type.setter
-        def type(self, v: int): self["type"] = v
-        @property
-        def x(self) -> float: return self["x"]
-        @x.setter
-        def x(self, v: float): self["x"] = v
-        @property
-        def y(self) -> float: return self["y"]
-        @y.setter
-        def y(self, v: float): self["y"] = v
-        @property
-        def z(self) -> float: return self["z"]
-        @z.setter
-        def z(self, v: float): self["z"] = v
-        @property
-        def r(self) -> float: return self["r"]
-        @r.setter
-        def r(self, v: float): self["r"] = v
-        @property
-        def pid(self) -> int: return self["pid"]
-        @pid.setter
-        def pid(self, v: int): self["pid"] = v
-        # fmt: on
+        self.source = None
 
-        def xyz(self) -> npt.NDArray[np.float64]:
-            """Get the `x`, `y`, `z` of branch, an array of shape (3,)"""
-            return np.array([self.x, self.y, self.z], dtype=np.float64)
+    def __len__(self) -> int:
+        """Get number of nodes."""
+        return self.number_of_nodes()
 
-        def xyzr(self) -> npt.NDArray[np.float64]:
-            """Get the `x`, `y`, `z`, `r` of branch, an array of shape (4,)"""
-            return np.array([self.x, self.y, self.z, self.r], dtype=np.float64)
+    def __repr__(self) -> str:
+        nodes, edges = self.number_of_nodes(), self.number_of_edges()
+        return f"Neuron Tree with {nodes} nodes and {edges} edges"
 
-        def distance(self, b: "Tree.Node") -> float:
-            """Get the distance of two nodes."""
-            return np.linalg.norm(self.xyz() - b.xyz()).item()
+    def __getitem__(self, idx: int) -> Node:
+        """Get node by id."""
+        return Node(self, idx)
 
-        def format_swc(self) -> str:
-            """Get the SWC format string."""
-            x, y, z, r = ["%.4f" % f for f in [self.x, self.y, self.z, self.r]]
-            items = [self.id, self.type, x, y, z, r, self.pid]
-            return " ".join(map(str, items))
+    # fmt:off
+    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"]
+    def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
+    def x(self)    -> npt.NDArray[np.float64]: return self.ndata["x"]
+    def y(self)    -> npt.NDArray[np.float64]: return self.ndata["y"]
+    def z(self)    -> npt.NDArray[np.float64]: return self.ndata["z"]
+    def r(self)    -> npt.NDArray[np.float64]: return self.ndata["r"]
+    def pid(self)  -> npt.NDArray[np.int32]:   return self.ndata["pid"]
+    # fmt:on
 
-        def __str__(self) -> str:
-            return self.format_swc()
+    def xyz(self) -> npt.NDArray[np.float64]:
+        """Get array of shape(N, 3)"""
+        return np.array([self.x(), self.y(), self.z()])
 
-        @classmethod
-        def from_dataframe_row(cls, row: tuple[Any, ...]) -> Self:
-            """Read node from row of `~pandas.DataFrame`"""
-            keys = ("id", "type", "x", "y", "z", "r", "pid")
-            return cls(*[getattr(row, key) for key in keys])
+    def xyzr(self) -> npt.NDArray[np.float64]:
+        """Get array of shape(N, 4)"""
+        return np.array([self.x(), self.y(), self.z(), self.r()])
 
-    root: int
-    G: nx.DiGraph
-    nodes: dict[int, Node]
-    scale: tuple[float, float, float, float]
-    _source: Optional[str] = None
+    def number_of_nodes(self) -> int:
+        return self.id().shape[0]
 
-    def __init__(self) -> None:
-        self.G = nx.DiGraph()
-        self.root = 1  # default to 1
-        self.scale = (1, 1, 1, 1)
-        self.nodes = {}
+    def number_of_edges(self) -> int:
+        return self.number_of_nodes() - 1
 
     def to_swc(self, swc_path: str) -> None:
         """Write swc file."""
+        ids = self.id()
+        types = self.type()
+        xyzr = self.xyzr()
+        pid = self.pid()
+
+        def format(idx: int) -> str:
+            x, y, z, r = ["%.4f" % f for f in xyzr[idx]]
+            items = [ids[idx], types[idx], x, y, z, r, pid[idx]]
+            return " ".join(map(str, items))
+
         with open(swc_path, "w") as f:
-            if self._source is not None:
-                f.write(f"# source: {self._source}\n")
-
+            f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
             f.write("# id type x y z r pid\n")
-            f.writelines((str(n) + "\n" for n in self))
-
-    def copy(self, G: bool = True) -> Self:
-        """Make a copy.
-
-        Parameters
-        ----------
-        G : bool, default `True`
-            Skip copy G if false.
-        """
-        newTree = Tree()
-        newTree._source = self._source
-        newTree.G = self.G.copy() if G else self.G
-        newTree.nodes = {k: v for k, v in self.nodes.items()} if G else self.nodes
-        return newTree
+            f.writelines(map(format, ids))
 
     def draw(
         self,
-        color: Optional[str] = painter.palette.momo,
-        ax: Optional[matplotlib.axes.Axes] = None,
+        color: str | None = painter.palette.momo,
+        ax: matplotlib.axes.Axes | None = None,
         **kwargs,
     ) -> tuple[matplotlib.axes.Axes, matplotlib.collections.LineCollection]:
         """Draw neuron tree.
@@ -152,24 +126,25 @@ class Tree:
         collection : ~matplotlib.collections.LineCollection
             Drawn line collection.
         """
-        edges = np.array([[self[a].xyz(), self[b].xyz()] for a, b in self.G.edges])
+        xyz = self.xyz()  # (N, 3)
+        edges = np.array([xyz[range(self.number_of_nodes())], xyz[self.pid()]])
         return painter.draw_lines(edges, ax=ax, color=color, **kwargs)
 
-    TraverseEnter = Callable[[Node, Optional[T]], T]
+    TraverseEnter = Callable[[Node, T | None], T]
     TraverseLeave = Callable[[Node, list[T]], T]
 
     # fmt:off
     @overload
     def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
     @overload
-    def traverse(self, *, enter: Optional[TraverseEnter[T]] = None, leave: TraverseLeave[K]) -> K: ...
+    def traverse(self, *, enter: TraverseEnter[T] | None = None, leave: TraverseLeave[K]) -> K: ...
     # fmt:on
 
     def traverse(
         self,
         *,
-        enter: Optional[TraverseEnter[T]] = None,
-        leave: Optional[TraverseLeave[K]] = None,
+        enter: TraverseEnter[T] | None = None,
+        leave: TraverseLeave[K] | None = None,
     ) -> K | None:
         """Traverse each nodes.
 
@@ -179,135 +154,97 @@ class Tree:
             The callback when entering each node, it accepts two parameters,
             the first parameter is the current node, the second parameter is
             the parent's information T, and the root node receives an None.
-        leave : Callable[[Node, Optional[T]], T], optional
+        leave : Callable[[Node, T | None], T], optional
             The callback when leaving each node. When leaving a node, subtree
             has already been traversed. Callback accepts two parameters, the
             first parameter is the current node, the second parameter is the
             children's information T, and the leaf node receives an empty list.
         """
-        return self._traverse(enter, leave, self.root, None)
 
-    def length(self) -> float:
-        """Sum of length of all segments."""
-        return self.traverse(
-            leave=lambda n, acc: sum(acc)
-            + sum(map(lambda b: n.distance(self[b]), self.G.neighbors(n.id)))
-        )
-
-    def random_cut(self, keep_percent: float) -> Self:
-        """Random cut tree.
-
-        Parameters
-        ----------
-        keep_percent : float
-            The percent of preserved segment length.
-
-        Returns
-        -------
-        Tree
-            A new tree.
-        """
-        tree = self.copy()
-        length = (1 - keep_percent) * self.length()
-        while tree.G.size() > 1 and length > 0:
-            nodes = [i for i, d in tree.G.out_degree() if d == 0]
-            i = nodes[random.randint(0, len(nodes) - 1)]
-            predecessors = list(tree.G.predecessors(i))
-            if len(predecessors) == 0:
+        childrenMap = dict[int, list[int]]()
+        for pid in self.pid():
+            if pid == -1:
                 continue
-            length -= tree[predecessors[0]].distance(tree[i])
-            tree.G.remove_node(i)
 
-        return tree
+            childrenMap.setdefault(pid, [])
+            childrenMap[pid].append(pid)
 
-    def normalize(self) -> None:
-        """Normalize neuron tree.
+        def dfs(
+            idx: int,
+            enter: Tree.TraverseEnter[T] | None,
+            leave: Tree.TraverseLeave[K] | None,
+            pre: T | None,
+        ) -> K | None:
+            cur = enter(self[idx], pre) if enter is not None else None
+            children = [dfs(i, enter, leave, cur) for i in childrenMap.get(idx, [])]
+            children = cast(list[K], children)
+            return leave(self[idx], children) if leave is not None else None
 
-        Scale the `x`, `y`, `z`, `r` of nodes to 0-1
-        """
-
-        _min, _max = self.traverse(
-            leave=lambda a, children: functools.reduce(
-                lambda acc, cur: (
-                    np.min(np.stack([acc[0], cur[0]]).transpose(), axis=1),
-                    np.max(np.stack([acc[1], cur[1]]).transpose(), axis=1),
-                ),
-                children,
-                (a.xyzr(), a.xyzr()),
-            )
-        )
-        scale = 1 / (_max - _min)
-        self.scale = tuple(scale)
-
-        def scaler(a: Tree.Node, _):
-            a.x, a.y, a.z, a.r = (a.xyzr() - _min) * scale
-
-        self.traverse(leave=scaler)
-
-    def standardize(self) -> None:
-        raise NotImplementedError()
-
-    def _add_edge(self, id: int, child_id: int) -> None:
-        self.G.add_edge(id, child_id)
-
-    def _add_node(self, node: Node) -> None:
-        self.G.add_node(node.id)
-        self.nodes[node.id] = node
-
-    def _traverse(
-        self,
-        enter: Optional[TraverseEnter[T]],
-        leave: Optional[TraverseLeave[K]],
-        idx: int,
-        pre: Optional[T],
-    ) -> K | None:
-        cur = enter(self[idx], pre) if enter is not None else None
-        children = [self._traverse(enter, leave, i, cur) for i in self.G.neighbors(idx)]
-        return leave(self[idx], cast(list[K], children)) if leave is not None else None
-
-    def __getitem__(self, idx: int) -> Node:
-        """Get node by id."""
-        return self.nodes[idx]
-
-    def __iter__(self) -> Iterator[Node]:
-        """Iter each nodes."""
-        return (self[i] for i in self.G)
-
-    def __len__(self) -> int:
-        """Get number of nodes."""
-        return len(self.G)
-
-    def __str__(self) -> str:
-        nodes, edges = self.G.number_of_nodes(), self.G.number_of_edges()
-        return f"Neuron Tree with {nodes} nodes and {edges} edges"
+        return dfs(0, enter, leave, None)
 
     @classmethod
-    def from_swc(cls, swc_path: str, names: Optional[list[str]] = None) -> Self:
-        """Read neuron tree from swc file."""
+    def copy(cls) -> "Tree":
+        """Make a copy."""
 
-        self = cls()
-        self._source = os.path.abspath(swc_path)
+        new_tree = cls(**{k: v.copy() for k, v in cls.ndata.items()})
+        new_tree.source = cls.source
+        return new_tree
 
-        names = ["id", "type", "x", "y", "z", "r", "pid"] if names is None else names
-        df = pd.read_csv(
-            swc_path,
-            sep=" ",
-            comment="#",
-            names=names,
-            dtype={
-                "id": np.int16,
-                "type": np.int8,
-                "x": np.float64,
-                "y": np.float64,
-                "z": np.float64,
-                "r": np.float64,
-                "pid": np.int16,
-            },
-        )
+    @classmethod
+    def normalize(cls) -> "Tree":
+        """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
+        new_tree = cls.copy()
+        for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
+            max = np.max(new_tree.ndata[key])
+            min = np.min(new_tree.ndata[key])
+            new_tree.ndata[key] = (new_tree.ndata[key] - min) / max
 
-        nodes = [cls.Node.from_dataframe_row(r) for r in df.itertuples()]
-        self.G.add_nodes_from([n.id for n in nodes])
-        self.G.add_edges_from([(n.pid, n.id) for n in nodes if n.pid != -1])
-        self.nodes = {n.id: n for n in nodes}
-        self.root = df.iloc[0]["id"]
-        return self
+        return new_tree
+
+
+SWCNameMap = TypedDict(
+    "SWCNameMap",
+    {"id": str, "type": str, "x": str, "y": str, "z": str, "r": str, "pid": str},
+    total=False,
+)
+
+
+def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
+    """Read neuron tree from swc file.
+
+    Parameters
+    ----------
+    swc_path : str
+        Path of swc file, the id should be consecutively incremented.
+    name_map : dict[str, str]
+        Map standard name to actual name. The standard names are `id`,
+        `type`, `x`, `y`, `z`, `r` and `pid`.
+    """
+
+    def get_name(key: str) -> str:
+        return name_map[key] if name_map and key in name_map else key
+
+    cols = {
+        "id": np.int32,
+        "type": np.int32,
+        "x": np.float64,
+        "y": np.float64,
+        "z": np.float64,
+        "r": np.float64,
+        "pid": np.int32,
+    }
+    names = [get_name(k) for k in cols.keys()]
+    dtype = {get_name(k): v for k, v in cols.items()}
+    df = pd.read_csv(swc_path, sep=" ", comment="#", names=names, dtype=dtype)
+
+    root = df.iloc[0][get_name("id")]
+    if root != 0:
+        df[get_name("id")] = df[get_name("id")] - root
+        df[get_name("pid")] = df[get_name("pid")] - root
+
+    if df.iloc[0][get_name("pid")] != -1:
+        df.iloc[0][get_name("pid")] = -1
+
+    tree = Tree(**{k: df[get_name(k)].to_numpy() for k in cols.keys()})
+    tree.source = os.path.abspath(swc_path)
+    return tree

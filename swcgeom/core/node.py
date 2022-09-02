@@ -114,10 +114,10 @@ class Node(NodeBase):
         self.idx = idx
 
     def __getitem__(self, k: str) -> Any:
-        raise NotImplementedError()
+        return self.tree.ndata[k][self.idx]
 
     def __setitem__(self, k: str, v: Any) -> None:
-        raise NotImplementedError()
+        self.tree.ndata[k][self.idx] = v
 
     # fmt: off
     @property
