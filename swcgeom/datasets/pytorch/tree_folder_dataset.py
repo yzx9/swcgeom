@@ -6,6 +6,8 @@ import torch.utils.data
 from ...core import Tree
 from ...transforms import Transform
 
+__all__ = ["TreeFolderDataset"]
+
 T = TypeVar("T")
 
 

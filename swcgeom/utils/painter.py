@@ -3,7 +3,10 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
+
+__all__ = ["palette", "draw_lines"]
 
 
 @dataclass
@@ -16,8 +19,8 @@ palette = Palette()
 
 
 def draw_lines(
-    lines: npt.NDArray[np.floating], ax: plt.Axes | None = None, **kwargs
-) -> tuple[plt.Axes, LineCollection]:
+    lines: npt.NDArray[np.floating], ax: Axes | None = None, **kwargs
+) -> tuple[Axes, LineCollection]:
     """Draw lines.
 
     Parameters
@@ -51,7 +54,7 @@ def draw_lines(
 
     if ax is None:
         fig, ax = plt.subplots(1, 1)
-    ax.add_collection(collection)
+    ax.add_collection(collection)  # type: ignore
     ax.set_aspect(1)
     ax.autoscale()
     ax.axis("off")

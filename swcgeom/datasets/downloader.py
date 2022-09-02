@@ -7,6 +7,8 @@ from urllib.parse import urljoin
 import bs4
 import urllib3
 
+__all__ = ["download"]
+
 
 def get_page_soup(url: str) -> bs4.BeautifulSoup:
     """Get page."""
@@ -42,7 +44,7 @@ def download_file(dist_dir: str, url: str) -> None:
         file.write(r.data)
 
 
-def download_all(
+def download(
     index_url: str, dist: str, override: bool = False, multiprocess: int = 4
 ) -> None:
     """Download directory from index page.

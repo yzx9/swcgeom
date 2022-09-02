@@ -7,6 +7,8 @@ import torch
 from ...core import Branch
 from ...transforms import Transform
 
+__all__ = ["BranchToTensor"]
+
 
 class BranchToTensor(Transform[Branch, torch.Tensor]):
     """Transform branch to ~torch.Tensor."""

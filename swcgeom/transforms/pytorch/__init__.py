@@ -1,1 +1,1 @@
-from .branch import BranchToTensor
+from .branch import *

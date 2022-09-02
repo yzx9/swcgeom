@@ -1,6 +1,8 @@
 from ..core import Branch
 from .base import Transform
 
+__all__ = ["BranchResampler", "BranchStandardizer"]
+
 
 class BranchResampler(Transform[Branch, Branch]):
     r"""Resample branch."""
@@ -21,13 +23,3 @@ class BranchStandardizer(Transform[Branch, Branch]):
 
     def __call__(self, x: Branch) -> Branch:
         return x.standardize()
-
-
-class BranchStandardize(BranchStandardizer):
-    r"""Standarize branch.
-
-    .. deprecated:: 0.1.8
-       `BranchTreeFolderDataset` will be removed in v0.2.0, because
-       this is a typo, use `BranchStandardizer` instead.
-    """
-    pass

@@ -10,6 +10,8 @@ from ...core import Branch
 from ...transforms import ToBranchTree, Transform
 from .tree_folder_dataset import TreeFolderDataset
 
+__all__ = ["BranchDataset"]
+
 T = TypeVar("T")
 
 
