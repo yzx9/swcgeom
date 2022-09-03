@@ -10,7 +10,7 @@ __all__ = ["Node", "NodeDetached"]
 
 
 class NodeBase:
-    """Node of neuron tree"""
+    """Node of neuron tree."""
 
     def __str__(self) -> str:
         return self.format_swc()
@@ -62,12 +62,14 @@ class NodeBase:
 
     def format_swc(self) -> str:
         """Get the SWC format string."""
-        x, y, z, r = ["%.4f" % f for f in [self.x, self.y, self.z, self.r]]
+        x, y, z, r = [f"{f:.4f}" for f in [self.x, self.y, self.z, self.r]]
         items = [0, self.type, x, y, z, r, 0]  # TODO: id, pid
         return " ".join(map(str, items))
 
 
 class NodeDetached(NodeBase):
+    """Detached node that do not depend on the tree."""
+
     ndata: dict[str, Any]
 
     def __init__(self) -> None:

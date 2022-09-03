@@ -154,7 +154,10 @@ disable=raw-checker-failed,
         useless-suppression,
         deprecated-pragma,
         use-symbolic-message-instead,
-        fixme # Ok, I know here is a todo
+        fixme, # OK, I know here is a todo
+        missing-function-docstring, # as much as possible, but sometime unnecessary
+        multiple-statements, # black will check it
+        line-too-long # black will check it
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -182,7 +185,7 @@ argument-naming-style=snake_case
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style. If left empty, argument names will be checked with the set
 # naming style.
-#argument-rgx=
+argument-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
 
 # Naming style matching correct attribute names.
 attr-naming-style=snake_case
@@ -190,7 +193,7 @@ attr-naming-style=snake_case
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style. If left empty, attribute names will be checked with the set naming
 # style.
-#attr-rgx=
+attr-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
 
 # Bad variable names which should always be refused, separated by a comma.
 bad-names=foo,
@@ -253,7 +256,8 @@ good-names=i,
            k,
            ex,
            Run,
-           _
+           _,
+           T
 
 # Good variable names regexes, separated by a comma. If names match any regex,
 # they will always be accepted
@@ -307,7 +311,7 @@ variable-naming-style=snake_case
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style. If left empty, variable names will be checked with the set
 # naming style.
-#variable-rgx=
+variable-rgx=^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$
 
 
 [TYPECHECK]
@@ -320,7 +324,7 @@ contextmanager-decorators=contextlib.contextmanager
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E1101 when accessed. Python regular
 # expressions are accepted.
-generated-members=
+generated-members=numpy.*,torch.*
 
 # Tells whether to warn about missing members when the owner of the attribute
 # is inferred to be None.
@@ -576,7 +580,7 @@ never-returning-functions=sys.exit,argparse.parse_error
 
 # The type of string formatting that logging methods do. `old` means using %
 # formatting, `new` is for `{}` formatting.
-logging-format-style=old
+logging-format-style=new
 
 # Logging modules to check that the string format arguments are in logging
 # function parameter format.

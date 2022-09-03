@@ -1,3 +1,5 @@
+"""3D geometry transformations."""
+
 import numpy as np
 import numpy.typing as npt
 
@@ -67,8 +69,8 @@ def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float32]:
 
 def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
     r"""Get the 3D rotation transfomation matrix.
-    
-    Rotate v with axis n by an angle theta according to the right hand rule, 
+
+    Rotate v with axis n by an angle theta according to the right hand rule,
     follow rodrigues' rotaion formula.
 
     .. math::
@@ -105,7 +107,7 @@ def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
             [-ny, nx, 0],
         ],
         dtype=np.float32,
-    )
+    )  # pylint: disable=invalid-name
 
     return (
         np.cos(theta) * np.identity(4)

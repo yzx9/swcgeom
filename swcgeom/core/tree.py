@@ -1,3 +1,5 @@
+"""Neuron tree."""
+
 import os
 from typing import Callable, TypedDict, TypeVar, cast, overload
 
@@ -79,10 +81,10 @@ class Tree:
         """Get array of shape(N, 4)"""
         return np.array([self.x(), self.y(), self.z(), self.r()])
 
-    def number_of_nodes(self) -> int:
+    def number_of_nodes(self) -> int:  # pylint: disable=missing-function-docstring
         return self.id().shape[0]
 
-    def number_of_edges(self) -> int:
+    def number_of_edges(self) -> int:  # pylint: disable=missing-function-docstring
         return self.number_of_nodes() - 1
 
     def to_swc(self, swc_path: str) -> None:
@@ -92,15 +94,15 @@ class Tree:
         xyzr = self.xyzr()
         pid = self.pid()
 
-        def format(idx: int) -> str:
-            x, y, z, r = ["%.4f" % f for f in xyzr[idx]]
+        def get_line_str(idx: int) -> str:
+            x, y, z, r = [f"{f:.4f}" for f in xyzr[idx]]
             items = [ids[idx], types[idx], x, y, z, r, pid[idx]]
             return " ".join(map(str, items))
 
-        with open(swc_path, "w") as f:
+        with open(swc_path, "w", encoding="utf-8") as f:
             f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
             f.write("# id type x y z r pid\n")
-            f.writelines(map(format, ids))
+            f.writelines(map(get_line_str, ids))
 
     def draw(
         self,
@@ -161,13 +163,13 @@ class Tree:
             children's information T, and the leaf node receives an empty list.
         """
 
-        childrenMap = dict[int, list[int]]()
+        children_map = dict[int, list[int]]()
         for pid in self.pid():
             if pid == -1:
                 continue
 
-            childrenMap.setdefault(pid, [])
-            childrenMap[pid].append(pid)
+            children_map.setdefault(pid, [])
+            children_map[pid].append(pid)
 
         def dfs(
             idx: int,
@@ -176,7 +178,7 @@ class Tree:
             pre: T | None,
         ) -> K | None:
             cur = enter(self[idx], pre) if enter is not None else None
-            children = [dfs(i, enter, leave, cur) for i in childrenMap.get(idx, [])]
+            children = [dfs(i, enter, leave, cur) for i in children_map.get(idx, [])]
             children = cast(list[K], children)
             return leave(self[idx], children) if leave is not None else None
 
@@ -195,9 +197,9 @@ class Tree:
         """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
         new_tree = cls.copy()
         for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
-            max = np.max(new_tree.ndata[key])
-            min = np.min(new_tree.ndata[key])
-            new_tree.ndata[key] = (new_tree.ndata[key] - min) / max
+            v_max = np.max(new_tree.ndata[key])
+            v_min = np.min(new_tree.ndata[key])
+            new_tree.ndata[key] = (new_tree.ndata[key] - v_min) / v_max
 
         return new_tree
 
@@ -233,7 +235,7 @@ def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
         "r": np.float32,
         "pid": np.int32,
     }
-    names = [get_name(k) for k in cols.keys()]
+    names = [get_name(k) for k in cols]
     dtype = {get_name(k): v for k, v in cols.items()}
     df = pd.read_csv(swc_path, sep=" ", comment="#", names=names, dtype=dtype)
 
@@ -245,6 +247,6 @@ def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
     if df.iloc[0][get_name("pid")] != -1:
         df.iloc[0][get_name("pid")] = -1
 
-    tree = Tree(**{k: df[get_name(k)].to_numpy() for k in cols.keys()})
+    tree = Tree(**{k: df[get_name(k)].to_numpy() for k in cols})
     tree.source = os.path.abspath(swc_path)
     return tree

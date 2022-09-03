@@ -1,3 +1,5 @@
+"""Painter utils."""
+
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
@@ -11,6 +13,8 @@ __all__ = ["palette", "draw_lines"]
 
 @dataclass
 class Palette:
+    """Palette dataclasss."""
+
     momo: str = "#F596AA"
     mizugaki: str = "#B9887D"
 
@@ -53,7 +57,7 @@ def draw_lines(
     collection = LineCollection(edges, **kwargs)  # type: ignore
 
     if ax is None:
-        fig, ax = plt.subplots(1, 1)
+        fig, ax = plt.subplots(1, 1)  # pylint: disable=unused-variable
     ax.add_collection(collection)  # type: ignore
     ax.set_aspect(1)
     ax.autoscale()

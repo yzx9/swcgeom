@@ -1,11 +1,13 @@
+"""Transformation in tree."""
+
 from typing import Any, Generic, TypeVar, cast, overload
 
 __all__ = ["Transform", "Transforms"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
-T1, T2, T3 = TypeVar("T1"), TypeVar("T2"), TypeVar("T3")
-T4, T5, T6 = TypeVar("T4"), TypeVar("T5"), TypeVar("T6")
+T1, T2, T3 = TypeVar("T1"), TypeVar("T2"), TypeVar("T3")  # pylint: disable=invalid-name
+T4, T5, T6 = TypeVar("T4"), TypeVar("T5"), TypeVar("T6")  # pylint: disable=invalid-name
 
 
 class Transform(Generic[T, K]):

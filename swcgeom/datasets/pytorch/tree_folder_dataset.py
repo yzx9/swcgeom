@@ -1,3 +1,5 @@
+"""Tree Folder Dataset."""
+
 import os
 from typing import Generic, TypeVar, cast
 
@@ -65,7 +67,7 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
     def find_swcs(swc_dir: str) -> list[str]:
         """Find all swc files."""
         swcs = list[str]()
-        for root, dirs, files in os.walk(swc_dir):
+        for root, dirs, files in os.walk(swc_dir):  # pylint: disable=unused-variable
             files = [f for f in files if os.path.splitext(f)[-1] == ".swc"]
             swcs.extend([os.path.join(root, f) for f in files])
 

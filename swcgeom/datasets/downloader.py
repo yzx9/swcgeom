@@ -1,3 +1,5 @@
+"""Download helpers."""
+
 import itertools
 import logging
 import multiprocessing
@@ -34,6 +36,7 @@ def get_all_file_urls(url: str) -> list[str]:
 
 
 def download_file(dist_dir: str, url: str) -> None:
+    """Download a file."""
     conn = urllib3.connection_from_url(url)
     r = conn.request("GET", url)
     name = url.split("/")[-1]
@@ -68,24 +71,24 @@ def download(
         "downloader: search `{}`, found {} files.", index_url, len(all_file_urls)
     )
 
-    def download(dist: str, url: str) -> None:
+    def _download(dist: str, url: str) -> None:
         file_dist = url.removeprefix(index_url)
         components = file_dist.split("/")[:-1]
-        dir = os.path.join(dist, *components)
+        dist_dir = os.path.join(dist, *components)
         if os.path.exists(file_dist):
             if not override:
                 return
 
-            logging.info("downloader: file `{}` exits, deleted.", dir)
+            logging.info("downloader: file `{}` exits, deleted.", dist_dir)
             os.remove(file_dist)
 
         try:
-            logging.info("downloader: downloading `{}` to `{}`", url, dir)
-            download_file(dir, url)
+            logging.info("downloader: downloading `{}` to `{}`", url, dist_dir)
+            download_file(dist_dir, url)
 
-            logging.info("downloader: download `{}` to `{}`", url, dir)
-        except Exception as ex:
+            logging.info("downloader: download `{}` to `{}`", url, dist_dir)
+        except Exception as ex:  # pylint: disable=broad-except
             logging.info("downloader: fails to download `{}`, except `{}`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
-        p.map(lambda url: download(dist, url), all_file_urls)
+        p.map(lambda url: _download(dist, url), all_file_urls)

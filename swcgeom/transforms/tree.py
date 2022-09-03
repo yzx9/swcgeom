@@ -1,3 +1,5 @@
+"""Transformation in tree."""
+
 from ..core import BranchTree, Tree
 from .base import Transform
 

@@ -1,3 +1,5 @@
+"""Transformation in branch."""
+
 from ..core import Branch
 from .base import Transform
 

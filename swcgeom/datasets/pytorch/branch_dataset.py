@@ -1,6 +1,8 @@
+"""Branch Dataset."""
+
 import os
 import warnings
-from typing import Generic, Iterable, Optional, TypeVar, cast
+from typing import Generic, Iterable, TypeVar, cast
 
 import numpy as np
 import torch
@@ -92,12 +94,12 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         branch_trees = TreeFolderDataset(self.swc_dir, transform=ToBranchTree())
         branches = list[T]()
         old_settings = np.seterr(all="raise")
-        for x, y in branch_trees:
+        for x, y in branch_trees:  # pylint: disable=unused-variable
             try:
                 brs = x.get_branches()
                 brs = [self.transform(br) for br in brs] if self.transform else brs
                 branches.extend(cast(Iterable[T], brs))
-            except Exception as ex:
+            except Exception as ex:  # pylint: disable=broad-except
                 warnings.warn(
                     f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}"
                 )
