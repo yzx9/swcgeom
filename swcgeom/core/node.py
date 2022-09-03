@@ -15,40 +15,46 @@ class NodeBase:
     def __str__(self) -> str:
         return self.format_swc()
 
+    def __getitem__(self, k: str) -> Any:
+        raise NotImplementedError()
+
+    def __setitem__(self, k: str, v: Any) -> Any:
+        raise NotImplementedError()
+
     # fmt: off
     @property
-    def type(self) -> int: raise NotImplementedError()
+    def type(self) -> int: return self["type"]
     @type.setter
-    def type(self, v: int) -> None: raise NotImplementedError()
+    def type(self, v: int): self["type"] = v
 
     @property
-    def x(self) -> float: raise NotImplementedError()
+    def x(self) -> float: return self["x"]
     @x.setter
-    def x(self, v: float) -> None: raise NotImplementedError()
+    def x(self, v: float): self["x"] = v
 
     @property
-    def y(self) -> float: raise NotImplementedError()
+    def y(self) -> float: return self["y"]
     @y.setter
-    def y(self, v: float) -> None: raise NotImplementedError()
+    def y(self, v: float): self["y"] = v
 
     @property
-    def z(self) -> float: raise NotImplementedError()
+    def z(self) -> float: return self["z"]
     @z.setter
-    def z(self, v: float) -> None: raise NotImplementedError()
+    def z(self, v: float): self["z"] = v
 
     @property
-    def r(self) -> float: raise NotImplementedError()
+    def r(self) -> float: return self["r"]
     @r.setter
-    def r(self, v: float) -> None: raise NotImplementedError()
+    def r(self, v: float): self["r"] = v
     # fmt: on
 
-    def xyz(self) -> npt.NDArray[np.float64]:
+    def xyz(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z` of branch, an array of shape (3,)"""
-        return np.array([self.x, self.y, self.z], dtype=np.float64)
+        return np.array([self.x, self.y, self.z], dtype=np.float32)
 
-    def xyzr(self) -> npt.NDArray[np.float64]:
+    def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z`, `r` of branch, an array of shape (4,)"""
-        return np.array([self.x, self.y, self.z, self.r], dtype=np.float64)
+        return np.array([self.x, self.y, self.z, self.r], dtype=np.float32)
 
     def distance(self, b: "NodeBase") -> float:
         """Get the distance of two nodes."""
@@ -74,33 +80,6 @@ class NodeDetached(NodeBase):
     def __setitem__(self, k: str, v: Any) -> Any:
         self.ndata[k] = v
 
-    # fmt: off
-    @property
-    def type(self) -> int: return self["type"]
-    @type.setter
-    def type(self, v: int): self["type"] = v
-
-    @property
-    def x(self) -> float: return self["x"]
-    @x.setter
-    def x(self, v: float): self["x"] = v
-
-    @property
-    def y(self) -> float: return self["y"]
-    @y.setter
-    def y(self, v: float): self["y"] = v
-
-    @property
-    def z(self) -> float: return self["z"]
-    @z.setter
-    def z(self, v: float): self["z"] = v
-
-    @property
-    def r(self) -> float: return self["r"]
-    @r.setter
-    def r(self, v: float): self["r"] = v
-    # fmt: on
-
 
 class Node(NodeBase):
     """Node of neuron tree"""
@@ -118,30 +97,3 @@ class Node(NodeBase):
 
     def __setitem__(self, k: str, v: Any) -> None:
         self.tree.ndata[k][self.idx] = v
-
-    # fmt: off
-    @property
-    def type(self) -> int: return self["type"]
-    @type.setter
-    def type(self, v: int): self["type"] = v
-
-    @property
-    def x(self) -> float: return self["x"]
-    @x.setter
-    def x(self, v: float): self["x"] = v
-
-    @property
-    def y(self) -> float: return self["y"]
-    @y.setter
-    def y(self, v: float): self["y"] = v
-
-    @property
-    def z(self) -> float: return self["z"]
-    @z.setter
-    def z(self, v: float): self["z"] = v
-
-    @property
-    def r(self) -> float: return self["r"]
-    @r.setter
-    def r(self, v: float): self["r"] = v
-    # fmt: on

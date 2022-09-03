@@ -16,7 +16,7 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
     channels: str
     channel_first: bool
 
-    get_channels: Callable[[Branch], npt.NDArray[np.float64]]
+    get_channels: Callable[[Branch], npt.NDArray[np.float32]]
 
     def __init__(
         self, channels: Literal["xyz", "xyzr"] = "xyz", channel_first: bool = True

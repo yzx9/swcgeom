@@ -27,65 +27,65 @@ class Branch(list[Tree.Node]):
         super().__init__(nodes)
         self.scale = Scale(1, 1, 1, 1)
 
-    def x(self) -> npt.NDArray[np.float64]:
+    def x(self) -> npt.NDArray[np.float32]:
         """Get the `x` of branch.
 
         Returns
         -------
-        x : np.ndarray[np.float64]
+        x : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.x for n in self], dtype=np.float64)
+        return np.array([n.x for n in self], dtype=np.float32)
 
-    def y(self) -> npt.NDArray[np.float64]:
+    def y(self) -> npt.NDArray[np.float32]:
         """Get the `y` of branch.
 
         Returns
         -------
-        y : np.ndarray[np.float64]
+        y : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.y for n in self], dtype=np.float64)
+        return np.array([n.y for n in self], dtype=np.float32)
 
-    def z(self) -> npt.NDArray[np.float64]:
+    def z(self) -> npt.NDArray[np.float32]:
         """Get the `z` of branch.
 
         Returns
         -------
-        z : np.ndarray[np.float64]
+        z : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.z for n in self], dtype=np.float64)
+        return np.array([n.z for n in self], dtype=np.float32)
 
-    def r(self) -> npt.NDArray[np.float64]:
+    def r(self) -> npt.NDArray[np.float32]:
         """Get the `r` of branch.
 
         Returns
         -------
-        r : np.ndarray[np.float64]
+        r : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.r for n in self], dtype=np.float64)
+        return np.array([n.r for n in self], dtype=np.float32)
 
-    def xyz(self) -> npt.NDArray[np.float64]:
+    def xyz(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z` of branch.
 
         Returns
         -------
-        xyz : np.ndarray[np.float64]
+        xyz : np.ndarray[np.float32]
             An array of shape (n_sample, 3).
         """
-        return np.array([n.xyz() for n in self], dtype=np.float64)
+        return np.array([n.xyz() for n in self], dtype=np.float32)
 
-    def xyzr(self) -> npt.NDArray[np.float64]:
+    def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z`, `r` of branch.
 
         Returns
         -------
-        xyzr : np.ndarray[np.float64]
+        xyzr : np.ndarray[np.float32]
             An array of shape (n_sample, 4).
         """
-        return np.array([n.xyzr() for n in self], dtype=np.float64)
+        return np.array([n.xyzr() for n in self], dtype=np.float32)
 
     def draw(
         self,
@@ -179,7 +179,7 @@ class Branch(list[Tree.Node]):
         """Distance between start point and end point."""
         return float(np.linalg.norm(self[-1].xyz() - self[0].xyz()))
 
-    def _standardize(self) -> tuple[npt.NDArray[np.float64], Scale]:
+    def _standardize(self) -> tuple[npt.NDArray[np.float32], Scale]:
         xyzr = self.xyzr()
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
         T, s = self.get_standardize_matrix(xyzr)
@@ -195,12 +195,12 @@ class Branch(list[Tree.Node]):
         return f"Neuron branch with {len(self)} nodes."
 
     @classmethod
-    def from_numpy(cls, xyzr: npt.NDArray[np.float64]) -> Self:
+    def from_numpy(cls, xyzr: npt.NDArray[np.float32]) -> Self:
         """Create a branch from ~numpy.ndarray.
 
         Parameters
         ----------
-        xyzr : npt.NDArray[np.float64]
+        xyzr : npt.NDArray[np.float32]
             Collection of nodes. If shape (n, 4), both `x`, `y`, `z`, `r` of
             nodes is enabled. If shape (n, 3), only `x`, `y`, `z` is enabled
             and `r` will fill by 1.
@@ -219,12 +219,12 @@ class Branch(list[Tree.Node]):
         return cls(nodes)
 
     @classmethod
-    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float64]) -> list[Self]:
+    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
         """Create list of branch form ~numpy.ndarray.
 
         Parameters
         ----------
-        xyzr : npt.NDArray[np.float64]
+        xyzr : npt.NDArray[np.float32]
             Batch of collection of nodes. If shape (bs, n, 4), both `x`, `y`,
             `z`, `r` of nodes is enabled. If shape (bs, n, 3), only `x`, `y`,
             `z` is enabled and `r` will fill by 1.
@@ -249,13 +249,13 @@ class Branch(list[Tree.Node]):
 
     @staticmethod
     def resample_linear(
-        xyzr: npt.NDArray[np.float64], num: int
-    ) -> npt.NDArray[np.float64]:
+        xyzr: npt.NDArray[np.float32], num: int
+    ) -> npt.NDArray[np.float32]:
         """Resampling by linear interpolation, DO NOT keep original node.
 
         Parameters
         ----------
-        xyzr : np.ndarray[np.float64]
+        xyzr : np.ndarray[np.float32]
             The array of shape (N, 4).
         num : int
             Number of nodes after resample.
@@ -278,8 +278,8 @@ class Branch(list[Tree.Node]):
 
     @staticmethod
     def get_standardize_matrix(
-        xyzr: npt.NDArray[np.float64],
-    ) -> tuple[npt.NDArray[np.float64], Scale]:
+        xyzr: npt.NDArray[np.float32],
+    ) -> tuple[npt.NDArray[np.float32], Scale]:
         """Get standarize transformation matrix.
 
         Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
@@ -287,12 +287,12 @@ class Branch(list[Tree.Node]):
 
         Parameters
         ----------
-        xyzr : np.ndarray[np.float64]
+        xyzr : np.ndarray[np.float32]
             The `x`, `y`, `z`, `r` matrix of shape (N, 4) of branch.
 
         Returns
         -------
-        T : np.ndarray[np.float64]
+        T : np.ndarray[np.float32]
             An homogeneous transfomation matrix of shape (4, 4).
         scale : float
             Scale ratio.

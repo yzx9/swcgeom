@@ -28,10 +28,10 @@ class Tree:
         *,
         ids: npt.NDArray[np.int32] | None = None,
         types: npt.NDArray[np.int32] | None = None,
-        x: npt.NDArray[np.float64] | None = None,
-        y: npt.NDArray[np.float64] | None = None,
-        z: npt.NDArray[np.float64] | None = None,
-        r: npt.NDArray[np.float64] | None = None,
+        x: npt.NDArray[np.float32] | None = None,
+        y: npt.NDArray[np.float32] | None = None,
+        z: npt.NDArray[np.float32] | None = None,
+        r: npt.NDArray[np.float32] | None = None,
         pid: npt.NDArray[np.int32] | None = None,
         **kwargs: npt.NDArray,
     ) -> None:
@@ -39,10 +39,10 @@ class Tree:
         self.ndata = {
             "id": np.zeros(n_nodes, dtype=np.int32) if ids is None else ids,
             "type": np.zeros(n_nodes, dtype=np.int32) if types is None else types,
-            "x": np.zeros(n_nodes, dtype=np.float64) if x is None else x,
-            "y": np.zeros(n_nodes, dtype=np.float64) if y is None else y,
-            "z": np.zeros(n_nodes, dtype=np.float64) if z is None else z,
-            "r": np.ones(n_nodes, dtype=np.float64) if r is None else r,
+            "x": np.zeros(n_nodes, dtype=np.float32) if x is None else x,
+            "y": np.zeros(n_nodes, dtype=np.float32) if y is None else y,
+            "z": np.zeros(n_nodes, dtype=np.float32) if z is None else z,
+            "r": np.ones(n_nodes, dtype=np.float32) if r is None else r,
             "pid": np.ones(n_nodes, dtype=np.int32) if pid is None else pid,
             **kwargs,
         }
@@ -64,18 +64,18 @@ class Tree:
     # fmt:off
     def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"]
     def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
-    def x(self)    -> npt.NDArray[np.float64]: return self.ndata["x"]
-    def y(self)    -> npt.NDArray[np.float64]: return self.ndata["y"]
-    def z(self)    -> npt.NDArray[np.float64]: return self.ndata["z"]
-    def r(self)    -> npt.NDArray[np.float64]: return self.ndata["r"]
+    def x(self)    -> npt.NDArray[np.float32]: return self.ndata["x"]
+    def y(self)    -> npt.NDArray[np.float32]: return self.ndata["y"]
+    def z(self)    -> npt.NDArray[np.float32]: return self.ndata["z"]
+    def r(self)    -> npt.NDArray[np.float32]: return self.ndata["r"]
     def pid(self)  -> npt.NDArray[np.int32]:   return self.ndata["pid"]
     # fmt:on
 
-    def xyz(self) -> npt.NDArray[np.float64]:
+    def xyz(self) -> npt.NDArray[np.float32]:
         """Get array of shape(N, 3)"""
         return np.array([self.x(), self.y(), self.z()])
 
-    def xyzr(self) -> npt.NDArray[np.float64]:
+    def xyzr(self) -> npt.NDArray[np.float32]:
         """Get array of shape(N, 4)"""
         return np.array([self.x(), self.y(), self.z(), self.r()])
 
@@ -227,10 +227,10 @@ def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
     cols = {
         "id": np.int32,
         "type": np.int32,
-        "x": np.float64,
-        "y": np.float64,
-        "z": np.float64,
-        "r": np.float64,
+        "x": np.float32,
+        "y": np.float32,
+        "z": np.float32,
+        "r": np.float32,
         "pid": np.int32,
     }
     names = [get_name(k) for k in cols.keys()]
