@@ -1,4 +1,6 @@
-from typing import Iterable, Literal, NamedTuple, overload
+"""Branch is a set of node points."""
+
+from typing import Any, Literal, NamedTuple, cast, overload
 
 import matplotlib.axes
 import matplotlib.collections
@@ -6,13 +8,13 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
-from ..utils import painter, transforms
-from .tree import Tree
+from ..utils import padding1d, painter, transforms
+from ._node import NodeAttached
 
 Scale = NamedTuple("Scale", x=float, y=float, z=float, r=float)
 
 
-class Branch(list[Tree.Node]):
+class Branch:
     """A branch of neuron tree.
 
     Notes
@@ -21,51 +23,82 @@ class Branch(list[Tree.Node]):
     `r`, but the `id` and `type` is usually invalid.
     """
 
-    scale: Scale
+    class Node(NodeAttached["Branch"]):
+        """Node of branch."""
 
-    def __init__(self, nodes: Iterable[Tree.Node]) -> None:
-        super().__init__(nodes)
-        self.scale = Scale(1, 1, 1, 1)
+    ndata: dict[str, npt.NDArray[Any]]
+
+    def __init__(
+        self,
+        n_nodes: int,
+        *,
+        typee: npt.NDArray[np.int32] | None = None,
+        x: npt.NDArray[np.float32] | None = None,
+        y: npt.NDArray[np.float32] | None = None,
+        z: npt.NDArray[np.float32] | None = None,
+        r: npt.NDArray[np.float32] | None = None,
+        **kwargs: npt.NDArray,
+    ) -> None:
+        self.ndata = {
+            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
+            "type": padding1d(n_nodes, typee, dtype=np.int32),
+            "x": padding1d(n_nodes, x),
+            "y": padding1d(n_nodes, y),
+            "z": padding1d(n_nodes, z),
+            "r": padding1d(n_nodes, r, padding_value=1),
+            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
+            **kwargs,
+        }
+
+    def __len__(self) -> int:
+        """Get the number of nodes."""
+        return self.x().shape[0]
+
+    def __repr__(self) -> str:
+        return f"Neuron branch with {len(self)} nodes."
+
+    def __getitem__(self, idx: int) -> Node:
+        return self.Node(self, idx)
 
     def x(self) -> npt.NDArray[np.float32]:
-        """Get the `x` of branch.
+        """Get the x-coordinates of nodes of branch.
 
         Returns
         -------
         x : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.x for n in self], dtype=np.float32)
+        return self.ndata["x"]
 
     def y(self) -> npt.NDArray[np.float32]:
-        """Get the `y` of branch.
+        """Get the y-coordinates of nodes of branch.
 
         Returns
         -------
         y : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.y for n in self], dtype=np.float32)
+        return self.ndata["y"]
 
     def z(self) -> npt.NDArray[np.float32]:
-        """Get the `z` of branch.
+        """Get the z-coordinates of nodes of branch.
 
         Returns
         -------
         z : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.z for n in self], dtype=np.float32)
+        return self.ndata["z"]
 
     def r(self) -> npt.NDArray[np.float32]:
-        """Get the `r` of branch.
+        """Get the radius of nodes of branch.
 
         Returns
         -------
         r : np.ndarray[np.float32]
             An array of shape (n_sample,).
         """
-        return np.array([n.r for n in self], dtype=np.float32)
+        return self.ndata["r"]
 
     def xyz(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z` of branch.
@@ -75,7 +108,7 @@ class Branch(list[Tree.Node]):
         xyz : np.ndarray[np.float32]
             An array of shape (n_sample, 3).
         """
-        return np.array([n.xyz() for n in self], dtype=np.float32)
+        return np.array([self.x(), self.y(), self.z()])
 
     def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z`, `r` of branch.
@@ -85,7 +118,7 @@ class Branch(list[Tree.Node]):
         xyzr : np.ndarray[np.float32]
             An array of shape (n_sample, 4).
         """
-        return np.array([n.xyzr() for n in self], dtype=np.float32)
+        return np.array([self.x(), self.y(), self.z(), self.r()])
 
     def draw(
         self,
@@ -165,19 +198,17 @@ class Branch(list[Tree.Node]):
         and scale max radius to 1.
         """
 
-        new_xyzr, scale = self._standardize()
-        branch = Branch.from_numpy(new_xyzr)
-        branch.scale = scale
-        return branch
+        new_xyzr, _ = self._standardize()
+        return Branch.from_numpy(new_xyzr)
 
     def length(self) -> float:
         """Sum of length of stems."""
         xyz = self.xyz()
-        return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1))
+        return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1)).item()
 
     def straight_line_distance(self) -> float:
         """Distance between start point and end point."""
-        return float(np.linalg.norm(self[-1].xyz() - self[0].xyz()))
+        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
 
     def _standardize(self) -> tuple[npt.NDArray[np.float32], Scale]:
         xyzr = self.xyzr()
@@ -189,10 +220,7 @@ class Branch(list[Tree.Node]):
         new_xyz = np.dot(T, xyz4)[0:3, :].transpose()
         new_xyzr = np.concatenate([new_xyz, r * s.r], axis=1)
 
-        return new_xyzr, Scale(*np.multiply(s, self.scale))
-
-    def __str__(self) -> str:
-        return f"Neuron branch with {len(self)} nodes."
+        return new_xyzr, s
 
     @classmethod
     def from_numpy(cls, xyzr: npt.NDArray[np.float32]) -> Self:
@@ -209,14 +237,12 @@ class Branch(list[Tree.Node]):
         assert xyzr.shape[1] >= 3
 
         if xyzr.shape[1] == 3:
-            ones = np.ones([xyzr.shape[0], 1])
+            ones = np.ones([xyzr.shape[0], 1], dtype=np.float32)
             xyzr = np.concatenate([xyzr, ones], axis=1)
 
-        nodes = [
-            Tree.Node(i, 0, x, y, z, r, i - 1)
-            for i, (x, y, z, r) in zip(range(xyzr.shape[0]), xyzr[:, 0:4])
-        ]
-        return cls(nodes)
+        return cls(
+            xyzr.shape[0], x=xyzr[:, 0], y=xyzr[:, 1], z=xyzr[:, 2], r=xyzr[:, 3]
+        )
 
     @classmethod
     def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
@@ -234,16 +260,22 @@ class Branch(list[Tree.Node]):
         assert xyzr_batch.shape[1] >= 3
 
         if xyzr_batch.shape[2] == 3:
-            ones = np.ones([xyzr_batch.shape[0], xyzr_batch.shape[1], 1])
+            ones = np.ones(
+                [xyzr_batch.shape[0], xyzr_batch.shape[1], 1], dtype=np.float32
+            )
             xyzr_batch = np.concatenate([xyzr_batch, ones], axis=2)
 
         branches = list[Branch]()
         for xyzr in xyzr_batch:
-            nodes = [
-                Tree.Node(i, 0, x, y, z, r, i - 1)
-                for i, (x, y, z, r) in zip(range(xyzr.shape[0]), xyzr[:, 0:4])
-            ]
-            branches.append(Branch(nodes))
+            branches.append(
+                cls(
+                    xyzr.shape[0],
+                    x=xyzr[:, 0],
+                    y=xyzr[:, 1],
+                    z=xyzr[:, 2],
+                    r=xyzr[:, 3],
+                )
+            )
 
         return branches
 
@@ -274,7 +306,7 @@ class Branch(list[Tree.Node]):
         y = np.interp(xvals, xp, xyzr[:, 1])
         z = np.interp(xvals, xp, xyzr[:, 2])
         r = np.interp(xvals, xp, xyzr[:, 3])
-        return np.stack([x, y, z, r], axis=1)
+        return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
 
     @staticmethod
     def get_standardize_matrix(

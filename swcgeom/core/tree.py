@@ -7,118 +7,30 @@ import matplotlib.collections
 import numpy as np
 import numpy.typing as npt
 
-from ..utils import painter
+from ..utils import painter, padding1d
+from ._node import NodeAttached
 
-__all__ = ["Tree", "Node", "NodeDetached"]
+__all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
-
-
-class NodeBase:
-    """Node of neuron tree."""
-
-    def __str__(self) -> str:
-        return self.format_swc()
-
-    def __getitem__(self, k: str) -> Any:
-        raise NotImplementedError()
-
-    def __setitem__(self, k: str, v: Any) -> Any:
-        raise NotImplementedError()
-
-    # fmt: off
-    @property
-    def type(self) -> int: return self["type"]
-    @type.setter
-    def type(self, v: int): self["type"] = v
-
-    @property
-    def x(self) -> float: return self["x"]
-    @x.setter
-    def x(self, v: float): self["x"] = v
-
-    @property
-    def y(self) -> float: return self["y"]
-    @y.setter
-    def y(self, v: float): self["y"] = v
-
-    @property
-    def z(self) -> float: return self["z"]
-    @z.setter
-    def z(self, v: float): self["z"] = v
-
-    @property
-    def r(self) -> float: return self["r"]
-    @r.setter
-    def r(self, v: float): self["r"] = v
-    # fmt: on
-
-    def xyz(self) -> npt.NDArray[np.float32]:
-        """Get the `x`, `y`, `z` of branch, an array of shape (3,)"""
-        return np.array([self.x, self.y, self.z], dtype=np.float32)
-
-    def xyzr(self) -> npt.NDArray[np.float32]:
-        """Get the `x`, `y`, `z`, `r` of branch, an array of shape (4,)"""
-        return np.array([self.x, self.y, self.z, self.r], dtype=np.float32)
-
-    def distance(self, b: "NodeBase") -> float:
-        """Get the distance of two nodes."""
-        return np.linalg.norm(self.xyz() - b.xyz()).item()
-
-    def format_swc(self) -> str:
-        """Get the SWC format string."""
-        x, y, z, r = [f"{f:.4f}" for f in [self.x, self.y, self.z, self.r]]
-        items = [0, self.type, x, y, z, r, 0]  # TODO: id, pid
-        return " ".join(map(str, items))
-
-
-class NodeDetached(NodeBase):
-    """Detached node that do not depend on the tree."""
-
-    ndata: dict[str, Any]
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.ndata = {}
-
-    def __getitem__(self, k: str) -> Any:
-        return self.ndata[k]
-
-    def __setitem__(self, k: str, v: Any) -> Any:
-        self.ndata[k] = v
-
-
-class Node(NodeBase):
-    """Node of neuron tree"""
-
-    tree: "Tree"
-    idx: int
-
-    def __init__(self, tree: "Tree", idx: int) -> None:
-        super().__init__()
-        self.tree = tree
-        self.idx = idx
-
-    def __getitem__(self, k: str) -> Any:
-        return self.tree.ndata[k][self.idx]
-
-    def __setitem__(self, k: str, v: Any) -> None:
-        self.tree.ndata[k][self.idx] = v
 
 
 class Tree:
     """A neuron tree, which should be a binary tree in most cases."""
 
-    ndata: dict[str, npt.NDArray]
-    # Need edata?
+    class Node(NodeAttached):
+        """Node of neuron tree."""
 
+        def __init__(self, tree: "Tree", idx: int) -> None:
+            super().__init__(tree, idx)
+
+    ndata: dict[str, npt.NDArray[Any]]
     source: str | None
 
     def __init__(
         self,
         *,
-        ids: npt.NDArray[np.int32] | None = None,
-        types: npt.NDArray[np.int32] | None = None,
+        typee: npt.NDArray[np.int32] | None = None,
         x: npt.NDArray[np.float32] | None = None,
         y: npt.NDArray[np.float32] | None = None,
         z: npt.NDArray[np.float32] | None = None,
@@ -127,14 +39,15 @@ class Tree:
         **kwargs: npt.NDArray,
     ) -> None:
         n_nodes = self.number_of_nodes()
+        pid = pid or np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
         self.ndata = {
-            "id": np.zeros(n_nodes, dtype=np.int32) if ids is None else ids,
-            "type": np.zeros(n_nodes, dtype=np.int32) if types is None else types,
-            "x": np.zeros(n_nodes, dtype=np.float32) if x is None else x,
-            "y": np.zeros(n_nodes, dtype=np.float32) if y is None else y,
-            "z": np.zeros(n_nodes, dtype=np.float32) if z is None else z,
-            "r": np.ones(n_nodes, dtype=np.float32) if r is None else r,
-            "pid": np.ones(n_nodes, dtype=np.int32) if pid is None else pid,
+            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
+            "type": padding1d(n_nodes, typee, dtype=np.int32),
+            "x": padding1d(n_nodes, x),
+            "y": padding1d(n_nodes, y),
+            "z": padding1d(n_nodes, z),
+            "r": padding1d(n_nodes, r, padding_value=1),
+            "pid": padding1d(n_nodes, pid, dtype=np.int32),
             **kwargs,
         }
 
@@ -150,10 +63,10 @@ class Tree:
 
     def __getitem__(self, idx: int) -> Node:
         """Get node by id."""
-        return Node(self, idx)
+        return self.Node(self, idx)
 
     # fmt:off
-    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"]
+    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"]  # pylint: disable=invalid-name
     def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
     def x(self)    -> npt.NDArray[np.float32]: return self.ndata["x"]
     def y(self)    -> npt.NDArray[np.float32]: return self.ndata["y"]
@@ -163,17 +76,19 @@ class Tree:
     # fmt:on
 
     def xyz(self) -> npt.NDArray[np.float32]:
-        """Get array of shape(N, 3)"""
+        """Get array of shape(N, 3)."""
         return np.array([self.x(), self.y(), self.z()])
 
     def xyzr(self) -> npt.NDArray[np.float32]:
-        """Get array of shape(N, 4)"""
+        """Get array of shape(N, 4)."""
         return np.array([self.x(), self.y(), self.z(), self.r()])
 
-    def number_of_nodes(self) -> int:  # pylint: disable=missing-function-docstring
+    def number_of_nodes(self) -> int:
+        """Get the number of nodes."""
         return self.id().shape[0]
 
-    def number_of_edges(self) -> int:  # pylint: disable=missing-function-docstring
+    def number_of_edges(self) -> int:
+        """Get the number of edges."""
         return self.number_of_nodes() - 1
 
     def to_swc(self, swc_path: str) -> None:

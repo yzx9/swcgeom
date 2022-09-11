@@ -1,60 +1,21 @@
+"""Branch tree is simplified neuron tree."""
+
 import itertools
-from typing import Callable, Optional, overload
 
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from .branch import Branch
-from .tree import K, T, Tree
+from .swc_utils import from_swc
+from .tree import Node, Tree
 
 
 class BranchTree(Tree):
     """A branch tree that contains only soma, branch, and tip nodes."""
 
-    class Node(Tree.Node):
-        # fmt:off
-        @property
-        def branches(self) -> list[Branch]: return self["branches"]
-        @branches.setter
-        def branches(self, v: list[Branch]): self["branches"] = v
-        # fmt:on
-
-        def __init__(
-            self,
-            id: int,
-            type: int,
-            x: float,
-            y: float,
-            z: float,
-            r: float,
-            pid: int,
-            **kwargs,
-        ) -> None:
-            kwargs.setdefault("branches", [])
-            super().__init__(id, type, x, y, z, r, pid, **kwargs)
-
-    TraverseEnter = Callable[[Node, Optional[T]], T]
-    TraverseLeave = Callable[[Node, list[T]], T]
-
     def get_branches(self) -> list[Branch]:
-        return self.traverse(leave=lambda n, p: list(itertools.chain(n.branches, *p)))
-
-    # fmt:off
-    @overload
-    def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
-    @overload
-    def traverse(self, *, enter: Optional[TraverseEnter[T]] = None, leave: TraverseLeave[K]) -> K: ...
-    # fmt:on
-
-    def traverse(
-        self,
-        *,
-        enter: Optional[TraverseEnter[T]] = None,
-        leave: Optional[TraverseLeave[K]] = None,
-    ) -> K | None:
-        return super().traverse(enter=enter, leave=leave)  # type: ignore
-
-    def __getitem__(self, idx: int) -> Node:
-        return super().__getitem__(idx)  # type: ignore
+        return self.traverse(
+            leave=lambda n, p: list(itertools.chain(n["branches"], *p))
+        )
 
     @classmethod
     def from_swc(cls, swc_path: str) -> Self:
@@ -71,8 +32,7 @@ class BranchTree(Tree):
             A branch tree.
         """
 
-        tree = super().from_swc(swc_path)
-        return cls.from_tree(tree)
+        return cls.from_tree(from_swc(swc_path))
 
     @classmethod
     def from_tree(cls, tree: Tree) -> Self:
@@ -92,7 +52,7 @@ class BranchTree(Tree):
         self = cls()
         self.source = tree.source
 
-        def reducer(old_id: int, parent_id: Optional[int]) -> list[Tree.Node]:
+        def reducer(old_id: int, parent_id: int | None) -> list[Node]:
             node = cls.Node(**tree[old_id])  # make shallow copy
             neighbors = list(tree.G.neighbors(old_id))
             if (parent_id is not None) and (len(neighbors) == 1):
@@ -114,5 +74,5 @@ class BranchTree(Tree):
 
             return [node]
 
-        reducer(self.root, None)
+        reducer(0, None)
         return self
