@@ -2,12 +2,10 @@
 
 from typing import Any, Callable, TypeVar, cast, overload
 
-import matplotlib.axes
-import matplotlib.collections
 import numpy as np
 import numpy.typing as npt
 
-from ..utils import painter, padding1d
+from ..utils import padding1d
 from ._node import NodeAttached
 
 __all__ = ["Tree"]
@@ -29,6 +27,7 @@ class Tree:
 
     def __init__(
         self,
+        n_nodes: int,
         *,
         typee: npt.NDArray[np.int32] | None = None,
         x: npt.NDArray[np.float32] | None = None,
@@ -38,9 +37,8 @@ class Tree:
         pid: npt.NDArray[np.int32] | None = None,
         **kwargs: npt.NDArray,
     ) -> None:
-        n_nodes = self.number_of_nodes()
         pid = pid or np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
-        self.ndata = {
+        ndata = {
             "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
             "type": padding1d(n_nodes, typee, dtype=np.int32),
             "x": padding1d(n_nodes, x),
@@ -48,9 +46,9 @@ class Tree:
             "z": padding1d(n_nodes, z),
             "r": padding1d(n_nodes, r, padding_value=1),
             "pid": padding1d(n_nodes, pid, dtype=np.int32),
-            **kwargs,
         }
-
+        kwargs.update(ndata)
+        self.ndata = kwargs
         self.source = None
 
     def __len__(self) -> int:
@@ -108,34 +106,6 @@ class Tree:
             f.write("# id type x y z r pid\n")
             f.writelines(map(get_line_str, ids))
 
-    def draw(
-        self,
-        color: str | None = painter.palette.momo,
-        ax: matplotlib.axes.Axes | None = None,
-        **kwargs,
-    ) -> tuple[matplotlib.axes.Axes, matplotlib.collections.LineCollection]:
-        """Draw neuron tree.
-
-        Parameters
-        ----------
-        color : str, optional
-            Color of branch. If `None`, the default color will be enabled.
-        ax : ~matplotlib.axes.Axes, optional
-            A subplot of `~matplotlib`. If `None`, a new one will be created.
-        **kwargs : dict[str, Unknown]
-            Forwarded to `~matplotlib.collections.LineCollection`.
-
-        Returns
-        -------
-        ax : ~matplotlib.axes.Axes
-            If provided, return as-is.
-        collection : ~matplotlib.collections.LineCollection
-            Drawn line collection.
-        """
-        xyz = self.xyz()  # (N, 3)
-        edges = np.array([xyz[range(self.number_of_nodes())], xyz[self.pid()]])
-        return painter.draw_lines(edges, ax=ax, color=color, **kwargs)
-
     TraverseEnter = Callable[[Node, T | None], T]
     TraverseLeave = Callable[[Node, list[T]], T]
 
@@ -188,21 +158,8 @@ class Tree:
 
         return dfs(0, enter, leave, None)
 
-    @classmethod
-    def copy(cls) -> "Tree":
+    def copy(self) -> "Tree":
         """Make a copy."""
-
-        new_tree = cls(**{k: v.copy() for k, v in cls.ndata.items()})
-        new_tree.source = cls.source
-        return new_tree
-
-    @classmethod
-    def normalize(cls) -> "Tree":
-        """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
-        new_tree = cls.copy()
-        for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
-            v_max = np.max(new_tree.ndata[key])
-            v_min = np.min(new_tree.ndata[key])
-            new_tree.ndata[key] = (new_tree.ndata[key] - v_min) / v_max
-
+        new_tree = Tree(len(self), **{k: v.copy() for k, v in self.ndata.items()})
+        new_tree.source = self.source
         return new_tree
