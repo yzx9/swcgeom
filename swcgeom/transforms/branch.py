@@ -18,7 +18,7 @@ class _BranchResampler(Transform[Branch, Branch]):
     def __call__(self, x: Branch) -> Branch:
         xyzr = x.xyzr()
         new_xyzr = self.resample(xyzr)
-        return Branch.from_numpy(new_xyzr)
+        return Branch.from_xyzr(new_xyzr)
 
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
@@ -82,4 +82,4 @@ class BranchStandardizer(Transform[Branch, Branch]):
         xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
         new_xyz = np.dot(T, xyz4)[0:3, :].transpose()
         new_xyzr = np.concatenate([new_xyz, r / r.max()], axis=1)
-        return Branch.from_numpy(new_xyzr)
+        return Branch.from_xyzr(new_xyzr)

@@ -7,7 +7,7 @@ import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
-from ._node import NodeAttached
+from .node import NodeAttached
 
 Scale = NamedTuple("Scale", x=float, y=float, z=float, r=float)
 
@@ -25,6 +25,7 @@ class Branch:
         """Node of branch."""
 
     ndata: dict[str, npt.NDArray[Any]]
+    source: str | None
 
     def __init__(
         self,
@@ -48,9 +49,9 @@ class Branch:
         }
         kwargs.update(ndata)
         self.ndata = kwargs
+        self.source = None  # TODO
 
     def __len__(self) -> int:
-        """Get the number of nodes."""
         return self.x().shape[0]
 
     def __repr__(self) -> str:
@@ -59,45 +60,15 @@ class Branch:
     def __getitem__(self, idx: int) -> Node:
         return self.Node(self, idx)
 
-    def x(self) -> npt.NDArray[np.float32]:
-        """Get the x-coordinates of nodes of branch.
-
-        Returns
-        -------
-        x : np.ndarray[np.float32]
-            An array of shape (n_sample,).
-        """
-        return self.ndata["x"]
-
-    def y(self) -> npt.NDArray[np.float32]:
-        """Get the y-coordinates of nodes of branch.
-
-        Returns
-        -------
-        y : np.ndarray[np.float32]
-            An array of shape (n_sample,).
-        """
-        return self.ndata["y"]
-
-    def z(self) -> npt.NDArray[np.float32]:
-        """Get the z-coordinates of nodes of branch.
-
-        Returns
-        -------
-        z : np.ndarray[np.float32]
-            An array of shape (n_sample,).
-        """
-        return self.ndata["z"]
-
-    def r(self) -> npt.NDArray[np.float32]:
-        """Get the radius of nodes of branch.
-
-        Returns
-        -------
-        r : np.ndarray[np.float32]
-            An array of shape (n_sample,).
-        """
-        return self.ndata["r"]
+    # fmt:off
+    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"] # pylint: disable=invalid-name
+    def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
+    def x(self)    -> npt.NDArray[np.float32]: return self.ndata["x"]
+    def y(self)    -> npt.NDArray[np.float32]: return self.ndata["y"]
+    def z(self)    -> npt.NDArray[np.float32]: return self.ndata["z"]
+    def r(self)    -> npt.NDArray[np.float32]: return self.ndata["r"]
+    def pid(self)  -> npt.NDArray[np.int32]:   return self.ndata["pid"]
+    # fmt:on
 
     def xyz(self) -> npt.NDArray[np.float32]:
         """Get the `x`, `y`, `z` of branch.
@@ -129,7 +100,7 @@ class Branch:
         return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
 
     @classmethod
-    def from_numpy(cls, xyzr: npt.NDArray[np.float32]) -> Self:
+    def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> Self:
         """Create a branch from ~numpy.ndarray.
 
         Parameters
@@ -151,7 +122,7 @@ class Branch:
         )
 
     @classmethod
-    def from_numpy_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
+    def from_xyzr_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
         """Create list of branch form ~numpy.ndarray.
 
         Parameters

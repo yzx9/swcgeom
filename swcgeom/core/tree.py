@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from ._node import NodeAttached
+from .node import NodeAttached
 
 __all__ = ["Tree"]
 
@@ -52,15 +52,13 @@ class Tree:
         self.source = None
 
     def __len__(self) -> int:
-        """Get number of nodes."""
         return self.number_of_nodes()
 
     def __repr__(self) -> str:
-        nodes, edges = self.number_of_nodes(), self.number_of_edges()
-        return f"Neuron Tree with {nodes} nodes and {edges} edges"
+        n_nodes, n_edges = self.number_of_nodes(), self.number_of_edges()
+        return f"Neuron Tree with {n_nodes} nodes and {n_edges} edges"
 
     def __getitem__(self, idx: int) -> Node:
-        """Get node by id."""
         return self.Node(self, idx)
 
     # fmt:off
@@ -88,23 +86,6 @@ class Tree:
     def number_of_edges(self) -> int:
         """Get the number of edges."""
         return self.number_of_nodes() - 1
-
-    def to_swc(self, swc_path: str) -> None:
-        """Write swc file."""
-        ids = self.id()
-        types = self.type()
-        xyzr = self.xyzr()
-        pid = self.pid()
-
-        def get_line_str(idx: int) -> str:
-            x, y, z, r = [f"{f:.4f}" for f in xyzr[idx]]
-            items = [ids[idx], types[idx], x, y, z, r, pid[idx]]
-            return " ".join(map(str, items))
-
-        with open(swc_path, "w", encoding="utf-8") as f:
-            f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
-            f.write("# id type x y z r pid\n")
-            f.writelines(map(get_line_str, ids))
 
     TraverseEnter = Callable[[Node, T | None], T]
     TraverseLeave = Callable[[Node, list[T]], T]

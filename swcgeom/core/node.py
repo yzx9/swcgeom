@@ -1,10 +1,12 @@
 r"""Node of neuron tree."""
 
 
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+
+from .swc_utils import SWCProtocol
 
 __all__ = ["NodeAttached", "NodeDetached"]
 
@@ -83,11 +85,7 @@ class NodeDetached(_Node):
         self.ndata[k] = v
 
 
-class _AttachProto(Protocol):
-    ndata: dict[str, npt.NDArray[Any]]
-
-
-T = TypeVar("T", bound=_AttachProto)
+T = TypeVar("T", bound=SWCProtocol)
 
 
 class NodeAttached(_Node, Generic[T]):
