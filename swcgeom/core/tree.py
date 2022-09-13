@@ -1,19 +1,19 @@
 """Neuron tree."""
 
-from typing import Any, Callable, TypeVar, cast, overload
+from typing import Any, Callable, List, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from .node import NodeAttached
+from .base import SWC, NodeAttached
 
 __all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
 
-class Tree:
+class Tree(SWC):
     """A neuron tree, which should be a binary tree in most cases."""
 
     class Node(NodeAttached):
@@ -29,7 +29,7 @@ class Tree:
         self,
         n_nodes: int,
         *,
-        typee: npt.NDArray[np.int32] | None = None,
+        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
         x: npt.NDArray[np.float32] | None = None,
         y: npt.NDArray[np.float32] | None = None,
         z: npt.NDArray[np.float32] | None = None,
@@ -37,10 +37,12 @@ class Tree:
         pid: npt.NDArray[np.int32] | None = None,
         **kwargs: npt.NDArray,
     ) -> None:
-        pid = pid or np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
+        if pid is None:
+            pid = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
+
         ndata = {
             "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
-            "type": padding1d(n_nodes, typee, dtype=np.int32),
+            "type": padding1d(n_nodes, type, dtype=np.int32),
             "x": padding1d(n_nodes, x),
             "y": padding1d(n_nodes, y),
             "z": padding1d(n_nodes, z),
@@ -58,26 +60,33 @@ class Tree:
         n_nodes, n_edges = self.number_of_nodes(), self.number_of_edges()
         return f"Neuron Tree with {n_nodes} nodes and {n_edges} edges"
 
-    def __getitem__(self, idx: int) -> Node:
-        return self.Node(self, idx)
-
     # fmt:off
-    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"]  # pylint: disable=invalid-name
-    def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
-    def x(self)    -> npt.NDArray[np.float32]: return self.ndata["x"]
-    def y(self)    -> npt.NDArray[np.float32]: return self.ndata["y"]
-    def z(self)    -> npt.NDArray[np.float32]: return self.ndata["z"]
-    def r(self)    -> npt.NDArray[np.float32]: return self.ndata["r"]
-    def pid(self)  -> npt.NDArray[np.int32]:   return self.ndata["pid"]
+    @overload
+    def __getitem__(self, key: slice) -> List[Node]: ...
+    @overload
+    def __getitem__(self, key: int) -> Node: ...
+    @overload
+    def __getitem__(self, key: str) -> npt.NDArray[Any]: ...
     # fmt:on
 
-    def xyz(self) -> npt.NDArray[np.float32]:
-        """Get array of shape(N, 3)."""
-        return np.array([self.x(), self.y(), self.z()])
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return [self[i] for i in range(*key.indices(len(self)))]
 
-    def xyzr(self) -> npt.NDArray[np.float32]:
-        """Get array of shape(N, 4)."""
-        return np.array([self.x(), self.y(), self.z(), self.r()])
+        if isinstance(key, int):
+            length = len(self)
+            if key < -length or key >= length:
+                raise IndexError(f"The index ({key}) is out of range.")
+
+            if key < 0:  # Handle negative indices
+                key += length
+
+            return self.Node(self, key)
+
+        if isinstance(key, str):
+            return self.ndata[key]
+
+        raise TypeError("Invalid argument type.")
 
     def number_of_nodes(self) -> int:
         """Get the number of nodes."""
@@ -119,12 +128,9 @@ class Tree:
         """
 
         children_map = dict[int, list[int]]()
-        for pid in self.pid():
-            if pid == -1:
-                continue
-
+        for idx, pid in enumerate(self.pid()):
             children_map.setdefault(pid, [])
-            children_map[pid].append(pid)
+            children_map[pid].append(idx)
 
         def dfs(
             idx: int,

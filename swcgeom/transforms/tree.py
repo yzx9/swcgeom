@@ -5,7 +5,7 @@ import numpy as np
 from ..core import BranchTree, Tree
 from .base import Transform
 
-__all__ = ["ToBranchTree"]
+__all__ = ["ToBranchTree", "Normalizer"]
 
 
 class ToBranchTree(Transform[Tree, BranchTree]):

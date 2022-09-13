@@ -30,9 +30,9 @@ def padding1d(
         x will used, otherwise defaults to `~numpy.float32`.
     """
 
-    dtype = dtype or (v and v.dtype) or np.float32
-    v = v or np.zeros(n, dtype=dtype)
-    v = v if v.dtype != dtype else v.astype(dtype)
+    dtype = dtype or (v is not None and v.dtype) or np.float32
+    v = np.zeros(n, dtype=dtype) if v is None else v
+    v = v.astype(dtype) if v.dtype != dtype else v
     assert v.ndim == 1
 
     if v.shape[0] >= n:

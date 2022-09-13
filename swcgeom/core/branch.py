@@ -7,12 +7,12 @@ import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
-from .node import NodeAttached
+from .base import SWC, NodeAttached
 
 Scale = NamedTuple("Scale", x=float, y=float, z=float, r=float)
 
 
-class Branch:
+class Branch(SWC):
     """A branch of neuron tree.
 
     Notes
@@ -52,43 +52,13 @@ class Branch:
         self.source = None  # TODO
 
     def __len__(self) -> int:
-        return self.x().shape[0]
+        return self.id().shape[0]
 
     def __repr__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
 
     def __getitem__(self, idx: int) -> Node:
         return self.Node(self, idx)
-
-    # fmt:off
-    def id(self)   -> npt.NDArray[np.int32]:   return self.ndata["id"] # pylint: disable=invalid-name
-    def type(self) -> npt.NDArray[np.int32]:   return self.ndata["type"]
-    def x(self)    -> npt.NDArray[np.float32]: return self.ndata["x"]
-    def y(self)    -> npt.NDArray[np.float32]: return self.ndata["y"]
-    def z(self)    -> npt.NDArray[np.float32]: return self.ndata["z"]
-    def r(self)    -> npt.NDArray[np.float32]: return self.ndata["r"]
-    def pid(self)  -> npt.NDArray[np.int32]:   return self.ndata["pid"]
-    # fmt:on
-
-    def xyz(self) -> npt.NDArray[np.float32]:
-        """Get the `x`, `y`, `z` of branch.
-
-        Returns
-        -------
-        xyz : np.ndarray[np.float32]
-            An array of shape (n_sample, 3).
-        """
-        return np.array([self.x(), self.y(), self.z()])
-
-    def xyzr(self) -> npt.NDArray[np.float32]:
-        """Get the `x`, `y`, `z`, `r` of branch.
-
-        Returns
-        -------
-        xyzr : np.ndarray[np.float32]
-            An array of shape (n_sample, 4).
-        """
-        return np.array([self.x(), self.y(), self.z(), self.r()])
 
     def length(self) -> float:
         """Sum of length of stems."""
@@ -110,8 +80,10 @@ class Branch:
             nodes is enabled. If shape (n, 3), only `x`, `y`, `z` is enabled
             and `r` will fill by 1.
         """
-        assert xyzr.ndim == 2
-        assert xyzr.shape[1] >= 3
+        assert xyzr.ndim == 2 and xyzr.shape[1] in (
+            3,
+            4,
+        ), f"xyzr should be of shape (N, 3) or (N, 4), got {xyzr.shape}"
 
         if xyzr.shape[1] == 3:
             ones = np.ones([xyzr.shape[0], 1], dtype=np.float32)

@@ -9,7 +9,7 @@ from ..core import Branch
 from ..utils import angle, rotate3d_x, rotate3d_y, rotate3d_z, scale3d, translate3d
 from .base import Transform
 
-__all__ = ["BranchResamplerLinear", "BranchStandardizer"]
+__all__ = ["BranchLinearResampler", "BranchStandardizer"]
 
 
 class _BranchResampler(Transform[Branch, Branch]):
@@ -24,7 +24,7 @@ class _BranchResampler(Transform[Branch, Branch]):
         raise NotImplementedError()
 
 
-class BranchResamplerLinear(_BranchResampler):
+class BranchLinearResampler(_BranchResampler):
     r"""Resampling by linear interpolation, DO NOT keep original node."""
 
     def __init__(self, n_nodes: int) -> None:
@@ -39,7 +39,7 @@ class BranchResamplerLinear(_BranchResampler):
         self.n_nodes = n_nodes
 
     def __repr__(self) -> str:
-        return f"BranchResamplerLinear-{self.n_nodes}"
+        return f"BranchLinearResampler-{self.n_nodes}"
 
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Resampling by linear interpolation, DO NOT keep original node.
@@ -76,18 +76,16 @@ class BranchStandardizer(Transform[Branch, Branch]):
     def __call__(self, x: Branch) -> Branch:
         xyzr = x.xyzr()
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
-        T = self.get_branch_standardize_matrix(xyzr)
+        T = self.get_matrix(xyz)
 
         ones = np.ones([xyz.shape[0], 1])
         xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
-        new_xyz = np.dot(T, xyz4)[0:3, :].transpose()
+        new_xyz = np.dot(T, xyz4)[:3].transpose()
         new_xyzr = np.concatenate([new_xyz, r / r.max()], axis=1)
         return Branch.from_xyzr(new_xyzr)
 
     @staticmethod
-    def get_branch_standardize_matrix(
-        xyz: npt.NDArray[np.float32],
-    ) -> npt.NDArray[np.float32]:
+    def get_matrix(xyz: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         r"""Get standarize transformation matrix.
 
         Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y.
@@ -103,8 +101,9 @@ class BranchStandardizer(Transform[Branch, Branch]):
             An homogeneous transfomation matrix of shape (4, 4).
         """
 
-        assert xyz.ndim == 2
-        assert xyz.shape[1] == 3
+        assert (
+            xyz.ndim == 2 and xyz.shape[1] == 3
+        ), f"xyz should be of shape (N, 3), got {xyz.shape}"
 
         xyz = xyz[:, :3]
         T = np.identity(4)

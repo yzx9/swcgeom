@@ -1,31 +1,16 @@
 """Utils for SWC format file."""
 
 import os
-from typing import Any, Protocol, TypedDict
+from typing import Any, List, Tuple, TypedDict, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from .base import SWC
 from .tree import Tree
 
-__all__ = ["SWCProtocol", "from_swc", "to_swc"]
-
-
-class SWCProtocol(Protocol):
-    """Abstract class that including swc infomation."""
-
-    ndata: dict[str, npt.NDArray[Any]]
-    source: str | None
-    # fmt: off
-    def id(self)   -> npt.NDArray[np.int32]:   ... # pylint: disable=invalid-name
-    def type(self) -> npt.NDArray[np.int32]:   ...
-    def x(self)    -> npt.NDArray[np.float32]: ...
-    def y(self)    -> npt.NDArray[np.float32]: ...
-    def z(self)    -> npt.NDArray[np.float32]: ...
-    def r(self)    -> npt.NDArray[np.float32]: ...
-    def pid(self)  -> npt.NDArray[np.int32]:   ...
-    # fmt:on
+__all__ = ["from_swc", "to_swc"]
 
 
 SWCNameMap = TypedDict(
@@ -47,36 +32,40 @@ def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
         `type`, `x`, `y`, `z`, `r` and `pid`.
     """
 
-    def get_name(key: str) -> str:
-        return name_map[key] if name_map and key in name_map else key
+    cols: List[Tuple[str, npt.DTypeLike]] = [
+        ("id", np.int32),
+        ("type", np.int32),
+        ("x", np.float32),
+        ("y", np.float32),
+        ("z", np.float32),
+        ("r", np.float32),
+        ("pid", np.int32),
+    ]
 
-    cols = {
-        "id": np.int32,
-        "type": np.int32,
-        "x": np.float32,
-        "y": np.float32,
-        "z": np.float32,
-        "r": np.float32,
-        "pid": np.int32,
-    }
-    names = [get_name(k) for k in cols]
-    dtype = {get_name(k): v for k, v in cols.items()}
-    df = pd.read_csv(swc_path, sep=" ", comment="#", names=names, dtype=dtype)
+    def get_name(k: str) -> str:
+        return name_map[k] if name_map is not None and k in name_map else k
 
-    root = df.iloc[0][get_name("id")]
+    df = pd.read_csv(
+        swc_path,
+        sep=" ",
+        comment="#",
+        names=[get_name(k) for k, v in cols],
+        dtype=cast(Any, {get_name(k): v for k, v in cols}),
+    ).rename({get_name(k): k for k, v in cols})
+
+    root = df.loc[0]["id"]
     if root != 0:
-        df[get_name("id")] = df[get_name("id")] - root
-        df[get_name("pid")] = df[get_name("pid")] - root
+        df["id"] = df["id"] - root
+        df["pid"] = df["pid"] - root
 
-    if df.iloc[0][get_name("pid")] != -1:
-        df.iloc[0][get_name("pid")] = -1
+    df.loc[0, "pid"] = -1
 
-    tree = Tree(df.shape[0], **{k: df[get_name(k)].to_numpy() for k in cols})
+    tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in cols})
     tree.source = os.path.abspath(swc_path)
     return tree
 
 
-def to_swc(nodes: SWCProtocol, swc_path: str) -> None:
+def to_swc(nodes: SWC, swc_path: str) -> None:
     """Write swc file."""
     ids, typee, pid = nodes.id(), nodes.type(), nodes.pid()
     x, y, z, r = nodes.x(), nodes.y(), nodes.r(), nodes.z()
