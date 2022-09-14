@@ -1,6 +1,8 @@
 """Painter utils."""
 
 
+from typing import Dict
+
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
@@ -11,10 +13,12 @@ from ..utils import draw_lines, palette
 
 __all__ = ["draw"]
 
+DEFAULT_COLOR = palette.momo
+
 
 def draw(
     swc: SWCLike,
-    color: str | None = palette.momo,
+    color: Dict[int, str] | str | None = None,
     ax: Axes | None = None,
     standardize: bool = True,
     **kwargs,
@@ -23,10 +27,12 @@ def draw(
 
     Parameters
     ----------
-    color : str, optional
-        Color of branch. If `None`, the default color will be enabled.
+    color : Dict[int, str] | str, optional
+        Color map. If is dict, segments will be colored by the type of
+        parent node.If is string, the value will be use for any type.
     ax : ~matplotlib.axes.Axes, optional
-        A subplot of `~matplotlib`. If `None`, a new one will be created.
+        A subplot of `~matplotlib`. If `None`, a new one will be
+        created.
     standardize : bool, default `True`
         Standardize input, enable for branch only.
     **kwargs : dict[str, Unknown]
@@ -47,4 +53,11 @@ def draw(
     xyz = np.stack([swc.x(), swc.y(), swc.z()], axis=1)  # (N, 3)
     starts, ends = swc.id()[1:], swc.pid()[1:]
     segments = np.stack([xyz[starts], xyz[ends]], axis=1)
-    return draw_lines(segments, ax=ax, color=color, **kwargs)
+
+    if isinstance(color, dict):
+        types = swc.type()[:-1]  # colored by type of parent node
+        color_map = list(map(lambda t: color.get(t, DEFAULT_COLOR), types))
+    else:
+        color_map = color if color is not None else DEFAULT_COLOR
+
+    return draw_lines(segments, ax=ax, color=color_map, **kwargs)

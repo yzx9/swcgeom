@@ -18,6 +18,12 @@ class Palette:
 
     momo: str = "#F596AA"
     mizugaki: str = "#B9887D"
+    kuchiba: str = "#E2943B"
+    kimirucha: str = "#867835"
+    aotake: str = "#00896C"
+    tsuyukusa: str = "#2EA9DF"
+    sumire: str = "#66327C"
+    benikeshinezumi: str = "#52433D"
 
 
 palette = Palette()
