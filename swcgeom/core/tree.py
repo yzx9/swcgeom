@@ -1,13 +1,14 @@
 """Neuron tree."""
 
-from typing import Any, Callable, Iterable, List, TypeVar, cast, overload
+from typing import Callable, Iterable, List, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from .node import NodeAttached
 from .branch import BranchAttached
+from .node import NodeAttached
+from .segment import SegmentAttached
 from .swc import SWC
 
 __all__ = ["Tree"]
@@ -21,10 +22,13 @@ class Tree(SWC):
     class Node(NodeAttached["Tree"]):
         """Node of neuron tree."""
 
-    class Branch(BranchAttached["Branch"]):
+    class Segment(SegmentAttached["Tree"]):
+        """Segment of neuron tree."""
+
+    class Branch(BranchAttached["Tree"]):
         """Branch of neuron tree."""
 
-    ndata: dict[str, npt.NDArray[Any]]
+    ndata: dict[str, npt.NDArray]
     source: str | None
 
     def __init__(
@@ -55,6 +59,9 @@ class Tree(SWC):
         self.ndata = kwargs
         self.source = None
 
+    def __iter__(self) -> Iterable[Node]:
+        return (self[i] for i in range(len(self)))
+
     def __len__(self) -> int:
         return self.number_of_nodes()
 
@@ -68,7 +75,7 @@ class Tree(SWC):
     @overload
     def __getitem__(self, key: int) -> Node: ...
     @overload
-    def __getitem__(self, key: str) -> npt.NDArray[Any]: ...
+    def __getitem__(self, key: str) -> npt.NDArray: ...
     # fmt:on
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -92,11 +99,15 @@ class Tree(SWC):
     def get_keys(self) -> Iterable[str]:
         return self.ndata.keys()
 
-    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+    def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
 
     def get_node(self, idx: int) -> Node:
         return self.Node(self, idx)
+
+    def get_segments(self) -> List[Segment]:
+        # pylint: disable-next=not-an-iterable
+        return [self.Segment(self, n.pid, n.id) for n in self[1:]]
 
     def number_of_nodes(self) -> int:
         """Get the number of nodes."""

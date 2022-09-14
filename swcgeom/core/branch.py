@@ -1,75 +1,34 @@
 """Branch is a set of node points."""
 
-from typing import Any, Dict, Generic, Iterable, List, overload
+from typing import Dict, Generic, Iterable, List
 
 import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
-from .swc import SWC, SWCTypeVar
-from .node import NodeAttached
+from .node import Nodes
+from .segment import SegmentAttached
+from .swc import SWCTypeVar
 
 __all__ = ["Branch", "BranchAttached"]
 
 
-class _Branch(SWC):
-    class Node(NodeAttached["_Branch"]):
-        """Node of branch."""
-
-    def __iter__(self) -> Iterable[Node]:
-        return (self[i] for i in range(len(self)))
-
-    def __len__(self) -> int:
-        return self.id().shape[0]
+class _Branch(Nodes):
+    class Segment(SegmentAttached["_Branch"]):
+        """Segment of branch."""
 
     def __repr__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
 
-    # fmt:off
-    @overload
-    def __getitem__(self, key: int) -> Node: ...
-    @overload
-    def __getitem__(self, key: slice) -> List[Node]: ...
-    @overload
-    def __getitem__(self, key: str) -> npt.NDArray[Any]: ...
-    # fmt:on
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            return [self.get_node(i) for i in range(*key.indices(len(self)))]
-
-        if isinstance(key, int):
-            length = len(self)
-            if key < -length or key >= length:
-                raise IndexError(f"The index ({key}) is out of range.")
-
-            if key < 0:  # Handle negative indices
-                key += length
-
-            return self.get_node(key)
-
-        if isinstance(key, str):
-            return self.get_ndata(key)
-
-        raise TypeError("Invalid argument type.")
-
     def get_keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
-    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+    def get_ndata(self, key: str) -> npt.NDArray:
         raise NotImplementedError()
 
-    def get_node(self, idx: int) -> Node:
-        return self.Node(self, idx)
-
-    def length(self) -> float:
-        """Sum of length of stems."""
-        xyz = self.xyz()
-        return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1)).item()
-
-    def straight_line_distance(self) -> float:
-        """Distance between start point and end point."""
-        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
+    def get_segments(self) -> List[Segment]:
+        return [self.Segment(self, n.pid, n.id) for n in self[1:]]
 
 
 class Branch(_Branch):
@@ -111,7 +70,7 @@ class Branch(_Branch):
     def get_keys(self) -> Iterable[str]:
         return self.ndata.keys()
 
-    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+    def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
 
     @classmethod
@@ -174,7 +133,7 @@ class Branch(_Branch):
 
 
 class BranchAttached(_Branch, Generic[SWCTypeVar]):
-    """Node attached to external object."""
+    """Branch attached to external object."""
 
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
@@ -187,7 +146,8 @@ class BranchAttached(_Branch, Generic[SWCTypeVar]):
     def get_keys(self) -> Iterable[str]:
         return self.attach.get_keys()
 
-    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+    def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    # def detach(self) -> Branch: # TODO
+    def detach(self) -> Branch:
+        return Branch(len(self), **{k: self[k] for k in self.get_keys()})
