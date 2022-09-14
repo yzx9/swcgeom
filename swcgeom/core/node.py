@@ -5,7 +5,7 @@ from typing import Any, Generic, Iterable, List, overload
 import numpy as np
 import numpy.typing as npt
 
-from .swc import SWC, SWCTypeVar
+from .swc import SWCLike, SWCTypeVar
 
 __all__ = ["Node", "NodeAttached", "Nodes"]
 
@@ -118,7 +118,7 @@ class NodeAttached(_Node, Generic[SWCTypeVar]):
         return Node(**{k: self[k] for k in self})
 
 
-class Nodes(SWC):
+class Nodes(SWCLike):
     """Nodes of neuron tree."""
 
     class Node(NodeAttached["Nodes"]):

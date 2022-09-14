@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .swc import SWC
+from .swc import SWCLike
 from .tree import Tree
 
 __all__ = ["from_swc", "to_swc", "to_sub_tree"]
@@ -65,7 +65,7 @@ def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> Tree:
     return tree
 
 
-def to_swc(swc_like: SWC, swc_path: str) -> None:
+def to_swc(swc_like: SWCLike, swc_path: str) -> None:
     """Write swc file."""
     ids, typee, pid = swc_like.id(), swc_like.type(), swc_like.pid()
     x, y, z, r = swc_like.x(), swc_like.y(), swc_like.r(), swc_like.z()
@@ -85,8 +85,8 @@ NData = Dict[str, npt.NDArray]
 
 
 def to_sub_tree(
-    swc_like: SWC, sub_id: npt.ArrayLike, sub_pid: npt.ArrayLike
-) -> Tuple[SWC, Dict[int, int]]:
+    swc_like: SWCLike, sub_id: npt.ArrayLike, sub_pid: npt.ArrayLike
+) -> Tuple[SWCLike, Dict[int, int]]:
     """Create sub tree from origin tree."""
 
     sub_id = np.array(sub_id, dtype=np.int32)

@@ -9,14 +9,14 @@ from ..utils import padding1d
 from .branch import BranchAttached
 from .node import NodeAttached
 from .segment import SegmentAttached
-from .swc import SWC
+from .swc import SWCLike
 
 __all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
 
-class Tree(SWC):
+class Tree(SWCLike):
     """A neuron tree, which should be a binary tree in most cases."""
 
     class Node(NodeAttached["Tree"]):

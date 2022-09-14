@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 
-from ..core import Branch, SWC
+from ..core import Branch, SWCLike
 from ..transforms import BranchStandardizer
 from ..utils import draw_lines, palette
 
@@ -13,7 +13,7 @@ __all__ = ["draw"]
 
 
 def draw(
-    swc: SWC,
+    swc: SWCLike,
     color: str | None = palette.momo,
     ax: Axes | None = None,
     standardize: bool = True,

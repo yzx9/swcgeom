@@ -5,10 +5,10 @@ from typing import Any, Iterable, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["SWC", "SWCTypeVar"]
+__all__ = ["SWCLike", "SWCTypeVar"]
 
 
-class SWC:
+class SWCLike:
     """Abstract class that including swc infomation."""
 
     source: str | None
@@ -67,4 +67,4 @@ class SWC:
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
 
-SWCTypeVar = TypeVar("SWCTypeVar", bound=SWC)
+SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
