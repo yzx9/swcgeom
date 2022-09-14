@@ -4,6 +4,7 @@ from typing import Any, Iterable, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+import scipy.sparse as sp
 
 __all__ = ["SWCLike", "SWCTypeVar"]
 
@@ -15,12 +16,6 @@ class SWCLike:
 
     def __len__(self) -> int:
         return self.number_of_nodes()
-
-    def get_keys(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    def get_ndata(self, key: str) -> npt.NDArray[Any]:
-        raise NotImplementedError()
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,)."""
@@ -57,6 +52,18 @@ class SWCLike:
     def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the coordinates and radius array of shape(n_sample, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=1)
+
+    def get_keys(self) -> Iterable[str]:
+        raise NotImplementedError()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        raise NotImplementedError()
+
+    def get_adjacency_matrix(self) -> sp.coo_matrix:
+        n_nodes = len(self)
+        row, col = self.pid()[1:], self.id()[1:]  # ignore root
+        triad = (np.ones_like(row), (row, col))
+        return sp.coo_matrix(triad, shape=(n_nodes, n_nodes), dtype=np.int32)
 
     def number_of_nodes(self) -> int:
         """Get the number of nodes."""
