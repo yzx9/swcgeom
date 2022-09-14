@@ -1,9 +1,21 @@
 """Neuron tree."""
 
-from typing import Callable, Iterable, List, Tuple, TypeVar, cast, overload
+import os
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Tuple,
+    TypedDict,
+    TypeVar,
+    cast,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from ..utils import padding1d
 from .branch import BranchAttached
@@ -14,6 +26,13 @@ from .swc import SWCLike
 __all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
+
+
+SWCNameMap = TypedDict(
+    "SWCNameMap",
+    {"id": str, "type": str, "x": str, "y": str, "z": str, "r": str, "pid": str},
+    total=False,
+)
 
 
 class Tree(SWCLike):
@@ -184,3 +203,48 @@ class Tree(SWCLike):
         new_tree = Tree(len(self), **{k: v.copy() for k, v in self.ndata.items()})
         new_tree.source = self.source
         return new_tree
+
+    @staticmethod
+    def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> "Tree":
+        """Read neuron tree from swc file.
+
+        Parameters
+        ----------
+        swc_path : str
+            Path of swc file, the id should be consecutively incremented.
+        name_map : dict[str, str], optional
+            Map standard name to actual name. The standard names are `id`,
+            `type`, `x`, `y`, `z`, `r` and `pid`.
+        """
+
+        cols: List[Tuple[str, npt.DTypeLike]] = [
+            ("id", np.int32),
+            ("type", np.int32),
+            ("x", np.float32),
+            ("y", np.float32),
+            ("z", np.float32),
+            ("r", np.float32),
+            ("pid", np.int32),
+        ]
+
+        def get_name(k: str) -> str:
+            return name_map[k] if name_map is not None and k in name_map else k
+
+        df = pd.read_csv(
+            swc_path,
+            sep=" ",
+            comment="#",
+            names=[get_name(k) for k, v in cols],
+            dtype=cast(Any, {get_name(k): v for k, v in cols}),
+        ).rename({get_name(k): k for k, v in cols})
+
+        root = df.loc[0]["id"]
+        if root != 0:
+            df["id"] = df["id"] - root
+            df["pid"] = df["pid"] - root
+
+        df.loc[0, "pid"] = -1
+
+        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in cols})
+        tree.source = os.path.abspath(swc_path)
+        return tree

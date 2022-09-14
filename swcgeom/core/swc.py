@@ -73,5 +73,21 @@ class SWCLike:
         """Get the number of edges."""
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
+    def to_swc(self, swc_path: str) -> None:
+        """Write swc file."""
+        ids, typee, pid = self.id(), self.type(), self.pid()
+        x, y, z, r = self.x(), self.y(), self.z(), self.r()
+
+        def get_row_str(idx: int) -> str:
+            xx, yy, zz, rr = [f"{v[idx]:.4f}" for v in (x, y, z, r)]
+            items = [idx, typee[idx], xx, yy, zz, rr, pid[idx]]
+            return " ".join(map(str, items))
+
+        with open(swc_path, "w", encoding="utf-8") as f:
+            f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
+            f.write("# id type x y z r pid\n")
+            for idx in ids:
+                f.write(get_row_str(idx) + "\n")
+
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
