@@ -13,6 +13,9 @@ class SWC:
 
     source: str | None
 
+    def __len__(self) -> int:
+        return self.number_of_nodes()
+
     def get_keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
@@ -54,6 +57,14 @@ class SWC:
     def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the coordinates and radius array of shape(n_sample, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=1)
+
+    def number_of_nodes(self) -> int:
+        """Get the number of nodes."""
+        return self.id().shape[0]
+
+    def number_of_edges(self) -> int:
+        """Get the number of edges."""
+        return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWC)

@@ -1,6 +1,6 @@
 """Neuron tree."""
 
-from typing import Callable, Iterable, List, TypeVar, cast, overload
+from typing import Callable, Iterable, List, Tuple, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -62,9 +62,6 @@ class Tree(SWC):
     def __iter__(self) -> Iterable[Node]:
         return (self[i] for i in range(len(self)))
 
-    def __len__(self) -> int:
-        return self.number_of_nodes()
-
     def __repr__(self) -> str:
         n_nodes, n_edges = self.number_of_nodes(), self.number_of_edges()
         return f"Neuron Tree with {n_nodes} nodes and {n_edges} edges"
@@ -109,13 +106,29 @@ class Tree(SWC):
         # pylint: disable-next=not-an-iterable
         return [self.Segment(self, n.pid, n.id) for n in self[1:]]
 
-    def number_of_nodes(self) -> int:
-        """Get the number of nodes."""
-        return self.id().shape[0]
+    def get_branches(self) -> List[Branch]:
+        Info = Tuple[List[Tree.Branch], List[int]]
 
-    def number_of_edges(self) -> int:
-        """Get the number of edges."""
-        return self.number_of_nodes() - 1
+        def collect_branches(node: "Tree.Node", pre: List[Info]) -> Info:
+            if len(pre) == 1:
+                branches, child = pre[0]
+                child.append(node.id)
+                return branches, child
+
+            branches: List[Tree.Branch] = []
+
+            for sub_branches, child in pre:
+                child.append(node.id)
+                child.reverse()
+                sub_branches.append(Tree.Branch(self, np.array(child, dtype=np.int32)))
+                sub_branches.reverse()
+                branches.extend(sub_branches)
+
+            return branches, [node.id]
+
+        # pylint: disable-next=unpacking-non-sequence
+        branches, _ = self.traverse(leave=collect_branches)
+        return branches
 
     TraverseEnter = Callable[[Node, T | None], T]
     TraverseLeave = Callable[[Node, list[T]], T]

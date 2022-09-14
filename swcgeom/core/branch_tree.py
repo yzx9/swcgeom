@@ -1,78 +1,47 @@
-"""Branch tree is simplified neuron tree."""
+"""Branch tree is a simplified neuron tree."""
 
 import itertools
+from typing import Dict, List
 
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from .branch import Branch
-from .swc_utils import from_swc
-from .tree import Node, Tree
+from .swc_utils import to_sub_tree
+from .tree import Tree
 
 
 class BranchTree(Tree):
     """A branch tree that contains only soma, branch, and tip nodes."""
 
+    branches: Dict[int, List[Branch]]
+
     def get_branches(self) -> list[Branch]:
-        return self.traverse(
-            leave=lambda n, p: list(itertools.chain(n["branches"], *p))
-        )
+        return list(itertools.chain(*self.branches.values()))
 
-    @classmethod
-    def from_swc(cls, swc_path: str) -> Self:
-        """Generating a branch tree from swc file.
-
-        Parameters
-        ----------
-        swc_path : str
-            Path of *.swc.
-
-        Returns
-        -------
-        BranchTree
-            A branch tree.
-        """
-
-        return cls.from_tree(from_swc(swc_path))
+    def get_node_branches(self, idx: int) -> List[Branch]:
+        return self.branches[idx]
 
     @classmethod
     def from_tree(cls, tree: Tree) -> Self:
-        """Generating a branch tree from tree.
+        """Generating a branch tree from tree."""
 
-        Parameters
-        ----------
-        tree : Tree
-            A neuron tree.
+        branches = tree.get_branches()
 
-        Returns
-        -------
-        BranchTree : BranchTree
-            A branch tree.
-        """
+        sub_id = [br[-1].id for br in branches]
+        sub_pid = [br[0].id for br in branches]
+        # insert root
+        sub_id.insert(0, 0)
+        sub_pid.insert(0, -1)
 
-        self = cls()
+        sub_tree, id_map = to_sub_tree(tree, sub_id, sub_pid)
+        ndata = {k: sub_tree.get_ndata(k) for k in sub_tree.get_keys()}
+        self = cls(len(sub_tree), **ndata)
         self.source = tree.source
 
-        def reducer(old_id: int, parent_id: int | None) -> list[Node]:
-            node = cls.Node(**tree[old_id])  # make shallow copy
-            neighbors = list(tree.G.neighbors(old_id))
-            if (parent_id is not None) and (len(neighbors) == 1):
-                branch_nodes = reducer(neighbors[0], parent_id)
-                branch_nodes.append(node)
-                return branch_nodes
+        self.branches = {}
+        for branch_raw in branches:
+            idx = id_map[branch_raw[0].id]
+            self.branches.setdefault(idx, [])
+            self.branches[idx].append(branch_raw.detach())
 
-            node.id = len(self) + 1
-            node.pid = parent_id if parent_id is not None else -1
-            self._add_node(node)
-            if parent_id is not None:
-                self._add_edge(parent_id, node.id)
-
-            for n in neighbors:
-                branch_nodes = reducer(n, node.id)
-                branch_nodes.append(node)
-                branch_nodes.reverse()
-                node.branches.append(Branch(branch_nodes))
-
-            return [node]
-
-        reducer(0, None)
         return self
