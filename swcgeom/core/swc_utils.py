@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .base import SWC
+from .swc import SWC
 from .tree import Tree
 
 __all__ = ["from_swc", "to_swc"]

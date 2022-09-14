@@ -1,55 +1,24 @@
 """Branch is a set of node points."""
 
-from typing import Any, NamedTuple
+from typing import Any, Dict, Generic, Iterable, List, overload
 
 import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
-from .base import SWC, NodeAttached
+from .swc import SWC, SWCTypeVar
+from .node import NodeAttached
 
-Scale = NamedTuple("Scale", x=float, y=float, z=float, r=float)
+__all__ = ["Branch", "BranchAttached"]
 
 
-class Branch(SWC):
-    """A branch of neuron tree.
-
-    Notes
-    -----
-    Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and
-    `r`, but the `id` and `type` is usually invalid.
-    """
-
-    class Node(NodeAttached["Branch"]):
+class _Branch(SWC):
+    class Node(NodeAttached["_Branch"]):
         """Node of branch."""
 
-    ndata: dict[str, npt.NDArray[Any]]
-    source: str | None
-
-    def __init__(
-        self,
-        n_nodes: int,
-        *,
-        typee: npt.NDArray[np.int32] | None = None,
-        x: npt.NDArray[np.float32] | None = None,
-        y: npt.NDArray[np.float32] | None = None,
-        z: npt.NDArray[np.float32] | None = None,
-        r: npt.NDArray[np.float32] | None = None,
-        **kwargs: npt.NDArray,
-    ) -> None:
-        ndata = {
-            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
-            "type": padding1d(n_nodes, typee, dtype=np.int32),
-            "x": padding1d(n_nodes, x),
-            "y": padding1d(n_nodes, y),
-            "z": padding1d(n_nodes, z),
-            "r": padding1d(n_nodes, r, padding_value=1),
-            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
-        }
-        kwargs.update(ndata)
-        self.ndata = kwargs
-        self.source = None  # TODO
+    def __iter__(self) -> Iterable[Node]:
+        return (self[i] for i in range(len(self)))
 
     def __len__(self) -> int:
         return self.id().shape[0]
@@ -57,7 +26,40 @@ class Branch(SWC):
     def __repr__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
 
-    def __getitem__(self, idx: int) -> Node:
+    # fmt:off
+    @overload
+    def __getitem__(self, key: int) -> Node: ...
+    @overload
+    def __getitem__(self, key: slice) -> List[Node]: ...
+    @overload
+    def __getitem__(self, key: str) -> npt.NDArray[Any]: ...
+    # fmt:on
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return [self.get_node(i) for i in range(*key.indices(len(self)))]
+
+        if isinstance(key, int):
+            length = len(self)
+            if key < -length or key >= length:
+                raise IndexError(f"The index ({key}) is out of range.")
+
+            if key < 0:  # Handle negative indices
+                key += length
+
+            return self.get_node(key)
+
+        if isinstance(key, str):
+            return self.get_ndata(key)
+
+        raise TypeError("Invalid argument type.")
+
+    def get_keys(self) -> Iterable[str]:
+        raise NotImplementedError()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        raise NotImplementedError()
+
+    def get_node(self, idx: int) -> Node:
         return self.Node(self, idx)
 
     def length(self) -> float:
@@ -68,6 +70,49 @@ class Branch(SWC):
     def straight_line_distance(self) -> float:
         """Distance between start point and end point."""
         return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
+
+
+class Branch(_Branch):
+    r"""A branch of neuron tree.
+
+    Notes
+    -----
+    Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and
+    `r`, but the `id` and `pid` is usually invalid.
+    """
+
+    ndata: Dict[str, npt.NDArray]
+
+    def __init__(
+        self,
+        n_nodes: int,
+        *,
+        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
+        x: npt.NDArray[np.float32] | None = None,
+        y: npt.NDArray[np.float32] | None = None,
+        z: npt.NDArray[np.float32] | None = None,
+        r: npt.NDArray[np.float32] | None = None,
+        **kwargs: npt.NDArray,
+    ) -> None:
+        super().__init__()
+        ndata = {
+            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
+            "type": padding1d(n_nodes, type, dtype=np.int32),
+            "x": padding1d(n_nodes, x),
+            "y": padding1d(n_nodes, y),
+            "z": padding1d(n_nodes, z),
+            "r": padding1d(n_nodes, r, padding_value=1),
+            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
+        }
+        kwargs.update(ndata)
+        self.ndata = kwargs
+        self.source = None  # TODO
+
+    def get_keys(self) -> Iterable[str]:
+        return self.ndata.keys()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        return self.ndata[key]
 
     @classmethod
     def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> Self:
@@ -126,3 +171,23 @@ class Branch(SWC):
             branches.append(branch)
 
         return branches
+
+
+class BranchAttached(_Branch, Generic[SWCTypeVar]):
+    """Node attached to external object."""
+
+    attach: SWCTypeVar
+    idx: npt.NDArray[np.int32]
+
+    def __init__(self, attach: SWCTypeVar, idx: npt.NDArray[np.int32]) -> None:
+        super().__init__()
+        self.attach = attach
+        self.idx = idx
+
+    def get_keys(self) -> Iterable[str]:
+        return self.attach.get_keys()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        return self.attach.get_ndata(key)[self.idx]
+
+    # def detach(self) -> Branch: # TODO

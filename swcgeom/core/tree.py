@@ -1,12 +1,14 @@
 """Neuron tree."""
 
-from typing import Any, Callable, List, TypeVar, cast, overload
+from typing import Any, Callable, Iterable, List, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from .base import SWC, NodeAttached
+from .node import NodeAttached
+from .branch import BranchAttached
+from .swc import SWC
 
 __all__ = ["Tree"]
 
@@ -16,11 +18,11 @@ T, K = TypeVar("T"), TypeVar("K")
 class Tree(SWC):
     """A neuron tree, which should be a binary tree in most cases."""
 
-    class Node(NodeAttached):
+    class Node(NodeAttached["Tree"]):
         """Node of neuron tree."""
 
-        def __init__(self, tree: "Tree", idx: int) -> None:
-            super().__init__(tree, idx)
+    class Branch(BranchAttached["Branch"]):
+        """Branch of neuron tree."""
 
     ndata: dict[str, npt.NDArray[Any]]
     source: str | None
@@ -68,10 +70,9 @@ class Tree(SWC):
     @overload
     def __getitem__(self, key: str) -> npt.NDArray[Any]: ...
     # fmt:on
-
     def __getitem__(self, key):
         if isinstance(key, slice):
-            return [self[i] for i in range(*key.indices(len(self)))]
+            return [self.get_node(i) for i in range(*key.indices(len(self)))]
 
         if isinstance(key, int):
             length = len(self)
@@ -81,12 +82,21 @@ class Tree(SWC):
             if key < 0:  # Handle negative indices
                 key += length
 
-            return self.Node(self, key)
+            return self.get_node(key)
 
         if isinstance(key, str):
-            return self.ndata[key]
+            return self.get_ndata(key)
 
         raise TypeError("Invalid argument type.")
+
+    def get_keys(self) -> Iterable[str]:
+        return self.ndata.keys()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        return self.ndata[key]
+
+    def get_node(self, idx: int) -> Node:
+        return self.Node(self, idx)
 
     def number_of_nodes(self) -> int:
         """Get the number of nodes."""
