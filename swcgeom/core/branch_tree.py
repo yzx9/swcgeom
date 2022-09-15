@@ -3,11 +3,9 @@
 import itertools
 from typing import Dict, List
 
-from typing_extensions import Self  # TODO: move to typing in python 3.11
-
 from .branch import Branch
-from .swc_utils import to_sub_tree
 from .tree import Tree
+from .tree_utils import to_sub_tree
 
 
 class BranchTree(Tree):
@@ -21,8 +19,8 @@ class BranchTree(Tree):
     def get_node_branches(self, idx: int) -> List[Branch]:
         return self.branches[idx]
 
-    @classmethod
-    def from_tree(cls, tree: Tree) -> Self:
+    @staticmethod
+    def from_tree(tree: Tree) -> "BranchTree":
         """Generating a branch tree from tree."""
 
         branches = tree.get_branches()
@@ -34,14 +32,13 @@ class BranchTree(Tree):
         sub_pid.insert(0, -1)
 
         sub_tree, id_map = to_sub_tree(tree, sub_id, sub_pid)
-        ndata = {k: sub_tree.get_ndata(k) for k in sub_tree.keys()}
-        self = cls(len(sub_tree), **ndata)
-        self.source = tree.source
+        branch_tree = BranchTree(len(sub_tree), **sub_tree.ndata)
+        branch_tree.source = tree.source  # TODO
 
-        self.branches = {}
+        branch_tree.branches = {}
         for branch_raw in branches:
             idx = id_map[branch_raw[0].id]
-            self.branches.setdefault(idx, [])
-            self.branches[idx].append(branch_raw.detach())
+            branch_tree.branches.setdefault(idx, [])
+            branch_tree.branches[idx].append(branch_raw.detach())
 
-        return self
+        return branch_tree

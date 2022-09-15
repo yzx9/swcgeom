@@ -1,39 +1,20 @@
 """Neuron tree."""
 
 import os
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    List,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-    cast,
-    overload,
-)
+from typing import Callable, Iterable, List, Tuple, TypeVar, Union, cast, overload
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
 
 from ..utils import padding1d
 from .branch import BranchAttached
 from .node import NodeAttached
 from .segment import SegmentAttached
-from .swc import SWCLike
+from .swc import SWCLike, SWCNameMap, read_swc, swc_cols
 
 __all__ = ["Tree"]
 
 T, K = TypeVar("T"), TypeVar("K")
-
-
-SWCNameMap = TypedDict(
-    "SWCNameMap",
-    {"id": str, "type": str, "x": str, "y": str, "z": str, "r": str, "pid": str},
-    total=False,
-)
 
 
 class Tree(SWCLike):
@@ -46,17 +27,10 @@ class Tree(SWCLike):
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
 
         def children(self) -> List["Tree.Node"]:
-            pid = self.attach.pid()
-            return [Tree.Node(self.attach, idx) for idx in pid[pid == self.id]]
+            return [Tree.Node(self.attach, idx) for idx in self.child_ids()]
 
         def is_soma(self) -> bool:
             return self.id == -1
-
-        def is_bifurcation(self) -> bool:
-            return len(self.children()) > 1
-
-        def is_tip(self) -> bool:
-            return len(self.children()) == 0
 
         def get_branch(self) -> "Tree.Branch":
             nodes: List["Tree.Node"] = [self]
@@ -68,7 +42,7 @@ class Tree(SWCLike):
 
             nodes.reverse()
             while not nodes[-1].is_bifurcation() and not nodes[-1].is_tip():
-                nodes.append(nodes[-1].children()[0])
+                nodes.append(nodes[-1].child_ids()[0])
 
             return Tree.Branch(self.attach, [n.id for n in nodes])
 
@@ -178,22 +152,13 @@ class Tree(SWCLike):
         branches, _ = self.traverse(leave=collect_branches)
         return branches
 
-    TraverseEnter = Callable[[Node, T | None], T]
-    TraverseLeave = Callable[[Node, list[T]], T]
-
     # fmt:off
     @overload
-    def traverse(self, *, enter: TraverseEnter[T]) -> None: ...
+    def traverse(self, *, enter: Callable[[Node, T | None], T]) -> None: ...
     @overload
-    def traverse(self, *, enter: TraverseEnter[T] | None = None, leave: TraverseLeave[K]) -> K: ...
+    def traverse(self, *, enter: Callable[[Node, T | None], T] | None = ..., leave: Callable[[Node, list[K]], K]) -> K: ...
     # fmt:on
-
-    def traverse(
-        self,
-        *,
-        enter: TraverseEnter[T] | None = None,
-        leave: TraverseLeave[K] | None = None,
-    ) -> K | None:
+    def traverse(self, *, enter=None, leave=None):
         """Traverse each nodes.
 
         Parameters
@@ -214,12 +179,7 @@ class Tree(SWCLike):
             children_map.setdefault(pid, [])
             children_map[pid].append(idx)
 
-        def dfs(
-            idx: int,
-            enter: Tree.TraverseEnter[T] | None,
-            leave: Tree.TraverseLeave[K] | None,
-            pre: T | None,
-        ) -> K | None:
+        def dfs(idx, enter, leave, pre):
             cur = enter(self[idx], pre) if enter is not None else None
             children = [dfs(i, enter, leave, cur) for i in children_map.get(idx, [])]
             children = cast(list[K], children)
@@ -237,43 +197,12 @@ class Tree(SWCLike):
     def from_swc(swc_file: str, name_map: SWCNameMap | None = None) -> "Tree":
         """Read neuron tree from swc file.
 
-        Parameters
-        ----------
-        swc_file : str
-            Path of swc file, the id should be consecutively incremented.
-        name_map : dict[str, str], optional
-            Map standard name to actual name. The standard names are `id`,
-            `type`, `x`, `y`, `z`, `r` and `pid`.
+        See Also
+        --------
+        ~swcgeom.read_swc
         """
 
-        cols: List[Tuple[str, npt.DTypeLike]] = [
-            ("id", np.int32),
-            ("type", np.int32),
-            ("x", np.float32),
-            ("y", np.float32),
-            ("z", np.float32),
-            ("r", np.float32),
-            ("pid", np.int32),
-        ]
-
-        def get_name(k: str) -> str:
-            return name_map[k] if name_map is not None and k in name_map else k
-
-        df = pd.read_csv(
-            swc_file,
-            sep=" ",
-            comment="#",
-            names=[get_name(k) for k, v in cols],
-            dtype=cast(Any, {get_name(k): v for k, v in cols}),
-        ).rename({get_name(k): k for k, v in cols})
-
-        root = df.loc[0]["id"]
-        if root != 0:
-            df["id"] = df["id"] - root
-            df["pid"] = df["pid"] - root
-
-        df.loc[0, "pid"] = -1
-
-        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in cols})
+        df = read_swc(swc_file, name_map)
+        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
         tree.source = os.path.abspath(swc_file)
         return tree

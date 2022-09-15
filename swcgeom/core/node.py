@@ -114,6 +114,16 @@ class NodeAttached(_Node, Generic[SWCTypeVar]):
     def __setitem__(self, k: str, v: Any) -> None:
         self.attach.get_ndata(k)[self.idx] = v
 
+    def child_ids(self) -> npt.NDArray[np.int32]:
+        pid = self.attach.pid()
+        return pid[pid == self.id]
+
+    def is_bifurcation(self) -> bool:
+        return len(self.child_ids()) > 1
+
+    def is_tip(self) -> bool:
+        return len(self.child_ids()) == 0
+
     def detach(self) -> Node:
         return Node(**{k: self[k] for k in self})
 
