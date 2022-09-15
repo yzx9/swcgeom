@@ -173,7 +173,3 @@ class Nodes(SWCLike):
         """Sum of length of stems."""
         xyz = self.xyz()
         return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1)).item()
-
-    def straight_line_distance(self) -> float:
-        """Distance between start point and end point."""
-        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()

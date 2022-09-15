@@ -138,10 +138,10 @@ class BranchAttached(_Branch, Generic[SWCTypeVar]):
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
 
-    def __init__(self, attach: SWCTypeVar, idx: npt.NDArray[np.int32]) -> None:
+    def __init__(self, attach: SWCTypeVar, idx: npt.ArrayLike) -> None:
         super().__init__()
         self.attach = attach
-        self.idx = idx
+        self.idx = np.array(idx, dtype=np.int32)
 
     def get_keys(self) -> Iterable[str]:
         return self.attach.get_keys()
@@ -151,3 +151,7 @@ class BranchAttached(_Branch, Generic[SWCTypeVar]):
 
     def detach(self) -> Branch:
         return Branch(len(self), **{k: self[k] for k in self.get_keys()})
+
+    def straight_line_distance(self) -> float:
+        """Distance between start point and end point."""
+        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()

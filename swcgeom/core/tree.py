@@ -9,6 +9,7 @@ from typing import (
     Tuple,
     TypedDict,
     TypeVar,
+    Union,
     cast,
     overload,
 )
@@ -41,6 +42,36 @@ class Tree(SWCLike):
     class Node(NodeAttached["Tree"]):
         """Node of neuron tree."""
 
+        def parent(self) -> Union["Tree.Node", None]:
+            return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
+
+        def children(self) -> List["Tree.Node"]:
+            pid = self.attach.pid()
+            return [Tree.Node(self.attach, idx) for idx in pid[pid == self.id]]
+
+        def is_soma(self) -> bool:
+            return self.id == -1
+
+        def is_bifurcation(self) -> bool:
+            return len(self.children()) > 1
+
+        def is_tip(self) -> bool:
+            return len(self.children()) == 0
+
+        def get_branch(self) -> "Tree.Branch":
+            nodes: List["Tree.Node"] = [self]
+            while (
+                not nodes[-1].is_bifurcation()
+                and (parent := nodes[-1].parent()) is not None
+            ):
+                nodes.append(parent)
+
+            nodes.reverse()
+            while not nodes[-1].is_bifurcation() and not nodes[-1].is_tip():
+                nodes.append(nodes[-1].children()[0])
+
+            return Tree.Branch(self.attach, [n.id for n in nodes])
+
     class Segment(SegmentAttached["Tree"]):
         """Segment of neuron tree."""
 
@@ -48,7 +79,6 @@ class Tree(SWCLike):
         """Branch of neuron tree."""
 
     ndata: dict[str, npt.NDArray]
-    source: str | None
 
     def __init__(
         self,
@@ -76,7 +106,6 @@ class Tree(SWCLike):
         }
         kwargs.update(ndata)
         self.ndata = kwargs
-        self.source = None
 
     def __iter__(self) -> Iterable[Node]:
         return (self[i] for i in range(len(self)))
