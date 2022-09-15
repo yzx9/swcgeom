@@ -21,7 +21,7 @@ class _Branch(Nodes):
     def __repr__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
     def get_ndata(self, key: str) -> npt.NDArray:
@@ -29,6 +29,10 @@ class _Branch(Nodes):
 
     def get_segments(self) -> List[Segment]:
         return [self.Segment(self, n.pid, n.id) for n in self[1:]]
+
+    def straight_line_distance(self) -> float:
+        """Distance between start point and end point."""
+        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
 
 
 class Branch(_Branch):
@@ -67,7 +71,7 @@ class Branch(_Branch):
         self.ndata = kwargs
         self.source = None  # TODO
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         return self.ndata.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
@@ -143,15 +147,11 @@ class BranchAttached(_Branch, Generic[SWCTypeVar]):
         self.attach = attach
         self.idx = np.array(idx, dtype=np.int32)
 
-    def get_keys(self) -> Iterable[str]:
-        return self.attach.get_keys()
+    def keys(self) -> Iterable[str]:
+        return self.attach.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
     def detach(self) -> Branch:
-        return Branch(len(self), **{k: self[k] for k in self.get_keys()})
-
-    def straight_line_distance(self) -> float:
-        """Distance between start point and end point."""
-        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
+        return Branch(len(self), **{k: self[k] for k in self.keys()})

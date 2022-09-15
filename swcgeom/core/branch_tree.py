@@ -34,7 +34,7 @@ class BranchTree(Tree):
         sub_pid.insert(0, -1)
 
         sub_tree, id_map = to_sub_tree(tree, sub_id, sub_pid)
-        ndata = {k: sub_tree.get_ndata(k) for k in sub_tree.get_keys()}
+        ndata = {k: sub_tree.get_ndata(k) for k in sub_tree.keys()}
         self = cls(len(sub_tree), **ndata)
         self.source = tree.source
 

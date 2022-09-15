@@ -23,7 +23,7 @@ def to_sub_tree(
     id_map = {idx: i for i, idx in enumerate(sub_id)}
     new_pid = [id_map[i] if i != -1 else -1 for i in sub_pid]
 
-    ndata = {k: swc_like.get_ndata(k)[sub_id] for k in swc_like.get_keys()}
+    ndata = {k: swc_like.get_ndata(k)[sub_id] for k in swc_like.keys()}
     ndata.update(
         id=np.arange(0, n_nodes),
         pid=np.array(new_pid, dtype=np.int32),

@@ -12,7 +12,7 @@ __all__ = ["SWCLike", "SWCTypeVar"]
 class SWCLike:
     """Abstract class that including swc infomation."""
 
-    source: str | None
+    source: str | None = None
 
     def __len__(self) -> int:
         return self.number_of_nodes()
@@ -53,7 +53,7 @@ class SWCLike:
         """Get the coordinates and radius array of shape(n_sample, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=1)
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
     def get_ndata(self, key: str) -> npt.NDArray[Any]:

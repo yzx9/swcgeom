@@ -42,7 +42,7 @@ class Segment(Nodes):
         self.ndata = kwargs
         self.source = None  # TODO
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         return self.ndata.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
@@ -60,11 +60,11 @@ class SegmentAttached(Nodes, Generic[SWCTypeVar]):
         self.attach = attach
         self.idx = np.array([pid, idx])
 
-    def get_keys(self) -> Iterable[str]:
-        return self.attach.get_keys()
+    def keys(self) -> Iterable[str]:
+        return self.attach.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
     def detach(self) -> Segment:
-        return Segment(**{k: self[k] for k in self.get_keys()})
+        return Segment(**{k: self[k] for k in self.keys()})

@@ -160,7 +160,7 @@ class Nodes(SWCLike):
 
         raise TypeError("Invalid argument type.")
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
     def get_ndata(self, key: str) -> npt.NDArray:

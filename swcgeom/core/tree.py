@@ -124,7 +124,7 @@ class Tree(SWCLike):
     # fmt:on
     def __getitem__(self, key):
         if isinstance(key, slice):
-            return [self.get_node(i) for i in range(*key.indices(len(self)))]
+            return [self.node(i) for i in range(*key.indices(len(self)))]
 
         if isinstance(key, int):
             length = len(self)
@@ -134,21 +134,21 @@ class Tree(SWCLike):
             if key < 0:  # Handle negative indices
                 key += length
 
-            return self.get_node(key)
+            return self.node(key)
 
         if isinstance(key, str):
             return self.get_ndata(key)
 
         raise TypeError("Invalid argument type.")
 
-    def get_keys(self) -> Iterable[str]:
+    def keys(self) -> Iterable[str]:
         return self.ndata.keys()
+
+    def node(self, idx: int) -> Node:
+        return self.Node(self, idx)
 
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
-
-    def get_node(self, idx: int) -> Node:
-        return self.Node(self, idx)
 
     def get_segments(self) -> List[Segment]:
         # pylint: disable-next=not-an-iterable
@@ -234,12 +234,12 @@ class Tree(SWCLike):
         return new_tree
 
     @staticmethod
-    def from_swc(swc_path: str, name_map: SWCNameMap | None = None) -> "Tree":
+    def from_swc(swc_file: str, name_map: SWCNameMap | None = None) -> "Tree":
         """Read neuron tree from swc file.
 
         Parameters
         ----------
-        swc_path : str
+        swc_file : str
             Path of swc file, the id should be consecutively incremented.
         name_map : dict[str, str], optional
             Map standard name to actual name. The standard names are `id`,
@@ -260,7 +260,7 @@ class Tree(SWCLike):
             return name_map[k] if name_map is not None and k in name_map else k
 
         df = pd.read_csv(
-            swc_path,
+            swc_file,
             sep=" ",
             comment="#",
             names=[get_name(k) for k, v in cols],
@@ -275,5 +275,5 @@ class Tree(SWCLike):
         df.loc[0, "pid"] = -1
 
         tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in cols})
-        tree.source = os.path.abspath(swc_path)
+        tree.source = os.path.abspath(swc_file)
         return tree
