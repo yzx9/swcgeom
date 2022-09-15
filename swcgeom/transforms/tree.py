@@ -5,17 +5,17 @@ import numpy as np
 from ..core import BranchTree, Tree
 from .base import Transform
 
-__all__ = ["ToBranchTree", "Normalizer"]
+__all__ = ["TreeToBranchTree", "TreeNormalizer"]
 
 
-class ToBranchTree(Transform[Tree, BranchTree]):
+class TreeToBranchTree(Transform[Tree, BranchTree]):
     """Transform tree to branch tree."""
 
     def __call__(self, x: Tree) -> BranchTree:
         return BranchTree.from_tree(x)
 
 
-class Normalizer(Transform[Tree, BranchTree]):
+class TreeNormalizer(Transform[Tree, Tree]):
     """Noramlize coordinates and radius to 0-1."""
 
     def __call__(self, x: Tree) -> "Tree":
