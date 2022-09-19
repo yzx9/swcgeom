@@ -75,7 +75,7 @@ def draw(
         ax.spines["right"].set_visible(False)
         ax.spines["top"].set_visible(False)
 
-        ax.text(0.01, 1, r"$\mu m$", transform=ax.transAxes)
+        ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
 
         draw_xyz_axes(ax)
 
