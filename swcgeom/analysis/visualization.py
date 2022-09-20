@@ -62,12 +62,15 @@ def draw(
     else:
         color_map = color if color is not None else DEFAULT_COLOR
 
-    xyz = swc.xyz()
-    starts, ends = swc.id()[1:], swc.pid()[1:]
-    segments = np.stack([xyz[starts], xyz[ends]], axis=1)
+    if callable((get_segments := getattr(swc, "get_segments", None))):
+        lines = get_segments().xyz()
+    else:
+        xyz = swc.xyz()
+        starts, ends = swc.id()[1:], swc.pid()[1:]
+        lines = np.stack([xyz[starts], xyz[ends]], axis=1)
 
     fig, ax = get_fig_ax(fig, ax)
-    draw_lines(ax, segments, color=color_map, **kwargs)
+    draw_lines(ax, lines, color=color_map, **kwargs)
     ax.autoscale()
     if first:
         ax.set_aspect(1)

@@ -1,6 +1,6 @@
 """Branch is a set of node points."""
 
-from typing import Dict, Generic, Iterable, List
+from typing import Dict, Generic, Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -8,7 +8,7 @@ from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
 from .node import Nodes
-from .segment import SegmentAttached
+from .segment import SegmentAttached, Segments
 from .swc import SWCTypeVar
 
 __all__ = ["Branch", "BranchAttached"]
@@ -27,8 +27,8 @@ class _Branch(Nodes):
     def get_ndata(self, key: str) -> npt.NDArray:
         raise NotImplementedError()
 
-    def get_segments(self) -> List[Segment]:
-        return [self.Segment(self, n.pid, n.id) for n in self[1:]]
+    def get_segments(self) -> Segments[Segment]:
+        return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
 
     def straight_line_distance(self) -> float:
         """Distance between start point and end point."""

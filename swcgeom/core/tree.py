@@ -9,7 +9,7 @@ import numpy.typing as npt
 from ..utils import padding1d
 from .branch import BranchAttached
 from .node import NodeAttached
-from .segment import SegmentAttached
+from .segment import SegmentAttached, Segments
 from .swc import SWCLike, SWCNameMap, read_swc, swc_cols
 
 __all__ = ["Tree"]
@@ -124,9 +124,9 @@ class Tree(SWCLike):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
 
-    def get_segments(self) -> List[Segment]:
+    def get_segments(self) -> Segments[Segment]:
         # pylint: disable-next=not-an-iterable
-        return [self.Segment(self, n.pid, n.id) for n in self[1:]]
+        return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
 
     def get_branches(self) -> List[Branch]:
         Info = Tuple[List[Tree.Branch], List[int]]
