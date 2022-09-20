@@ -121,6 +121,9 @@ class Tree(SWCLike):
     def node(self, idx: int) -> Node:
         return self.Node(self, idx)
 
+    def soma(self) -> Node:
+        return self.node(0)
+
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
 
@@ -152,12 +155,19 @@ class Tree(SWCLike):
         branches, _ = self.traverse(leave=collect_branches)
         return branches
 
-    # fmt:off
     @overload
-    def traverse(self, *, enter: Callable[[Node, T | None], T]) -> None: ...
+    def traverse(self, *, enter: Callable[[Node, T | None], T]) -> None:
+        ...
+
     @overload
-    def traverse(self, *, enter: Callable[[Node, T | None], T] | None = ..., leave: Callable[[Node, list[K]], K]) -> K: ...
-    # fmt:on
+    def traverse(
+        self,
+        *,
+        enter: Callable[[Node, T | None], T] | None = ...,
+        leave: Callable[[Node, list[K]], K],
+    ) -> K:
+        ...
+
     def traverse(self, *, enter=None, leave=None):
         """Traverse each nodes.
 
