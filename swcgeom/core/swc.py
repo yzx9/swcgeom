@@ -7,7 +7,17 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
-__all__ = ["SWCLike", "SWCTypeVar", "SWCNameMap", "swc_cols", "read_swc"]
+__all__ = ["swc_cols", "SWCLike", "SWCTypeVar", "SWCNameMap", "read_swc"]
+
+swc_cols: List[Tuple[str, npt.DTypeLike]] = [
+    ("id", np.int32),
+    ("type", np.int32),
+    ("x", np.float32),
+    ("y", np.float32),
+    ("z", np.float32),
+    ("r", np.float32),
+    ("pid", np.int32),
+]
 
 
 class SWCLike:
@@ -74,41 +84,33 @@ class SWCLike:
         """Get the number of edges."""
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
-    def to_swc(self, swc_path: str) -> None:
+    def to_swc(self, swc_path: str, extra_cols: List[str] | None = None) -> None:
         """Write swc file."""
-        ids, typee, pid = self.id(), self.type(), self.pid()
-        x, y, z, r = self.x(), self.y(), self.z(), self.r()
+        names = [name for name, _ in swc_cols]
+        if extra_cols:
+            names.extend(extra_cols)
 
-        def get_row_str(idx: int) -> str:
-            xx, yy, zz, rr = [f"{v[idx]:.4f}" for v in (x, y, z, r)]
-            items = [idx, typee[idx], xx, yy, zz, rr, pid[idx]]
-            return " ".join(map(str, items))
+        def get_v(value: npt.NDArray, idx: int) -> str:
+            if np.issubdtype(value.dtype, np.floating):
+                return f"{value[idx]:.4f}"
+
+            return str(value[idx])
 
         with open(swc_path, "w", encoding="utf-8") as f:
             f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
-            f.write("# id type x y z r pid\n")
-            for idx in ids:
-                f.write(get_row_str(idx) + "\n")
+            f.write(f"# {' '.join(names)}\n")
+            for idx in self.id():
+                values = [get_v(self.get_ndata(name), idx) for name in names]
+                f.write(f"{' '.join(values)}\n")
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
-
 
 SWCNameMap = TypedDict(
     "SWCNameMap",
     {"id": str, "type": str, "x": str, "y": str, "z": str, "r": str, "pid": str},
     total=False,
 )
-
-swc_cols: List[Tuple[str, npt.DTypeLike]] = [
-    ("id", np.int32),
-    ("type", np.int32),
-    ("x", np.float32),
-    ("y", np.float32),
-    ("z", np.float32),
-    ("r", np.float32),
-    ("pid", np.int32),
-]
 
 
 def read_swc(
