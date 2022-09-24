@@ -8,8 +8,23 @@ from urllib.parse import urljoin
 
 import bs4
 import urllib3
+import urllib3.exceptions
 
-__all__ = ["download"]
+__all__ = ["download_file", "clone_index_page"]
+
+
+def download_file(dist: str, url: str) -> None:
+    """Download a file."""
+
+    conn = urllib3.connection_from_url(url)
+    r = conn.request("GET", url)
+
+    dirname = os.path.dirname(dist)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+
+    with open(dist, "wb") as file:
+        file.write(r.data)
 
 
 def get_page_soup(url: str) -> bs4.BeautifulSoup:
@@ -26,7 +41,7 @@ def get_page_links(soup: bs4.BeautifulSoup) -> list[str]:
 
 
 def get_all_file_urls(url: str) -> list[str]:
-    """Get all file links by DFS."""
+    """Get all file links by dfs."""
     soup = get_page_soup(url)
     links = get_page_links(soup)
     files = [urljoin(url, a) for a in links if not a.endswith("/")]
@@ -35,20 +50,8 @@ def get_all_file_urls(url: str) -> list[str]:
     return files
 
 
-def download_file(dist_dir: str, url: str) -> None:
-    """Download a file."""
-    conn = urllib3.connection_from_url(url)
-    r = conn.request("GET", url)
-    name = url.split("/")[-1]
-    if not os.path.exists(dist_dir):
-        os.makedirs(dist_dir)
-
-    with open(os.path.join(dist_dir, name), "wb") as file:
-        file.write(r.data)
-
-
-def download(
-    index_url: str, dist: str, override: bool = False, multiprocess: int = 4
+def clone_index_page(
+    index_url: str, dist_dir: str, override: bool = False, multiprocess: int = 4
 ) -> None:
     """Download directory from index page.
 
@@ -58,8 +61,8 @@ def download(
     ----------
     index_url : str
         URL of index page.
-    dist : str
-        Path of target directory.
+    dist_dir : str
+        Directory of dist.
     override : bool, default `False`
         Override existing file, skip file if `False`.
     multiprocess : int, default `4`
@@ -71,24 +74,23 @@ def download(
         "downloader: search `{}`, found {} files.", index_url, len(all_file_urls)
     )
 
-    def _download(dist: str, url: str) -> None:
-        file_dist = url.removeprefix(index_url)
-        components = file_dist.split("/")[:-1]
-        dist_dir = os.path.join(dist, *components)
-        if os.path.exists(file_dist):
+    def downloader(url: str) -> None:
+        filepath = url.removeprefix(index_url)
+        dist = os.path.join(dist_dir, filepath)
+        if os.path.exists(filepath):
             if not override:
+                logging.info("downloader: file `{}` exits, skiped.", dist)
                 return
 
-            logging.info("downloader: file `{}` exits, deleted.", dist_dir)
-            os.remove(file_dist)
+            logging.info("downloader: file `{}` exits, deleted.", dist)
+            os.remove(filepath)
 
         try:
-            logging.info("downloader: downloading `{}` to `{}`", url, dist_dir)
-            download_file(dist_dir, url)
-
-            logging.info("downloader: download `{}` to `{}`", url, dist_dir)
-        except Exception as ex:  # pylint: disable=broad-except
+            logging.info("downloader: downloading `{}` to `{}`", url, dist)
+            download_file(filepath, url)
+            logging.info("downloader: download `{}` to `{}`", url, dist)
+        except urllib3.exceptions.HTTPError as ex:
             logging.info("downloader: fails to download `{}`, except `{}`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
-        p.map(lambda url: _download(dist, url), all_file_urls)
+        p.map(downloader, all_file_urls)
