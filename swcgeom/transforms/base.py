@@ -22,7 +22,9 @@ class Transform(Generic[T, K]):
         applying transform in `x`.
     __repr__() -> str
         Subclasses could also optionally overwrite :meth:`__repr__`.
-        If not provied, class name will be a default value.
+        Avoid using the underscore `_` because it is used by
+        `Transforms`. If not provied, class name will be a default
+        value.
     """
 
     def __call__(self, x: T) -> K:
@@ -35,6 +37,8 @@ class Transform(Generic[T, K]):
 
 class Transforms(Transform[T, K]):
     """A simple typed wrapper for transforms."""
+
+    transforms: list[Transform[Any, Any]]
 
     # fmt:off
     @overload
@@ -61,9 +65,6 @@ class Transforms(Transform[T, K]):
                        t5: Transform[T4, T5], t6: Transform[T5, T6],
                        t7: Transform[T6, Any], /, *transforms: Transform[Any, Any]) -> None: ...
     # fmt:on
-
-    transforms: list[Transform[Any, Any]]
-
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
         self.transforms = list(transforms)
 

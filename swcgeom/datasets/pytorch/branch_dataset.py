@@ -68,17 +68,9 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         if self.save:
             torch.save(self.branches, self.save)
 
-    def __getitem__(self, idx: int) -> tuple[T, int]:
-        """Get branch data.
-
-        Returns
-        -------
-        x : T
-            Transformed data.
-        y : int
-            Label of x.
-        """
-        return self.branches[idx], 0
+    def __getitem__(self, idx: int) -> T:
+        """Get branch."""
+        return self.branches[idx]
 
     def __len__(self) -> int:
         """Get length of branches."""
@@ -86,7 +78,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_filename(self) -> str:
         """Get filename."""
-        trans_name = f"_{self.transform}" if self.transform else ""
+        trans_name = f"-{self.transform}" if self.transform else ""
         return f"BranchDataset{trans_name}.pt"
 
     def get_branches(self) -> list[T]:
@@ -94,14 +86,14 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         branch_trees = TreeFolderDataset(self.swc_dir, transform=TreeToBranchTree())
         branches = list[T]()
         old_settings = np.seterr(all="raise")
-        for x, y in branch_trees:  # pylint: disable=unused-variable
+        for tree in branch_trees:  # pylint: disable=unused-variable
             try:
-                brs = x.get_branches()
+                brs = tree.get_branches()
                 brs = [self.transform(br) for br in brs] if self.transform else brs
                 branches.extend(cast(Iterable[T], brs))
             except Exception as ex:  # pylint: disable=broad-except
                 warnings.warn(
-                    f"BranchDataset: skip swc '{x}', got warning from numpy: {ex}"
+                    f"BranchDataset: skip swc '{tree.source}', got warning from numpy: {ex}"
                 )
 
         np.seterr(**old_settings)
