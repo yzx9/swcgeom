@@ -10,7 +10,7 @@ from ..utils import padding1d
 from .branch import BranchAttached
 from .node import NodeAttached
 from .segment import SegmentAttached, Segments
-from .swc import SWCLike, SWCNameMap, read_swc, swc_cols
+from .swc import SWCLike, read_swc, swc_cols
 
 __all__ = ["Tree"]
 
@@ -204,7 +204,7 @@ class Tree(SWCLike):
         return new_tree
 
     @staticmethod
-    def from_swc(swc_file: str, name_map: SWCNameMap | None = None) -> "Tree":
+    def from_swc(swc_file: str, **kwargs) -> "Tree":
         """Read neuron tree from swc file.
 
         See Also
@@ -212,7 +212,7 @@ class Tree(SWCLike):
         ~swcgeom.read_swc
         """
 
-        df = read_swc(swc_file, name_map)
+        df = read_swc(swc_file, **kwargs)
         tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
         tree.source = os.path.abspath(swc_file)
         return tree

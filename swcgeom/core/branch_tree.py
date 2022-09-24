@@ -42,3 +42,8 @@ class BranchTree(Tree):
             branch_tree.branches[idx].append(branch_raw.detach())
 
         return branch_tree
+
+    @staticmethod
+    def from_swc(swc_file: str, **kwargs) -> "BranchTree":
+        tree = super().from_swc(swc_file, **kwargs)
+        return BranchTree.from_tree(tree)

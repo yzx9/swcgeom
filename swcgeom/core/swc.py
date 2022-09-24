@@ -1,13 +1,13 @@
 """SWC format."""
 
-from typing import Any, Iterable, List, Tuple, TypedDict, TypeVar, cast
+from typing import Any, Iterable, List, Tuple, TypeVar, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
-__all__ = ["swc_cols", "SWCLike", "SWCTypeVar", "SWCNameMap", "read_swc"]
+__all__ = ["swc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
 
 swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("id", np.int32),
@@ -18,6 +18,43 @@ swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("r", np.float32),
     ("pid", np.int32),
 ]
+
+
+def read_swc(
+    swc_file: str, extra_cols: List[str] | None = None, reindex=True
+) -> pd.DataFrame:
+    """Read swc file.
+
+    Parameters
+    ----------
+    swc_file : str
+        Path of swc file, the id should be consecutively incremented.
+    extra_cols : List[str], optional
+        Read more cols in swc file.
+    """
+
+    names = [k for k, v in swc_cols]
+    if extra_cols:
+        names.extend(extra_cols)
+
+    df = pd.read_csv(
+        swc_file,
+        sep=" ",
+        comment="#",
+        names=names,
+        dtype=cast(Any, dict(swc_cols)),
+        index_col=False,
+    )
+
+    if reindex:
+        root = df.loc[0]["id"]
+        if root != 0:
+            df["id"] = df["id"] - root
+            df["pid"] = df["pid"] - root
+
+        df.loc[0, "pid"] = -1
+
+    return df
 
 
 class SWCLike:
@@ -105,44 +142,3 @@ class SWCLike:
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
-
-SWCNameMap = TypedDict(
-    "SWCNameMap",
-    {"id": str, "type": str, "x": str, "y": str, "z": str, "r": str, "pid": str},
-    total=False,
-)
-
-
-def read_swc(
-    swc_file: str, name_map: SWCNameMap | None = None, reindex=True
-) -> pd.DataFrame:
-    """Read swc file.
-
-    Parameters
-    ----------
-    swc_file : str
-        Path of swc file, the id should be consecutively incremented.
-    name_map : dict[str, str], optional
-        Map standard name to actual name. The standard names are `id`,
-        `type`, `x`, `y`, `z`, `r` and `pid`.
-    """
-
-    def get_name(k: str) -> str:
-        return name_map[k] if name_map is not None and k in name_map else k
-
-    names = [get_name(k) for k, v in swc_cols]
-    dtype = {get_name(k): v for k, v in swc_cols}
-
-    df = pd.read_csv(
-        swc_file, sep=" ", comment="#", names=names, dtype=cast(Any, dtype)
-    ).rename({get_name(k): k for k, v in swc_cols})
-
-    if reindex:
-        root = df.loc[0]["id"]
-        if root != 0:
-            df["id"] = df["id"] - root
-            df["pid"] = df["pid"] - root
-
-        df.loc[0, "pid"] = -1
-
-    return df
