@@ -60,7 +60,7 @@ def read_swc(
 class SWCLike:
     """Abstract class that including swc infomation."""
 
-    source: str | None = None
+    source: str = ""
 
     def __len__(self) -> int:
         return self.number_of_nodes()
