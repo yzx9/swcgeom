@@ -1,7 +1,7 @@
 """Neuron tree."""
 
 import os
-from typing import Callable, Iterable, List, Tuple, TypeVar, Union, cast, overload
+from typing import Callable, Iterable, List, Tuple, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -189,13 +189,25 @@ class Tree(SWCLike):
             children_map.setdefault(pid, [])
             children_map[pid].append(idx)
 
-        def dfs(idx, enter, leave, pre):
-            cur = enter(self[idx], pre) if enter is not None else None
-            children = [dfs(i, enter, leave, cur) for i in children_map.get(idx, [])]
-            children = cast(list[K], children)
-            return leave(self[idx], children) if leave is not None else None
+        # manual stack to avoid stack overflow in long projection
+        stack: List[Tuple[int, bool]] = [(0, True)]  # (idx, first)
+        params = {0: None}
+        vals = {}
 
-        return dfs(0, enter, leave, None)
+        while len(stack) != 0:
+            idx, first = stack.pop()
+            if first:
+                pre = params.pop(idx)
+                cur = enter(self[idx], pre) if enter is not None else None
+                stack.append((idx, False))
+                for child in children_map.get(idx, []):
+                    stack.append((child, True))
+                    params[child] = cur
+            else:
+                children = [vals.pop(i) for i in children_map.get(idx, [])]
+                vals[idx] = leave(self[idx], children) if leave is not None else None
+
+        return vals[0]
 
     def copy(self) -> "Tree":
         """Make a copy."""
