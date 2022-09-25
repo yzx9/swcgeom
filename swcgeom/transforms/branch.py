@@ -6,7 +6,15 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import Branch
-from ..utils import angle, rotate3d_x, rotate3d_y, rotate3d_z, scale3d, translate3d
+from ..utils import (
+    angle,
+    rotate3d_x,
+    rotate3d_y,
+    rotate3d_z,
+    scale3d,
+    to_homogeneous,
+    translate3d,
+)
 from .base import Transform
 
 __all__ = ["BranchLinearResampler", "BranchStandardizer"]
@@ -78,8 +86,7 @@ class BranchStandardizer(Transform[Branch, Branch]):
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
         T = self.get_matrix(xyz)
 
-        ones = np.ones([xyz.shape[0], 1])
-        xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
+        xyz4 = to_homogeneous(xyz, 1).transpose()  # (4, N)
         new_xyz = np.dot(T, xyz4)[:3].transpose()
         new_xyzr = np.concatenate([new_xyz, r / r.max()], axis=1)
         return Branch.from_xyzr(new_xyzr)
@@ -113,7 +120,7 @@ class BranchStandardizer(Transform[Branch, Branch]):
         T = translate3d(-xyz[0, 0], -xyz[0, 1], -xyz[0, 2]).dot(T)
 
         # scale to unit vector
-        s = float(1 / np.linalg.norm(v[:3, 0]))
+        s = (1 / np.linalg.norm(v[:3, 0])).item()
         T = scale3d(s, s, s).dot(T)
 
         # rotate v to the xz-plane, v should be (x, 0, z) now
@@ -128,8 +135,7 @@ class BranchStandardizer(Transform[Branch, Branch]):
 
         # rotate the farthest point to the xy-plane
         if xyz.shape[0] > 2:
-            ones = np.ones([xyz.shape[0], 1])
-            xyz4 = np.concatenate([xyz, ones], axis=1).transpose()  # (4, N)
+            xyz4 = to_homogeneous(xyz, 1).transpose()  # (4, N)
             new_xyz4 = np.dot(T, xyz4)  # (4, N)
             max_index = np.argmax(np.linalg.norm(new_xyz4[1:3, :], axis=0)[1:-1]) + 1
             max_xyz4 = xyz4[:, max_index].reshape(4, 1)

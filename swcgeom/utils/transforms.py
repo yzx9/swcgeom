@@ -5,6 +5,7 @@ import numpy.typing as npt
 
 
 __all__ = [
+    "to_homogeneous",
     "angle",
     "scale3d",
     "translate3d",
@@ -13,6 +14,30 @@ __all__ = [
     "rotate3d_y",
     "rotate3d_z",
 ]
+
+
+def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
+    """Fill xyz to homogeneous coordinates.
+
+    Parameters
+    ----------
+    xyz : ArrayLike
+        Coordinate of shape (N, 3)
+    w : float
+        w of homogeneous coordinate, 1 for dot, 0 for vector.
+
+    Returns
+    -------
+    xyz4 : npt.NDArray[np.float32]
+        Array of shape (N, 4)
+    """
+    xyz = np.array(xyz)
+    if xyz.shape[1] == 4:
+        return xyz
+
+    ones = np.full([xyz.shape[0]], fill_value=w)
+    xyz4 = np.concatenate([xyz, ones], axis=1)
+    return xyz4
 
 
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
