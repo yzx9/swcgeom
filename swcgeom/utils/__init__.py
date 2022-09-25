@@ -1,5 +1,5 @@
 """Utils."""
 
 from .numpy import *
-from .painter import *
+from .renderer import *
 from .transforms import *
