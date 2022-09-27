@@ -1,5 +1,6 @@
 """Branch anlysis of tree."""
 
+from functools import cached_property
 from typing import List
 
 import numpy as np
@@ -15,17 +16,16 @@ class BranchAnalysis:
     """Analysis bransh of tree."""
 
     tree: Tree
-    branches: List[Tree.Branch] | None = None
 
     def __init__(self, tree: Tree) -> None:
         self.tree = tree
 
     def get_count(self) -> int:
-        return len(self._get_branches())
+        return len(self._branches)
 
     def get_length(self) -> npt.NDArray[np.float32]:
         """Get length of branches."""
-        length = [br.length() for br in self._get_branches()]
+        length = [br.length() for br in self._branches]
         return np.array(length, dtype=np.float32)
 
     def get_length_distribution(self, step: float = 1) -> npt.NDArray[np.int32]:
@@ -42,7 +42,7 @@ class BranchAnalysis:
             An array of shape (N, N), which N is length of branches.
         """
 
-        vector = np.array([br[-1].xyz() - br[0].xyz() for br in self._get_branches()])
+        vector = np.array([br[-1].xyz() - br[0].xyz() for br in self._branches])
         vector_dot = np.matmul(vector, vector.T)
         vector_norm = np.linalg.norm(vector, ord=2, axis=1, keepdims=True)
         vector_norm_dot = np.matmul(vector_norm, vector_norm.T) + eps
@@ -50,8 +50,6 @@ class BranchAnalysis:
         angle = np.arccos(arccos)
         return angle
 
-    def _get_branches(self) -> List[Tree.Branch]:
-        if self.branches is None:
-            self.branches = self.tree.get_branches()
-
-        return self.branches
+    @cached_property
+    def _branches(self) -> List[Tree.Branch]:
+        return self.tree.get_branches()

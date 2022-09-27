@@ -1,6 +1,7 @@
 """Depth distribution of tree."""
 
 
+from functools import cached_property
 from typing import List
 
 import numpy as np
@@ -15,15 +16,13 @@ class DepthAnalysis:
     """Calc depth distribution of tree."""
 
     tree: Tree
-    branch_tree: BranchTree
 
     def __init__(self, tree: Tree) -> None:
         self.tree = tree
-        self.branch_tree = BranchTree.from_tree(self.tree)
 
     def get_branch_depth(self) -> npt.NDArray[np.int32]:
         """Get depth distribution of branches."""
-        depth = np.zeros_like(self.branch_tree.id())
+        depth = np.zeros_like(self._branch_tree.id())
         count = {}
 
         def assign_depth(n: Tree.Node, pre_depth: int | None) -> int:
@@ -35,13 +34,13 @@ class DepthAnalysis:
             if len(children) != 0:  # ignore tips
                 count[depth[n.id]] = count.get(depth[n.id], 0) + 1
 
-        self.branch_tree.traverse(enter=assign_depth, leave=collect_depth)
+        self._branch_tree.traverse(enter=assign_depth, leave=collect_depth)
         distribution = [count.get(i, 0) for i in range(max(count.keys()))]
         return np.array(distribution, dtype=np.int32)
 
     def get_tip_depth(self) -> npt.NDArray[np.int32]:
         """Get depth distribution of tips."""
-        depth = np.zeros_like(self.branch_tree.id())
+        depth = np.zeros_like(self._branch_tree.id())
         count = {}
 
         def assign_depth(n: Tree.Node, pre_depth: int | None) -> int:
@@ -53,6 +52,10 @@ class DepthAnalysis:
             if len(children) == 0:  # only tips
                 count[depth[n.id]] = count.get(depth[n.id], 0) + 1
 
-        self.branch_tree.traverse(enter=assign_depth, leave=collect_depth)
+        self._branch_tree.traverse(enter=assign_depth, leave=collect_depth)
         distribution = [count.get(i, 0) for i in range(max(count.keys()))]
         return np.array(distribution, dtype=np.int32)
+
+    @cached_property
+    def _branch_tree(self) -> BranchTree:
+        return BranchTree.from_tree(self.tree)
