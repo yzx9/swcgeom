@@ -215,6 +215,10 @@ class Tree(SWCLike):
         new_tree.source = self.source
         return new_tree
 
+    def length(self) -> float:
+        """Get length of tree."""
+        return sum(s.length() for s in self.get_segments())
+
     @staticmethod
     def from_swc(swc_file: str, **kwargs) -> "Tree":
         """Read neuron tree from swc file.
