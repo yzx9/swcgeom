@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.utils.data
 
-from ...core import Branch
+from ...core import BranchBase
 from ...transforms import TreeToBranchTree, Transform
 from .tree_folder_dataset import TreeFolderDataset
 
@@ -22,7 +22,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     swc_dir: str
     save: str | None
-    transform: Transform[Branch, T] | None
+    transform: Transform[BranchBase, T] | None
 
     branches: list[T]
 
@@ -30,7 +30,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         self,
         swc_dir: str,
         save: str | bool = True,
-        transform: Transform[Branch, T] | None = None,
+        transform: Transform[BranchBase, T] | None = None,
     ) -> None:
         """Create branch dataset.
 
