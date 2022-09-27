@@ -70,6 +70,36 @@ class PathBase(SWCLike):
     def get_node(self, idx: int) -> Node:
         return self.Node(self, idx)
 
+    def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
+        """Get the ids of shape (n_sample,).
+
+        Returns a consecutively incremented id.
+
+        See Also
+        --------
+        self.origin_id
+        """
+        return np.arange(len(self.origin_id()), dtype=np.int32)
+
+    def pid(self) -> npt.NDArray[np.int32]:
+        """Get the ids of shape (n_sample,).
+
+        Returns a consecutively incremented pid.
+
+        See Also
+        --------
+        self.origin_pid
+        """
+        return np.arange(-1, len(self.origin_id()) - 1, dtype=np.int32)
+
+    def origin_id(self) -> npt.NDArray[np.int32]:
+        """Get the original id."""
+        return self.get_ndata("id")
+
+    def origin_pid(self) -> npt.NDArray[np.int32]:
+        """Get the original pid."""
+        return self.get_ndata("pid")
+
     def length(self) -> float:
         """Sum of length of stems."""
         xyz = self.xyz()

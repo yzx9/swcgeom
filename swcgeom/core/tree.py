@@ -1,7 +1,8 @@
 """Neuron tree."""
 
+import itertools
 import os
-from typing import Callable, Iterable, List, Tuple, TypeVar, Union, overload
+from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -9,6 +10,7 @@ import numpy.typing as npt
 from ..utils import padding1d
 from .branch import BranchAttached
 from .node import NodeAttached
+from .path import PathAttached
 from .segment import SegmentAttached, Segments
 from .swc import SWCLike, read_swc, swc_cols
 
@@ -30,7 +32,10 @@ class Tree(SWCLike):
             return [Tree.Node(self.attach, idx) for idx in self.child_ids()]
 
         def is_soma(self) -> bool:
-            return self.id == -1
+            return self.id == 0
+
+        def is_tip(self) -> bool:
+            return self.id in self.attach.pid()
 
         def get_branch(self) -> "Tree.Branch":
             nodes: List["Tree.Node"] = [self]
@@ -45,6 +50,9 @@ class Tree(SWCLike):
                 nodes.append(nodes[-1].child_ids()[0])
 
             return Tree.Branch(self.attach, [n.id for n in nodes])
+
+    class Path(PathAttached["Tree"]):
+        """Path of neuron tree."""
 
     class Segment(SegmentAttached["Tree"]):
         """Segment of neuron tree."""
@@ -124,6 +132,11 @@ class Tree(SWCLike):
     def soma(self) -> Node:
         return self.node(0)
 
+    def tips(self) -> List[Node]:
+        """Get all node of tips."""
+        tip_ids = np.setdiff1d(self.id(), self.pid(), assume_unique=True)
+        return [self.node(i) for i in tip_ids]
+
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.ndata[key]
 
@@ -154,6 +167,27 @@ class Tree(SWCLike):
         # pylint: disable-next=unpacking-non-sequence
         branches, _ = self.traverse(leave=collect_branches)
         return branches
+
+    def get_paths(self) -> List[Path]:
+        """Get all path from soma to tips."""
+        path_dic: Dict[int, List[int]] = {}
+        Paths = List[List[int]]
+
+        def assign_path(n: Tree.Node, pre_path: List[int] | None) -> List[int]:
+            path = [] if pre_path is None else pre_path.copy()
+            path.append(n.id)
+            path_dic[n.id] = path
+            return path
+
+        def collect_path(n: Tree.Node, children: List[Paths]) -> Paths:
+            if len(children) == 0:
+                return [path_dic[n.id]]
+
+            return list(itertools.chain(*children))
+
+        paths = self.traverse(enter=assign_path, leave=collect_path)
+        # pylint: disable-next=not-an-iterable
+        return [self.Path(self, idx) for idx in paths]
 
     @overload
     def traverse(self, *, enter: Callable[[Node, T | None], T]) -> None:
