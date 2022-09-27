@@ -9,7 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import Tree
-from ..utils import get_fig_ax
+from ..utils import draw_circles, get_fig_ax
 
 __all__ = ["Sholl"]
 
@@ -53,7 +53,7 @@ class Sholl:
 
     def plot(
         self,
-        plot_type: Literal["bar"] | Literal["linechart"] = "linechart",
+        plot_type: Literal["bar", "linechart", "circles"] = "linechart",
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
@@ -69,6 +69,9 @@ class Sholl:
                 ax.bar(x, y, **kwargs)
             case "linechart":
                 ax.plot(x, y, **kwargs)
+            case "circles":
+                kwargs.setdefault("y_min", 0)
+                draw_circles(fig, ax, x, y, **kwargs)
             case _:
                 raise ValueError(f"unsupported plot type: {plot_type}")
 

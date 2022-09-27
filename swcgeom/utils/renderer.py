@@ -4,9 +4,12 @@ from dataclasses import dataclass
 from typing import NamedTuple, Tuple
 
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
+from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
+from matplotlib.patches import Circle
 
 import numpy as np
 import numpy.typing as npt
@@ -24,6 +27,7 @@ __all__ = [
     "palette",
     "draw_lines",
     "draw_xyz_axes",
+    "draw_circles",
     "get_fig_ax",
 ]
 
@@ -126,9 +130,43 @@ def draw_xyz_axes(
         )
 
 
+def draw_circles(
+    fig: Figure,
+    ax: Axes,
+    x: npt.NDArray,
+    y: npt.NDArray,
+    /,
+    y_min: float | None = None,
+    y_max: float | None = None,
+    cmap: str = "viridis",
+) -> None:
+    """Draw a sequential of circles."""
+    y_min = y.min() if y_min is None else y_min
+    y_max = y.max() if y_max is None else y_max
+    norm = Normalize(y_min, y_max)
+
+    color_map = cm.get_cmap(name=cmap)
+    colors = color_map(norm(y))
+
+    for xi, color in reversed(list(zip(x, colors))):
+        circle = Circle((0, 0), xi, color=color)
+        ax.add_patch(circle)
+
+    sm = cm.ScalarMappable(cmap=color_map, norm=norm)
+    sm.set_array([])
+    fig.colorbar(sm)
+
+    ax.set_aspect(1)
+    ax.autoscale()
+
+
 def get_fig_ax(
     fig: Figure | None = None, ax: Axes | None = None
 ) -> Tuple[Figure, Axes]:
-    fig = plt.gcf() if fig is None else fig
-    ax = fig.gca() if ax is None else ax
+    if fig is None:
+        fig = plt.gcf() if ax is None else ax.get_figure()
+
+    if ax is None:
+        ax = fig.gca()
+
     return fig, ax
