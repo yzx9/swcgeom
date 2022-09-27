@@ -2,7 +2,7 @@
 
 from typing import Any, Generic, TypeVar, cast, overload
 
-__all__ = ["Transform", "Transforms"]
+__all__ = ["Transform", "Transforms", "Identity"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
@@ -83,3 +83,13 @@ class Transforms(Transform[T, K]):
 
     def __len__(self) -> int:
         return len(self.transforms)
+
+
+class Identity(Transform[T, T]):
+    """Resurn input as-is."""
+
+    def __call__(self, x: T) -> T:
+        return x
+
+    def __repr__(self) -> str:
+        return ""

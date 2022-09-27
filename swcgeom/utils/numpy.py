@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d", "to_distribution", "printoptions"]
+__all__ = ["padding1d", "to_distribution", "numpy_printoptions", "numpy_err"]
 
 
 def padding1d(
@@ -53,7 +53,7 @@ def to_distribution(values: npt.NDArray, step: float) -> npt.NDArray[np.int32]:
 
 
 @contextmanager
-def printoptions(*args, **kwargs):
+def numpy_printoptions(*args, **kwargs):
     original_options = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
 
@@ -61,3 +61,13 @@ def printoptions(*args, **kwargs):
         yield
     finally:
         np.set_printoptions(**original_options)
+
+
+@contextmanager
+def numpy_err(*args, **kwargs):
+    old_settings = np.seterr(*args, **kwargs)
+
+    try:
+        yield
+    finally:
+        np.seterr(**old_settings)

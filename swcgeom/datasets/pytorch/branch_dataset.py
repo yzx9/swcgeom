@@ -4,17 +4,18 @@ import os
 import warnings
 from typing import Generic, Iterable, TypeVar, cast
 
-import numpy as np
 import torch
 import torch.utils.data
 
 from ...core import BranchBase
-from ...transforms import TreeToBranchTree, Transform
+from ...transforms import Identity, Transform
+from ...utils import numpy_err
 from .tree_folder_dataset import TreeFolderDataset
 
 __all__ = ["BranchDataset"]
 
 T = TypeVar("T")
+identity = Identity[BranchBase]()
 
 
 class BranchDataset(torch.utils.data.Dataset, Generic[T]):
@@ -22,7 +23,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     swc_dir: str
     save: str | None
-    transform: Transform[BranchBase, T] | None
+    transform: Transform[BranchBase, T]
 
     branches: list[T]
 
@@ -30,7 +31,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         self,
         swc_dir: str,
         save: str | bool = True,
-        transform: Transform[BranchBase, T] | None = None,
+        transform: Transform[BranchBase, T] = identity,
     ) -> None:
         """Create branch dataset.
 
@@ -78,23 +79,22 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     def get_filename(self) -> str:
         """Get filename."""
-        trans_name = f"-{self.transform}" if self.transform else ""
+        trans_name = f"-{self.transform}" if self.transform is not identity else ""
         return f"BranchDataset{trans_name}.pt"
 
     def get_branches(self) -> list[T]:
         """Get all branches."""
-        branch_trees = TreeFolderDataset(self.swc_dir, transform=TreeToBranchTree())
         branches = list[T]()
-        old_settings = np.seterr(all="raise")
-        for tree in branch_trees:  # pylint: disable=unused-variable
-            try:
-                brs = tree.get_branches()
-                brs = [self.transform(br) for br in brs] if self.transform else brs
-                branches.extend(cast(Iterable[T], brs))
-            except Exception as ex:  # pylint: disable=broad-except
-                warnings.warn(
-                    f"BranchDataset: skip swc '{tree.source}', got warning from numpy: {ex}"
-                )
 
-        np.seterr(**old_settings)
+        with numpy_err(all="raise"):
+            for tree in TreeFolderDataset(self.swc_dir):
+                try:
+                    brs = tree.get_branches()
+                    brs = [self.transform(br) for br in brs] if self.transform else brs
+                    branches.extend(cast(Iterable[T], brs))
+                except Exception as ex:  # pylint: disable=broad-except
+                    warnings.warn(
+                        f"BranchDataset: skip swc '{tree.source}', got warning from numpy: {ex}"
+                    )
+
         return branches
