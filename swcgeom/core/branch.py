@@ -11,11 +11,13 @@ from .path import PathBase
 from .segment import SegmentAttached, Segments
 from .swc import SWCTypeVar
 
-__all__ = ["Branch", "BranchAttached"]
+__all__ = ["BranchBase", "Branch", "BranchAttached"]
 
 
-class _Branch(PathBase):
-    class Segment(SegmentAttached["_Branch"]):
+class BranchBase(PathBase):
+    r"""Neuron branch."""
+
+    class Segment(SegmentAttached["BranchBase"]):
         """Segment of branch."""
 
     def __repr__(self) -> str:
@@ -35,7 +37,7 @@ class _Branch(PathBase):
         return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
 
 
-class Branch(_Branch):
+class Branch(BranchBase):
     r"""A branch of neuron tree.
 
     Notes
@@ -79,7 +81,7 @@ class Branch(_Branch):
 
     @classmethod
     def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> Self:
-        """Create a branch from ~numpy.ndarray.
+        r"""Create a branch from ~numpy.ndarray.
 
         Parameters
         ----------
@@ -103,7 +105,7 @@ class Branch(_Branch):
 
     @classmethod
     def from_xyzr_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
-        """Create list of branch form ~numpy.ndarray.
+        r"""Create list of branch form ~numpy.ndarray.
 
         Parameters
         ----------
@@ -136,8 +138,8 @@ class Branch(_Branch):
         return branches
 
 
-class BranchAttached(_Branch, Generic[SWCTypeVar]):
-    """Branch attached to external object."""
+class BranchAttached(BranchBase, Generic[SWCTypeVar]):
+    r"""Branch attached to external object."""
 
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]

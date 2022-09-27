@@ -9,10 +9,12 @@ from ..utils import padding1d
 from .path import PathBase
 from .swc import SWCTypeVar
 
-__all__ = ["Segment", "SegmentAttached", "Segments"]
+__all__ = ["SegmentBase", "Segment", "SegmentAttached", "Segments"]
 
 
-class _Segment(PathBase):
+class SegmentBase(PathBase):
+    r"""A segment is a branch with two nodes."""
+
     def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
@@ -20,8 +22,8 @@ class _Segment(PathBase):
         raise NotImplementedError()
 
 
-class Segment(_Segment):
-    r"""A segment is a branch with two nodes."""
+class Segment(SegmentBase):
+    r"""A segment is a path with two nodes."""
 
     ndata: Dict[str, npt.NDArray]
 
@@ -57,8 +59,8 @@ class Segment(_Segment):
         return self.ndata[key]
 
 
-class SegmentAttached(_Segment, Generic[SWCTypeVar]):
-    """Segment attached to external object."""
+class SegmentAttached(SegmentBase, Generic[SWCTypeVar]):
+    r"""Segment attached to external object."""
 
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
@@ -78,11 +80,11 @@ class SegmentAttached(_Segment, Generic[SWCTypeVar]):
         return Segment(**{k: self[k] for k in self.keys()})
 
 
-SegmentT = TypeVar("SegmentT", bound=_Segment)
+SegmentT = TypeVar("SegmentT", bound=SegmentBase)
 
 
 class Segments(List[SegmentT]):
-    """Segments contains a set of segments."""
+    r"""Segments contains a set of segments."""
 
     def __init__(self, segments: Iterable[SegmentT]) -> None:
         super().__init__(segments)
