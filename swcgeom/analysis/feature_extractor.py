@@ -6,15 +6,22 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import Tree
+from .branch import BranchAnalysis
 from .depth import DepthAnalysis
 from .sholl import Sholl
 
 __all__ = ["FeatureExtractor"]
 
-Feature = Literal["length", "branch_depth", "tip_depth", "sholl"]
+Feature = Literal[
+    "length",
+    "branch_length",
+    "branch_length_distribution",
+    "branch_depth",
+    "tip_depth",
+    "sholl",
+]
 
 
-# pylint: disable-next=too-few-public-methods
 class FeatureExtractor:
     """Extract feature from tree."""
 
@@ -57,7 +64,14 @@ class FeatureExtractor:
 
     # Caches
 
+    branch_anlysis: BranchAnalysis | None = None
     depth_analysis: DepthAnalysis | None = None
+
+    def _get_branch_anlysis(self) -> BranchAnalysis:
+        if self.branch_anlysis is None:
+            self.branch_anlysis = BranchAnalysis(self.tree)
+
+        return self.branch_anlysis
 
     def _get_depth_analysis(self) -> DepthAnalysis:
         if self.depth_analysis is None:
@@ -69,6 +83,16 @@ class FeatureExtractor:
 
     def _get_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
+
+    def _get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._get_branch_anlysis().get_length(**kwargs)
+
+    def _get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return (
+            self._get_branch_anlysis()
+            .get_length_distribution(**kwargs)
+            .astype(np.float32)
+        )
 
     def _get_branch_depth(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._get_depth_analysis().get_branch_depth(**kwargs).astype(np.float32)

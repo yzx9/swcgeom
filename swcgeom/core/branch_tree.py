@@ -13,10 +13,12 @@ class BranchTree(Tree):
 
     branches: Dict[int, List[Branch]]
 
-    def get_branches(self) -> list[Branch]:
+    def get_origin_branches(self) -> list[Branch]:
+        """Get branches of original tree."""
         return list(itertools.chain(*self.branches.values()))
 
-    def get_node_branches(self, idx: int) -> List[Branch]:
+    def get_origin_node_branches(self, idx: int) -> List[Branch]:
+        """Get branches of node of original tree."""
         return self.branches[idx]
 
     @staticmethod

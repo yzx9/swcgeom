@@ -5,7 +5,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d"]
+__all__ = ["padding1d", "to_distribution"]
 
 
 def padding1d(
@@ -40,3 +40,12 @@ def padding1d(
 
     padding = np.full(n - v.shape[0], padding_value, dtype=dtype)
     return np.concatenate([v, padding])
+
+
+def to_distribution(values: npt.NDArray, step: float) -> npt.NDArray[np.int32]:
+    indices = np.floor(values / step).astype(np.int32)
+    dirtribution = np.zeros((indices.max() + 1), dtype=np.int32)
+    for i in indices:
+        dirtribution[i] = dirtribution[i] + 1
+
+    return dirtribution
