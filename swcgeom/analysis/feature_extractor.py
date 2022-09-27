@@ -8,6 +8,7 @@ import numpy.typing as npt
 from ..core import Tree
 from .branch import BranchAnalysis
 from .depth import DepthAnalysis
+from .path import PathAnalysis
 from .sholl import Sholl
 
 __all__ = ["FeatureExtractor"]
@@ -18,6 +19,7 @@ Feature = Literal[
     "branch_length_distribution",
     "branch_depth",
     "tip_depth",
+    "path_length",
     "sholl",
 ]
 
@@ -56,16 +58,44 @@ class FeatureExtractor:
         return self._get(feature, **kwargs)
 
     def _get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
-        get_feature = getattr(self, f"_get_{feature}", None)
+        get_feature = getattr(self, f"get_{feature}", None)
         if not callable(get_feature):
             raise ValueError(f"Invalid feture: {feature}")
 
         return get_feature(**kwargs)
 
+    # Features
+
+    def get_length(self, **kwargs) -> npt.NDArray[np.float32]:
+        return np.array([self.tree.length(**kwargs)], dtype=np.float32)
+
+    def get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._get_branch_anlysis().get_length(**kwargs)
+
+    def get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return (
+            self._get_branch_anlysis()
+            .get_length_distribution(**kwargs)
+            .astype(np.float32)
+        )
+
+    def get_branch_depth(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._get_depth_analysis().get_branch_depth(**kwargs).astype(np.float32)
+
+    def get_tip_depth(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._get_depth_analysis().get_tip_depth(**kwargs).astype(np.float32)
+
+    def get_path_length(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._get_path_analysis().get_length(**kwargs)
+
+    def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
+        return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
+
     # Caches
 
     branch_anlysis: BranchAnalysis | None = None
     depth_analysis: DepthAnalysis | None = None
+    path_analysis: PathAnalysis | None = None
 
     def _get_branch_anlysis(self) -> BranchAnalysis:
         if self.branch_anlysis is None:
@@ -79,26 +109,8 @@ class FeatureExtractor:
 
         return self.depth_analysis
 
-    # Features
+    def _get_path_analysis(self) -> PathAnalysis:
+        if self.path_analysis is None:
+            self.path_analysis = PathAnalysis(self.tree)
 
-    def _get_length(self, **kwargs) -> npt.NDArray[np.float32]:
-        return np.array([self.tree.length(**kwargs)], dtype=np.float32)
-
-    def _get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._get_branch_anlysis().get_length(**kwargs)
-
-    def _get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return (
-            self._get_branch_anlysis()
-            .get_length_distribution(**kwargs)
-            .astype(np.float32)
-        )
-
-    def _get_branch_depth(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._get_depth_analysis().get_branch_depth(**kwargs).astype(np.float32)
-
-    def _get_tip_depth(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._get_depth_analysis().get_tip_depth(**kwargs).astype(np.float32)
-
-    def _get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
-        return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
+        return self.path_analysis

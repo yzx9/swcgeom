@@ -1,11 +1,12 @@
 """Numpy related utils."""
 
+from contextlib import contextmanager
 from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d", "to_distribution"]
+__all__ = ["padding1d", "to_distribution", "printoptions"]
 
 
 def padding1d(
@@ -49,3 +50,14 @@ def to_distribution(values: npt.NDArray, step: float) -> npt.NDArray[np.int32]:
         dirtribution[i] = dirtribution[i] + 1
 
     return dirtribution
+
+
+@contextmanager
+def printoptions(*args, **kwargs):
+    original_options = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+
+    try:
+        yield
+    finally:
+        np.set_printoptions(**original_options)
