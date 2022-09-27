@@ -7,14 +7,14 @@ import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from ..utils import padding1d
-from .node import Nodes
+from .path import PathBase
 from .segment import SegmentAttached, Segments
 from .swc import SWCTypeVar
 
 __all__ = ["Branch", "BranchAttached"]
 
 
-class _Branch(Nodes):
+class _Branch(PathBase):
     class Segment(SegmentAttached["_Branch"]):
         """Segment of branch."""
 
@@ -69,7 +69,7 @@ class Branch(_Branch):
         }
         kwargs.update(ndata)
         self.ndata = kwargs
-        self.source = None  # TODO
+        self.source = ""  # TODO
 
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()

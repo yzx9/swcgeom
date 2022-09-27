@@ -6,13 +6,13 @@ import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from .node import Nodes
+from .path import PathBase
 from .swc import SWCTypeVar
 
 __all__ = ["Segment", "SegmentAttached", "Segments"]
 
 
-class _Segment(Nodes):
+class _Segment(PathBase):
     def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
@@ -48,7 +48,7 @@ class Segment(_Segment):
         }
         kwargs.update(ndata)
         self.ndata = kwargs
-        self.source = None  # TODO
+        self.source = ""  # TODO
 
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()

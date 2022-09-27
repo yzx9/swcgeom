@@ -1,13 +1,13 @@
 """Nueron node."""
 
-from typing import Any, Generic, Iterable, List, overload
+from typing import Any, Generic
 
 import numpy as np
 import numpy.typing as npt
 
-from .swc import SWCLike, SWCTypeVar
+from .swc import SWCTypeVar
 
-__all__ = ["Node", "NodeAttached", "Nodes"]
+__all__ = ["Node", "NodeAttached"]
 
 
 class _Node:
@@ -126,60 +126,3 @@ class NodeAttached(_Node, Generic[SWCTypeVar]):
 
     def detach(self) -> Node:
         return Node(**{k: self[k] for k in self})
-
-
-class Nodes(SWCLike):
-    """Nodes of neuron tree."""
-
-    class Node(NodeAttached["Nodes"]):
-        """Node of neuron tree."""
-
-    def __iter__(self) -> Iterable[Node]:
-        return (self[i] for i in range(len(self)))
-
-    def __len__(self) -> int:
-        return self.id().shape[0]
-
-    def __repr__(self) -> str:
-        return f"{len(self)} Neuron nodes."
-
-    # fmt:off
-    @overload
-    def __getitem__(self, key: int) -> Node: ...
-    @overload
-    def __getitem__(self, key: slice) -> List[Node]: ...
-    @overload
-    def __getitem__(self, key: str) -> npt.NDArray: ...
-    # fmt:on
-    def __getitem__(self, key):
-        if isinstance(key, slice):
-            return [self.get_node(i) for i in range(*key.indices(len(self)))]
-
-        if isinstance(key, int):
-            length = len(self)
-            if key < -length or key >= length:
-                raise IndexError(f"The index ({key}) is out of range.")
-
-            if key < 0:  # Handle negative indices
-                key += length
-
-            return self.get_node(key)
-
-        if isinstance(key, str):
-            return self.get_ndata(key)
-
-        raise TypeError("Invalid argument type.")
-
-    def keys(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        raise NotImplementedError()
-
-    def get_node(self, idx: int) -> Node:
-        return self.Node(self, idx)
-
-    def length(self) -> float:
-        """Sum of length of stems."""
-        xyz = self.xyz()
-        return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1)).item()
