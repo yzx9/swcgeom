@@ -8,24 +8,28 @@ import numpy.typing as npt
 from .swc import SWCLike
 from .tree import Tree
 
-__all__ = ["REMOVE", "to_sub_tree", "cut_tree"]
+__all__ = ["REMOVE", "to_sub_tree", "cut_tree", "propagate_remove"]
 
 REMOVE = -2
-
 T, K = TypeVar("T"), TypeVar("K")
 
 
 def to_sub_tree(
     swc_like: SWCLike, sub_id: npt.ArrayLike, sub_pid: npt.ArrayLike
 ) -> Tuple[Tree, Dict[int, int]]:
-    """Create sub tree from origin tree."""
+    """Create sub tree from origin tree.
+
+    You can directly mark the node for removal, and we will
+    automatically remove it, but if the node you remove is not a leaf
+    node, you need to use `propagate_remove` to remove all children.
+    """
 
     sub_id = np.array(sub_id, dtype=np.int32)
     sub_pid = np.array(sub_pid, dtype=np.int32)
 
     # remove nodes
-    removed_id = cast(npt.NDArray[np.bool_], sub_id != REMOVE)
-    sub_id, sub_pid = sub_id[removed_id], sub_pid[removed_id]
+    keeped_id = cast(npt.NDArray[np.bool_], sub_id != REMOVE)
+    sub_id, sub_pid = sub_id[keeped_id], sub_pid[keeped_id]
 
     n_nodes = sub_id.shape[0]
 
@@ -94,18 +98,23 @@ def cut_tree(
             return res
 
         tree.traverse(leave=_leave)
-
-        def propagate_remove(n: Tree.Node, remove_parent: bool | None) -> bool:
-            remove = bool(remove_parent) or (idx[n.id] == REMOVE)
-            if remove:
-                idx[n.id] = REMOVE
-
-            return remove
-
-        tree.traverse(enter=propagate_remove)
+        propagate_remove(tree, idx)
 
     else:
         return tree.copy()
 
     new_tree, _ = to_sub_tree(tree, idx, pid)
     return new_tree
+
+
+def propagate_remove(tree: Tree, idx: npt.NDArray[np.int32]) -> None:
+    """Remove all children when parent is marked as removed."""
+
+    def propagate(n: Tree.Node, remove_parent: bool | None) -> bool:
+        remove = bool(remove_parent) or (idx[n.id] == REMOVE)
+        if remove:
+            idx[n.id] = REMOVE
+
+        return remove
+
+    tree.traverse(enter=propagate)
