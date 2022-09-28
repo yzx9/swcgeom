@@ -132,13 +132,24 @@ class Tree(SWCLike):
     def soma(self) -> Node:
         return self.node(0)
 
-    def tips(self) -> List[Node]:
+    def get_ndata(self, key: str) -> npt.NDArray:
+        return self.ndata[key]
+
+    def get_bifurcations(self) -> List[Node]:
+        """Get all node of bifurcations."""
+        bifurcations: List[int] = []
+
+        def collect_bifurcations(n: Tree.Node, children: List[None]) -> None:
+            if len(children) > 1:
+                bifurcations.append(n.id)
+
+        self.traverse(leave=collect_bifurcations)
+        return [self.node(i) for i in bifurcations]
+
+    def get_tips(self) -> List[Node]:
         """Get all node of tips."""
         tip_ids = np.setdiff1d(self.id(), self.pid(), assume_unique=True)
         return [self.node(i) for i in tip_ids]
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.ndata[key]
 
     def get_segments(self) -> Segments[Segment]:
         # pylint: disable-next=not-an-iterable

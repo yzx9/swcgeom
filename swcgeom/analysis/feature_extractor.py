@@ -7,8 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import Tree
+from .bifurcation_order import BifurcationOrderAnalysis
 from .branch import BranchAnalysis
-from .depth import DepthAnalysis
 from .path import PathAnalysis
 from .sholl import Sholl
 
@@ -16,12 +16,12 @@ __all__ = ["FeatureExtractor"]
 
 Feature = Literal[
     "length",
+    "bifurcation_order",
+    "bifurcation_order_distribution",
     "branch_length",
     "branch_length_distribution",
     "branch_tortuosity",
     "branch_tortuosity_distribution",
-    "branch_depth",
-    "tip_depth",
     "path_length",
     "path_length_distribution",
     "path_tortuosity",
@@ -75,6 +75,28 @@ class FeatureExtractor:
     def get_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
 
+    # Bifurcation Order
+
+    @cached_property
+    def _bifurcation_order_analysis(self) -> BifurcationOrderAnalysis:
+        return BifurcationOrderAnalysis(self.tree)
+
+    def get_bifurcation_order(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._bifurcation_order_analysis.get_bifurcation_order(**kwargs).astype(
+            np.float32
+        )
+
+    def get_bifurcation_order_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._bifurcation_order_analysis.get_bifurcation_order_distribution(
+            **kwargs
+        ).astype(np.float32)
+
+    # Branch
+
+    @cached_property
+    def _branch_anlysis(self) -> BranchAnalysis:
+        return BranchAnalysis(self.tree)
+
     def get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._branch_anlysis.get_length(**kwargs)
 
@@ -89,11 +111,11 @@ class FeatureExtractor:
             np.float32
         )
 
-    def get_branch_depth(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._depth_analysis.get_branch_depth(**kwargs).astype(np.float32)
+    # Path
 
-    def get_tip_depth(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._depth_analysis.get_tip_depth(**kwargs).astype(np.float32)
+    @cached_property
+    def _path_analysis(self) -> PathAnalysis:
+        return PathAnalysis(self.tree)
 
     def get_path_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._path_analysis.get_length(**kwargs)
@@ -109,19 +131,7 @@ class FeatureExtractor:
             np.float32
         )
 
+    # Sholl
+
     def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
         return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
-
-    # Caches
-
-    @cached_property
-    def _branch_anlysis(self) -> BranchAnalysis:
-        return BranchAnalysis(self.tree)
-
-    @cached_property
-    def _depth_analysis(self) -> DepthAnalysis:
-        return DepthAnalysis(self.tree)
-
-    @cached_property
-    def _path_analysis(self) -> PathAnalysis:
-        return PathAnalysis(self.tree)
