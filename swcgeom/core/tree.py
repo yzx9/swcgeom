@@ -51,6 +51,10 @@ class Tree(SWCLike):
 
             return Tree.Branch(self.attach, [n.id for n in nodes])
 
+        def radial_distance(self) -> float:
+            """The end-to-end straight-line distance to soma."""
+            return self.distance(self.attach.soma())
+
     class Path(PathAttached["Tree"]):
         """Path of neuron tree."""
 

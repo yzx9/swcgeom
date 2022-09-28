@@ -1,14 +1,14 @@
 """A seires of common feature."""
 
 from functools import cached_property
-from typing import Any, Dict, List, Literal, overload
+from typing import Any, Dict, List, Literal, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from ..core import Tree
-from .bifurcation_order import BifurcationOrderAnalysis
 from .branch import BranchAnalysis
+from .node import NodeAnalysis
 from .path import PathAnalysis
 from .sholl import Sholl
 
@@ -16,16 +16,22 @@ __all__ = ["FeatureExtractor"]
 
 Feature = Literal[
     "length",
-    "bifurcation_order",
-    "bifurcation_order_distribution",
+    # node
+    "node_radial_distance",
+    "node_radial_distance_distribution",
+    "node_branch_order",
+    "node_branch_order_distribution",
+    # branch
     "branch_length",
     "branch_length_distribution",
     "branch_tortuosity",
     "branch_tortuosity_distribution",
+    # path
     "path_length",
     "path_length_distribution",
     "path_tortuosity",
     "path_tortuosity_distribution",
+    # sholl
     "sholl",
 ]
 
@@ -68,28 +74,34 @@ class FeatureExtractor:
         if not callable(get_feature):
             raise ValueError(f"Invalid feature: {feature}")
 
-        return get_feature(**kwargs)
+        res = cast(npt.NDArray, get_feature(**kwargs))
+        if res.dtype != np.float32:
+            res = res.astype(np.float32)
+
+        return res
 
     # Features
 
     def get_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
 
-    # Bifurcation Order
+    # Node
 
     @cached_property
-    def _bifurcation_order_analysis(self) -> BifurcationOrderAnalysis:
-        return BifurcationOrderAnalysis(self.tree)
+    def _node_analysis(self) -> NodeAnalysis:
+        return NodeAnalysis(self.tree)
 
-    def get_bifurcation_order(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._bifurcation_order_analysis.get_bifurcation_order(**kwargs).astype(
-            np.float32
-        )
+    def get_node_radial_distance(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._node_analysis.get_radial_distance(**kwargs)
 
-    def get_bifurcation_order_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._bifurcation_order_analysis.get_bifurcation_order_distribution(
-            **kwargs
-        ).astype(np.float32)
+    def get_node_radial_distance_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._node_analysis.get_radial_distance_distribution(**kwargs)
+
+    def get_node_branch_order(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._node_analysis.get_branch_order(**kwargs)
+
+    def get_node_branch_order_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._node_analysis.get_branch_order_distribution(**kwargs)
 
     # Branch
 
@@ -100,16 +112,14 @@ class FeatureExtractor:
     def get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._branch_anlysis.get_length(**kwargs)
 
-    def get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._branch_anlysis.get_length_distribution(**kwargs).astype(np.float32)
+    def get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._branch_anlysis.get_length_distribution(**kwargs)
 
     def get_branch_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._branch_anlysis.get_tortuosity(**kwargs)
 
-    def get_branch_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._branch_anlysis.get_tortuosity_distribution(**kwargs).astype(
-            np.float32
-        )
+    def get_branch_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._branch_anlysis.get_tortuosity_distribution(**kwargs)
 
     # Path
 
@@ -120,18 +130,16 @@ class FeatureExtractor:
     def get_path_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._path_analysis.get_length(**kwargs)
 
-    def get_path_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._path_analysis.get_length_distribution(**kwargs).astype(np.float32)
+    def get_path_length_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._path_analysis.get_length_distribution(**kwargs)
 
     def get_path_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._path_analysis.get_tortuosity(**kwargs)
 
-    def get_path_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._path_analysis.get_tortuosity_distribution(**kwargs).astype(
-            np.float32
-        )
+    def get_path_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
+        return self._path_analysis.get_tortuosity_distribution(**kwargs)
 
     # Sholl
 
-    def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
-        return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
+    def get_sholl(self, **kwargs) -> npt.NDArray[np.int32]:
+        return Sholl(self.tree, **kwargs).get_count()
