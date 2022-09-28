@@ -1,15 +1,17 @@
 """Branch anlysis of tree."""
 
 from functools import cached_property
-from typing import List
+from typing import List, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
-from ..core import Tree
+from ..core import BranchBase, Tree
 from ..utils import to_distribution
 
 __all__ = ["BranchFeatures"]
+
+T = TypeVar("T", bound=BranchBase)
 
 
 class BranchFeatures:
@@ -50,7 +52,19 @@ class BranchFeatures:
             An array of shape (N, N), which N is length of branches.
         """
 
-        vector = np.array([br[-1].xyz() - br[0].xyz() for br in self._branches])
+        return self.calc_angle(self._branches, eps=eps)
+
+    @staticmethod
+    def calc_angle(branches: List[T], eps: float = 1e-7) -> npt.NDArray[np.float32]:
+        """Calc agnle between branches.
+
+        Returns
+        -------
+        angle : npt.NDArray[np.float32]
+            An array of shape (N, N), which N is length of branches.
+        """
+
+        vector = np.array([br[-1].xyz() - br[0].xyz() for br in branches])
         vector_dot = np.matmul(vector, vector.T)
         vector_norm = np.linalg.norm(vector, ord=2, axis=1, keepdims=True)
         vector_norm_dot = np.matmul(vector_norm, vector_norm.T) + eps
