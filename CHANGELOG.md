@@ -1,8 +1,9 @@
-## Unreleased
+## v0.2.0 (2022-09-28)
 
-## Feat
+### BREAKING CHANGE
 
-- **data**: add downloader
+- several features have been activatedm, take advantage
+- migrate to numpy-based, remove networkx
 
 ## v0.1.7 (2022-08-28)
 
@@ -33,7 +34,7 @@
 
 - resample args should be named arguments now
 - rename `Branch.from_numpy` to `Branch.from_numpy_batch`, and drop the support
-for squeezed input
+  for squeezed input
 
 ### Feat
 
