@@ -1,21 +1,28 @@
-"""A seires of common feature."""
+"""A seires of common feature.
+
+Notes
+-----
+For development, see method `FeatureExtractor._gen_feature_calculator`
+to confirm the naming specification.
+"""
 
 from functools import cached_property
-from typing import Any, Dict, List, Literal, cast, overload
+from typing import Any, Callable, Dict, List, Literal, overload
 
 import numpy as np
 import numpy.typing as npt
 
 from ..core import Tree
-from .branch import BranchAnalysis
-from .node import NodeAnalysis
-from .path import PathAnalysis
+from .branch_features import BranchFeatures
+from .node_features import NodeFeatures
+from .path_features import PathFeatures
 from .sholl import Sholl
 
 __all__ = ["FeatureExtractor"]
 
 Feature = Literal[
     "length",
+    "sholl",
     # node
     "node_radial_distance",
     "node_radial_distance_distribution",
@@ -31,8 +38,6 @@ Feature = Literal[
     "path_length_distribution",
     "path_tortuosity",
     "path_tortuosity_distribution",
-    # sholl
-    "sholl",
 ]
 
 
@@ -62,19 +67,35 @@ class FeatureExtractor:
     def get(self, feature, **kwargs):
         """Get feature."""
         if isinstance(feature, dict):
-            return {k: self._get(k, **v) for k, v in feature.items()}
+            return {k: self._get_feature(k, **v) for k, v in feature.items()}
 
         if isinstance(feature, list):
-            return [self._get(k) for k in feature]
+            return [self._get_feature(k) for k in feature]
 
-        return self._get(feature, **kwargs)
+        return self._get_feature(feature, **kwargs)
 
-    def _get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
-        get_feature = getattr(self, f"get_{feature}", None)
-        if not callable(get_feature):
-            raise ValueError(f"Invalid feature: {feature}")
+    def _get_feature(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
+        calc = self._gen_feature_calculator(feature)
+        return self._calc_feature(calc, **kwargs)
 
-        res = cast(npt.NDArray, get_feature(**kwargs))
+    def _gen_feature_calculator(self, feature: Feature) -> Callable[[], npt.NDArray]:
+        if callable(calc := getattr(self, f"get_{feature}", None)):
+            return calc  # custom features
+
+        components = feature.split("_")
+        attr = f"_{components[0]}_features"
+        method = f"get_{'_'.join(components[1:])}"
+        if (module := getattr(self, attr, None)) and callable(
+            calc := getattr(module, method, None)
+        ):
+            return calc
+
+        raise ValueError(f"Invalid feature: {feature}")
+
+    def _calc_feature(
+        self, calculator: Callable[[], npt.NDArray], **kwargs
+    ) -> npt.NDArray[np.float32]:
+        res = calculator(**kwargs)
         if res.dtype != np.float32:
             res = res.astype(np.float32)
 
@@ -85,61 +106,19 @@ class FeatureExtractor:
     def get_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
 
-    # Node
-
-    @cached_property
-    def _node_analysis(self) -> NodeAnalysis:
-        return NodeAnalysis(self.tree)
-
-    def get_node_radial_distance(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._node_analysis.get_radial_distance(**kwargs)
-
-    def get_node_radial_distance_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._node_analysis.get_radial_distance_distribution(**kwargs)
-
-    def get_node_branch_order(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._node_analysis.get_branch_order(**kwargs)
-
-    def get_node_branch_order_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._node_analysis.get_branch_order_distribution(**kwargs)
-
-    # Branch
-
-    @cached_property
-    def _branch_anlysis(self) -> BranchAnalysis:
-        return BranchAnalysis(self.tree)
-
-    def get_branch_length(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._branch_anlysis.get_length(**kwargs)
-
-    def get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._branch_anlysis.get_length_distribution(**kwargs)
-
-    def get_branch_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._branch_anlysis.get_tortuosity(**kwargs)
-
-    def get_branch_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._branch_anlysis.get_tortuosity_distribution(**kwargs)
-
-    # Path
-
-    @cached_property
-    def _path_analysis(self) -> PathAnalysis:
-        return PathAnalysis(self.tree)
-
-    def get_path_length(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._path_analysis.get_length(**kwargs)
-
-    def get_path_length_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._path_analysis.get_length_distribution(**kwargs)
-
-    def get_path_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
-        return self._path_analysis.get_tortuosity(**kwargs)
-
-    def get_path_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._path_analysis.get_tortuosity_distribution(**kwargs)
-
-    # Sholl
-
     def get_sholl(self, **kwargs) -> npt.NDArray[np.int32]:
         return Sholl(self.tree, **kwargs).get_count()
+
+    # Modules
+
+    @cached_property
+    def _node_features(self) -> NodeFeatures:
+        return NodeFeatures(self.tree)
+
+    @cached_property
+    def _branch_features(self) -> BranchFeatures:
+        return BranchFeatures(self.tree)
+
+    @cached_property
+    def _path_features(self) -> PathFeatures:
+        return PathFeatures(self.tree)

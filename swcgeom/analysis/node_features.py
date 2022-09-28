@@ -10,10 +10,10 @@ import numpy.typing as npt
 from ..core import BranchTree, Tree
 from ..utils import to_distribution
 
-__all__ = ["NodeAnalysis"]
+__all__ = ["NodeFeatures"]
 
 
-class NodeAnalysis:
+class NodeFeatures:
     """Calc node feature of tree."""
 
     tree: Tree

@@ -10,10 +10,10 @@ import numpy.typing as npt
 from ..core import Tree
 from ..utils import to_distribution
 
-__all__ = ["PathAnalysis"]
+__all__ = ["PathFeatures"]
 
 
-class PathAnalysis:
+class PathFeatures:
     """Path analysis of tree."""
 
     tree: Tree

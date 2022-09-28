@@ -1,8 +1,8 @@
 """Analysis for neuron trees."""
 
-from .branch import *
+from .branch_features import *
 from .feature_extractor import *
-from .node import *
-from .path import *
+from .node_features import *
+from .path_features import *
 from .sholl import *
 from .visualization import *
