@@ -21,6 +21,7 @@ Feature = Literal[
     "branch_depth",
     "tip_depth",
     "path_length",
+    "path_length_distribution",
     "sholl",
 ]
 
@@ -84,6 +85,9 @@ class FeatureExtractor:
 
     def get_path_length(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._path_analysis.get_length(**kwargs)
+
+    def get_path_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._path_analysis.get_length_distribution(**kwargs).astype(np.float32)
 
     def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
         return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
