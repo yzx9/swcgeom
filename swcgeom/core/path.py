@@ -105,6 +105,23 @@ class PathBase(SWCLike):
         xyz = self.xyz()
         return np.sum(np.linalg.norm(xyz[1:] - xyz[:-1], axis=1)).item()
 
+    def straight_line_distance(self) -> float:
+        """Straight-line distance of path.
+
+        The end-to-end straight-line distance between start point and
+        end point.
+        """
+        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
+
+    def tortuosity(self) -> float:
+        """Tortuosity of path.
+
+        The straight-line distance between two consecutive branch
+        points divided by the length of the neuronal path between
+        those points.
+        """
+        return self.straight_line_distance() / self.length()
+
 
 class Path(PathBase):
     r"""A path of neuron tree."""

@@ -32,10 +32,6 @@ class BranchBase(PathBase):
     def get_segments(self) -> Segments[Segment]:
         return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
 
-    def straight_line_distance(self) -> float:
-        """Distance between start point and end point."""
-        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
-
 
 class Branch(BranchBase):
     r"""A branch of neuron tree.

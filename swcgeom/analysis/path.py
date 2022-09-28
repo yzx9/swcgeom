@@ -31,8 +31,15 @@ class PathAnalysis:
 
     def get_length_distribution(self, step: float = 10) -> npt.NDArray[np.int32]:
         """Get length distribution of paths."""
-        lengths = self.get_length()
-        return to_distribution(lengths, step)
+        return to_distribution(self.get_length(), step)
+
+    def get_tortuosity(self) -> npt.NDArray[np.float32]:
+        """Get tortuosity of path."""
+        return np.array([path.tortuosity() for path in self._paths], dtype=np.float32)
+
+    def get_tortuosity_distribution(self, step: float = 0.1) -> npt.NDArray[np.int32]:
+        """Get tortuosity distribution of path."""
+        return to_distribution(self.get_tortuosity(), step)
 
     @cached_property
     def _paths(self) -> List[Tree.Path]:

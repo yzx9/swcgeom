@@ -9,7 +9,10 @@ from .tree_utils import to_sub_tree
 
 
 class BranchTree(Tree):
-    """A branch tree that contains only soma, branch, and tip nodes."""
+    """Branch tree keeps topology of tree.
+
+    A branch tree that contains only soma, branch, and tip nodes.
+    """
 
     branches: Dict[int, List[Branch]]
 

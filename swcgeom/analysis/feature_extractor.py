@@ -18,10 +18,14 @@ Feature = Literal[
     "length",
     "branch_length",
     "branch_length_distribution",
+    "branch_tortuosity",
+    "branch_tortuosity_distribution",
     "branch_depth",
     "tip_depth",
     "path_length",
     "path_length_distribution",
+    "path_tortuosity",
+    "path_tortuosity_distribution",
     "sholl",
 ]
 
@@ -62,7 +66,7 @@ class FeatureExtractor:
     def _get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
         get_feature = getattr(self, f"get_{feature}", None)
         if not callable(get_feature):
-            raise ValueError(f"Invalid feture: {feature}")
+            raise ValueError(f"Invalid feature: {feature}")
 
         return get_feature(**kwargs)
 
@@ -77,6 +81,14 @@ class FeatureExtractor:
     def get_branch_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._branch_anlysis.get_length_distribution(**kwargs).astype(np.float32)
 
+    def get_branch_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._branch_anlysis.get_tortuosity(**kwargs)
+
+    def get_branch_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._branch_anlysis.get_tortuosity_distribution(**kwargs).astype(
+            np.float32
+        )
+
     def get_branch_depth(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._depth_analysis.get_branch_depth(**kwargs).astype(np.float32)
 
@@ -88,6 +100,14 @@ class FeatureExtractor:
 
     def get_path_length_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
         return self._path_analysis.get_length_distribution(**kwargs).astype(np.float32)
+
+    def get_path_tortuosity(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._path_analysis.get_tortuosity(**kwargs)
+
+    def get_path_tortuosity_distribution(self, **kwargs) -> npt.NDArray[np.float32]:
+        return self._path_analysis.get_tortuosity_distribution(**kwargs).astype(
+            np.float32
+        )
 
     def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
         return Sholl(self.tree, **kwargs).get_count().astype(np.float32)
