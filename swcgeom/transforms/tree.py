@@ -5,10 +5,10 @@ import numpy as np
 from ..core import BranchTree, Tree
 from .base import Transform
 
-__all__ = ["TreeToBranchTree", "TreeNormalizer"]
+__all__ = ["ToBranchTree", "TreeNormalizer"]
 
 
-class TreeToBranchTree(Transform[Tree, BranchTree]):
+class ToBranchTree(Transform[Tree, BranchTree]):
     """Transform tree to branch tree."""
 
     def __call__(self, x: Tree) -> BranchTree:
