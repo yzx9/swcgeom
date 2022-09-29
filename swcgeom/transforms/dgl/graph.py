@@ -49,7 +49,7 @@ class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
 
         if self.keys:
             for k in self.keys:
-                g.ndata["y"] = x[k]
+                g.ndata[k] = x[k]
 
         return g
 
