@@ -1,13 +1,13 @@
 """Create image stack from morphology."""
 
-from typing import Any, Literal, cast
+from typing import Any, List, Literal, cast
 
 import numpy as np
 import numpy.typing as npt
 import skimage.io
 
 from ..core import Tree
-from ..utils import SDFs, sdf_is_in, sdf_round_cone
+from ..utils import SDF, SDFCompose, SDFRoundCone
 from .base import Transform
 
 __all__ = ["ToImageStack"]
@@ -48,8 +48,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         coord_max = np.ceil(xyz.max(axis=0))
         grid = self.get_grid(coord_min, coord_max)
 
-        is_in_fn = sdf_is_in(self.get_sdfs(x))
-        is_in = is_in_fn(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
+        sdf = self.get_sdf(x)
+        is_in = sdf(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
         level = np.sum(is_in, axis=3, dtype=np.int8)
         voxel = (255 / (self.k**3) * level).astype(np.uint8)
         return voxel
@@ -96,19 +96,17 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         grid = grid + inter_grid
         return cast(Any, grid)
 
-    def get_sdfs(self, x: Tree) -> SDFs:
-        sdfs: SDFs = []
+    def get_sdf(self, x: Tree) -> SDF:
+        sdfs: List[SDF] = []
 
         def collect(n: Tree.Node, parent: Tree.Node | None) -> Tree.Node:
             if parent is not None:
-                a, b = parent.xyz(), n.xyz()
-                ra, rb = parent.r, n.r
-                sdfs.append(lambda p: sdf_round_cone(p, a, b, ra, rb))
+                sdfs.append(SDFRoundCone(parent.xyz(), n.xyz(), parent.r, n.r))
 
             return n
 
         x.traverse(enter=collect)
-        return sdfs
+        return SDFCompose(sdfs)
 
     @staticmethod
     def save_tif(
