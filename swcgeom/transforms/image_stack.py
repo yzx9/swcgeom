@@ -17,12 +17,12 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     r"""Transform tree to image stack."""
 
     resolution: npt.NDArray[np.float32]
-    k: int
+    msaa: int
 
     def __init__(
         self,
         resolution: float | npt.ArrayLike = 1,
-        level: int = 9,
+        msaa: int = 8,
     ) -> None:
         """Transform tree to image stack.
 
@@ -30,8 +30,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ----------
         resolution : int | (x, y, z), default `(1, 1, 1)`
             Resolution of image stack.
-        level : int, default `9`
-            Image light level.
+        mass : int, default `8`
+            Multi-sample anti-aliasing.
         """
 
         if isinstance(resolution, float):
@@ -40,7 +40,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         self.resolution = (resolution := np.array(resolution, dtype=np.float32))
         assert tuple(resolution.shape) == (3,), "resolution shoule be vector of 3d."
 
-        self.k = np.cbrt(level - 1)
+        self.msaa = msaa
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         xyz = x.xyz()
@@ -50,15 +50,15 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
         sdf = self.get_sdf(x)
         is_in = sdf.is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
-        level = np.sum(is_in, axis=3, dtype=np.uint8)
-        voxel = (255 / (self.k**3) * level).astype(np.uint8)
+        level = np.sum(is_in, axis=3, dtype=np.int8)
+        voxel = (255 / self.msaa * level).astype(np.uint8)
         return voxel
 
     def __repr__(self) -> str:
         return (
             "ToImageStack"
             + f"-resolution-{'-'.join(self.resolution)}"
-            + f"-level-{1+self.k**3}"
+            + f"-mass-{self.msaa}"
         )
 
     def get_grid(
@@ -72,6 +72,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             Array of shape (nx, ny, nz, k, 3).
         """
 
+        k = np.cbrt(self.msaa)
         coord_min, coord_max = np.array(coord_min), np.array(coord_max)
         assert tuple(coord_min.shape) == (3,), "coord_min shoule be vector of 3d."
         assert tuple(coord_max.shape) == (3,), "coord_max shoule be vector of 3d."
@@ -83,7 +84,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ]  # (3, nx, ny, nz)
         point_grid = np.rollaxis(point_grid, 0, 4)  # (nx, ny, nz, 3)
 
-        step = self.resolution / (self.k + 1)
+        step = self.resolution / (k + 1)
         ends = self.resolution - step / 2
         inter_grid = np.mgrid[
             step[0] : ends[0] : step[0],
@@ -92,7 +93,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ]  # (3, kx, ky, kz)
         inter_grid = np.rollaxis(inter_grid, 0, 4).reshape(-1, 3)  # (k, 3)
 
-        grid = np.expand_dims(point_grid, 3).repeat(self.k**3, axis=3)
+        grid = np.expand_dims(point_grid, 3).repeat(k**3, axis=3)
         grid = grid + inter_grid
         return cast(Any, grid)
 
