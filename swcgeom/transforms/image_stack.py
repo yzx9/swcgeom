@@ -49,8 +49,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         grid = self.get_grid(coord_min, coord_max)
 
         sdf = self.get_sdf(x)
-        is_in = sdf(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
-        level = np.sum(is_in, axis=3, dtype=np.int8)
+        is_in = sdf.is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
+        level = np.sum(is_in, axis=3, dtype=np.uint8)
         voxel = (255 / (self.k**3) * level).astype(np.uint8)
         return voxel
 

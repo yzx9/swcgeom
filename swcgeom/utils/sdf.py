@@ -45,6 +45,10 @@ class SDFCompose(SDF):
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         return np.min([sdf(p) for sdf in self.sdfs], axis=0)
 
+    def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
+        flags = np.stack([sdf.is_in(p) for sdf in self.sdfs])
+        return np.any(flags.T, axis=1)
+
 
 class SDFRoundCone(SDF):
     """Round cone is made up of two balls and a cylinder."""
@@ -106,3 +110,15 @@ class SDFRoundCone(SDF):
         dis[rt] = np.sqrt(x2[rt] + y2[rt]) * il2 - ra
 
         return dis
+
+    def is_in(self, p: npt.ArrayLike) -> npt.NDArray[np.bool_]:
+        p = np.array(p, dtype=np.float32)
+        assert p.ndim == 2 and p.shape[1] == 3, "p should be array of shape (N, 3)"
+
+        inner = np.logical_and(
+            np.all(p <= np.max([self.a + self.ra, self.b + self.rb], axis=0), axis=1),
+            np.all(p >= np.min([self.a - self.ra, self.b - self.rb], axis=0), axis=1),
+        )
+        flags = np.full((p.shape[0]), False, dtype=np.bool_)
+        flags[inner] = self.distance(p[inner]) <= 0
+        return flags
