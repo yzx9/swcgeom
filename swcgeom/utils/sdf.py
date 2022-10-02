@@ -3,16 +3,21 @@
 Refs: https://iquilezles.org/articles/distfunctions/
 """
 
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 import numpy.typing as npt
 
 __all__ = ["SDF", "SDFCompose", "SDFRoundCone"]
 
+# Axis-aligned bounding box, tuple of array of shape (3,)
+AABB = Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+
 
 class SDF:
     """Signed distance functions."""
+
+    bounding_box: AABB | None = None
 
     def __call__(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         return self.distance(p)
@@ -33,7 +38,32 @@ class SDF:
         raise NotImplementedError()
 
     def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
-        return self.distance(p) <= 0
+        p = np.array(p, dtype=np.float32)
+        assert p.ndim == 2 and p.shape[1] == 3, "p should be array of shape (N, 3)"
+
+        in_box = self.is_in_bounding_box(p)
+        flags = np.full((p.shape[0]), False, dtype=np.bool_)
+        flags[in_box] = self.distance(p[in_box]) <= 0
+        return flags
+
+    def is_in_bounding_box(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
+        """Is p in bounding box.
+
+        Returns
+        -------
+        is_in : npt.NDArray[np.bool_]
+            Array of shape (N,), if bounding box is `None`, `True` will
+            be returned.
+        """
+
+        if self.bounding_box is None:
+            return np.full((p.shape[0]), True, dtype=np.bool_)
+
+        is_in = np.logical_and(
+            np.all(p >= self.bounding_box[0], axis=1),
+            np.all(p <= self.bounding_box[1], axis=1),
+        )
+        return is_in
 
 
 class SDFCompose(SDF):
@@ -42,12 +72,22 @@ class SDFCompose(SDF):
     def __init__(self, sdfs: List[SDF]) -> None:
         self.sdfs = sdfs
 
+        bounding_boxes = [sdf.bounding_box for sdf in sdfs if sdf.bounding_box]
+        if len(bounding_boxes) == len(self.sdfs):
+            self.bounding_box = (
+                np.min(np.stack([box[0] for box in bounding_boxes]).T, axis=1),
+                np.max(np.stack([box[1] for box in bounding_boxes]).T, axis=1),
+            )
+
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         return np.min([sdf(p) for sdf in self.sdfs], axis=0)
 
     def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
-        flags = np.stack([sdf.is_in(p) for sdf in self.sdfs])
-        return np.any(flags.T, axis=1)
+        in_box = self.is_in_bounding_box(p)
+        is_in = np.stack([sdf.is_in(p[in_box]) for sdf in self.sdfs])
+        flags = np.full_like(in_box, False, dtype=np.bool_)
+        flags[in_box] = np.any(is_in, axis=0)
+        return flags
 
 
 class SDFRoundCone(SDF):
@@ -73,6 +113,11 @@ class SDFRoundCone(SDF):
 
         assert tuple(self.a.shape) == (3,), "a should be vector of 3d"
         assert tuple(self.b.shape) == (3,), "b should be vector of 3d"
+
+        self.bounding_box = (
+            np.min([self.a - self.ra, self.b - self.rb], axis=0).astype(np.float32),
+            np.max([self.a + self.ra, self.b + self.rb], axis=0).astype(np.float32),
+        )
 
     def distance(self, p: npt.ArrayLike) -> npt.NDArray[np.float32]:
         p = np.array(p, dtype=np.float32)
@@ -110,15 +155,3 @@ class SDFRoundCone(SDF):
         dis[rt] = np.sqrt(x2[rt] + y2[rt]) * il2 - ra
 
         return dis
-
-    def is_in(self, p: npt.ArrayLike) -> npt.NDArray[np.bool_]:
-        p = np.array(p, dtype=np.float32)
-        assert p.ndim == 2 and p.shape[1] == 3, "p should be array of shape (N, 3)"
-
-        inner = np.logical_and(
-            np.all(p <= np.max([self.a + self.ra, self.b + self.rb], axis=0), axis=1),
-            np.all(p >= np.min([self.a - self.ra, self.b - self.rb], axis=0), axis=1),
-        )
-        flags = np.full((p.shape[0]), False, dtype=np.bool_)
-        flags[inner] = self.distance(p[inner]) <= 0
-        return flags

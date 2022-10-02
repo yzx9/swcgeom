@@ -1,6 +1,6 @@
 """Create image stack from morphology."""
 
-from typing import Any, List, Literal, cast
+from typing import Any, List, Literal, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -48,8 +48,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         coord_max = np.ceil(xyz.max(axis=0))
         grid = self.get_grid(coord_min, coord_max)
 
-        sdf = self.get_sdf(x)
-        is_in = sdf.is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
+        is_in = self.get_sdf(x).is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
         level = np.sum(is_in, axis=3, dtype=np.int8)
         voxel = (255 / self.msaa * level).astype(np.uint8)
         return voxel
@@ -99,14 +98,24 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
     def get_sdf(self, x: Tree) -> SDF:
         sdfs: List[SDF] = []
+        T = Tuple[Tree.Node, List[SDF]]
 
-        def collect(n: Tree.Node, parent: Tree.Node | None) -> Tree.Node:
-            if parent is not None:
-                sdfs.append(SDFRoundCone(parent.xyz(), n.xyz(), parent.r, n.r))
+        def collect(n: Tree.Node, pre: List[T]) -> T:
+            if len(pre) == 0:
+                return (n, [])
 
-            return n
+            if len(pre) == 1:
+                child, sub_sdfs = pre[0]
+                sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
+                return (n, sub_sdfs)
 
-        x.traverse(enter=collect)
+            for child, sub_sdfs in pre:
+                sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
+                sdfs.append(SDFCompose(sub_sdfs))
+
+            return (n, [])
+
+        x.traverse(leave=collect)
         return SDFCompose(sdfs)
 
     @staticmethod
