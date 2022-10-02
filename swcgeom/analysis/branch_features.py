@@ -7,7 +7,6 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import BranchBase, Tree
-from ..utils import to_distribution
 
 __all__ = ["BranchFeatures"]
 
@@ -30,18 +29,9 @@ class BranchFeatures:
         length = [br.length() for br in self._branches]
         return np.array(length, dtype=np.float32)
 
-    def get_length_distribution(self, step: float = 1) -> npt.NDArray[np.int32]:
-        """Get length distribution of branches."""
-        lengths = self.get_length()
-        return to_distribution(lengths, step)
-
     def get_tortuosity(self) -> npt.NDArray[np.float32]:
         """Get tortuosity of path."""
         return np.array([br.tortuosity() for br in self._branches], dtype=np.float32)
-
-    def get_tortuosity_distribution(self, step: float = 0.1) -> npt.NDArray[np.int32]:
-        """Get tortuosity distribution of path."""
-        return to_distribution(self.get_tortuosity(), step)
 
     def get_angle(self, eps: float = 1e-7) -> npt.NDArray[np.float32]:
         """Get agnle between branches.
