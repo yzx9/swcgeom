@@ -143,7 +143,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
             return (n, [])
 
-        x.traverse(leave=collect)  # TODO: handle root
+        _, remaining_sdfs = x.traverse(leave=collect)
+        if len(remaining_sdfs) > 1:
+            sdfs.append(SDFCompose(remaining_sdfs))
+
         return SDFCompose(sdfs)
 
     @staticmethod
