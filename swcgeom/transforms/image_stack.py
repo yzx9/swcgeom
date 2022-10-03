@@ -1,10 +1,10 @@
 """Create image stack from morphology."""
 
-from typing import Any, List, Literal, Tuple, cast
+from typing import Any, Iterable, List, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
-import skimage.io
+import tifffile
 
 from ..core import Tree
 from ..utils import SDF, SDFCompose, SDFRoundCone
@@ -43,15 +43,15 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         self.msaa = msaa
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
-        xyz = x.xyz()
-        coord_min = np.floor(xyz.min(axis=0))  # TODO: snap to grid
-        coord_max = np.ceil(xyz.max(axis=0))
-        grid = self.get_grid(coord_min, coord_max)
+        """Transform tree to image stack.
 
-        is_in = self.get_sdf(x).is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
-        level = np.sum(is_in, axis=3, dtype=np.int8)
-        voxel = (255 / self.msaa * level).astype(np.uint8)
-        return voxel
+        Notes
+        -----
+        This method loads the entire image stack into memory, so it
+        ONLY works for small image stacks, use
+        :meth`transform_and_save` for big image stack.
+        """
+        return np.concatenate(list(self.transfrom(x)), axis=0)
 
     def __repr__(self) -> str:
         return (
@@ -60,15 +60,41 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             + f"-mass-{self.msaa}"
         )
 
-    def get_grid(
-        self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike
-    ) -> npt.NDArray[np.float32]:
+    def transfrom(
+        self, x: Tree, z_per_iter: int = 1
+    ) -> Iterable[npt.NDArray[np.uint8]]:
+        xyz, r = x.xyz(), np.stack([x.r(), x.r(), x.r()], axis=1)  # TODO: perf
+        coord_min = np.floor(np.min(xyz - r, axis=0))  # TODO: snap to grid
+        coord_max = np.ceil(np.max(xyz + r, axis=0))
+        grids = self.get_grids(coord_min, coord_max, z_per_iter)
+
+        for grid in grids:
+            is_in = self.get_sdf(x).is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
+            level = np.sum(is_in, axis=3, dtype=np.uint8)
+            voxel = (255 / self.msaa * level).astype(np.uint8)
+            frames = np.moveaxis(voxel, 2, 0)
+            yield frames
+
+    def transform_and_save(self, fname: str, x: Tree, z_per_iter: int = 1) -> None:
+        self.save_tif(fname, self.transfrom(x, z_per_iter))
+
+    def get_grids(
+        self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike, z_per_iter: int = 1
+    ) -> Iterable[npt.NDArray[np.float32]]:
         """Get point grid.
+
+        Parameters
+        ----------
+        coord_min, coord_max: npt.ArrayLike
+            Coordinates array of shape (3,).
+        z_per_iter : int
+            Yeild z per iter, raising this option speeds up processing,
+            but consumes more memory.
 
         Returns
         -------
         grid : npt.NDArray[np.float32]
-            Array of shape (nx, ny, nz, k, 3).
+            Array of shape (nx, ny, z_per_iter, k, 3).
         """
 
         k = np.cbrt(self.msaa)
@@ -92,9 +118,11 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ]  # (3, kx, ky, kz)
         inter_grid = np.rollaxis(inter_grid, 0, 4).reshape(-1, 3)  # (k, 3)
 
-        grid = np.expand_dims(point_grid, 3).repeat(k**3, axis=3)
-        grid = grid + inter_grid
-        return cast(Any, grid)
+        grids = np.expand_dims(point_grid, 3).repeat(k**3, axis=3)
+        grids = cast(Any, grids + inter_grid)
+
+        for i in range(0, grids.shape[2], z_per_iter):
+            yield grids[:, :, i : i + z_per_iter]
 
     def get_sdf(self, x: Tree) -> SDF:
         sdfs: List[SDF] = []
@@ -115,20 +143,22 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
             return (n, [])
 
-        x.traverse(leave=collect)
+        x.traverse(leave=collect)  # TODO: handle root
         return SDFCompose(sdfs)
 
     @staticmethod
     def save_tif(
         fname: str,
-        voxel: npt.NDArray[np.uint8],
-        stack_axis: Literal["x", "y", "z"] = "z",
+        frames: Iterable[npt.NDArray[np.uint8]],
+        resolution: Tuple[float, float] = (1, 1),
     ) -> None:
-        if stack_axis == "x":
-            images = voxel
-        elif stack_axis == "y":
-            images = np.moveaxis(voxel, 1, 0)
-        else:
-            images = np.moveaxis(voxel, 2, 0)
-
-        skimage.io.imsave(fname, images, plugin="tifffile")
+        with tifffile.TiffWriter(fname) as tif:
+            for frame in frames:
+                tif.write(
+                    frame,
+                    contiguous=True,
+                    resolution=resolution,
+                    metadata={
+                        "unit": "um",
+                    },
+                )
