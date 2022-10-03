@@ -12,14 +12,14 @@ from typing import Any, Callable, Dict, List, Literal, cast, overload
 import numpy as np
 import numpy.typing as npt
 
-from ..core import Tree
+from ..core import Population, Tree
 from ..utils import to_distribution
 from .branch_features import BranchFeatures
 from .node_features import NodeFeatures
 from .path_features import PathFeatures
 from .sholl import Sholl
 
-__all__ = ["FeatureExtractor"]
+__all__ = ["Feature", "FeatureExtractor", "PopulationFeatureExtractor"]
 
 Feature = Literal[
     "length",
@@ -42,23 +42,16 @@ class FeatureExtractor:
     tree: Tree
 
     def __init__(self, tree: Tree) -> None:
-        # TODO: support population
         self.tree = tree
 
+    # fmt:off
     @overload
-    def get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
-        ...
-
+    def get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]: ...
     @overload
-    def get(self, feature: List[Feature], **kwargs) -> List[npt.NDArray[np.float32]]:
-        ...
-
+    def get(self, feature: List[Feature], **kwargs) -> List[npt.NDArray[np.float32]]: ...
     @overload
-    def get(
-        self, feature: Dict[Feature, Dict[str, Any]], **kwargs
-    ) -> Dict[str, npt.NDArray[np.float32]]:
-        ...
-
+    def get(self, feature: Dict[Feature, Dict[str, Any]], **kwargs) -> Dict[str, npt.NDArray[np.float32]]: ...
+    # fmt:on
     def get(self, feature, **kwargs):
         """Get feature."""
         if isinstance(feature, dict):
@@ -69,24 +62,14 @@ class FeatureExtractor:
 
         return self._get(feature, **kwargs)
 
+    # fmt:off
     @overload
-    def get_distribution(
-        self, feature: Feature, step: float = ..., **kwargs
-    ) -> npt.NDArray[np.int32]:
-        ...
-
+    def get_distribution(self, feature: Feature, step: float = ..., **kwargs) -> npt.NDArray[np.int32]: ...
     @overload
-    def get_distribution(
-        self, feature: List[Feature], step: float = ..., **kwargs
-    ) -> List[npt.NDArray[np.int32]]:
-        ...
-
+    def get_distribution(self, feature: List[Feature], step: float = ..., **kwargs) -> List[npt.NDArray[np.int32]]: ...
     @overload
-    def get_distribution(
-        self, feature: Dict[Feature, Dict[str, Any]], step: float = ..., **kwargs
-    ) -> Dict[str, npt.NDArray[np.int32]]:
-        ...
-
+    def get_distribution(self, feature: Dict[Feature, Dict[str, Any]], step: float = ..., **kwargs) -> Dict[str, npt.NDArray[np.int32]]: ...
+    # fmt:on
     def get_distribution(self, feature, step: float | None = None, **kwargs):
         """Get feature distribution."""
         if isinstance(feature, dict):
@@ -98,8 +81,8 @@ class FeatureExtractor:
         return self._get_distribution(feature, step, **kwargs)
 
     def _get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]:
-        calc = self._gen_feature_calculator(feature)
-        feat = self._calc_feature(calc, **kwargs)
+        evaluator = self._get_evaluator(feature)
+        feat = self._call_evaluator(evaluator, **kwargs)
         return feat
 
     def _get_distribution(
@@ -113,7 +96,7 @@ class FeatureExtractor:
         distribution = to_distribution(feat, step)
         return distribution
 
-    def _gen_feature_calculator(self, feature: Feature) -> Callable[[], npt.NDArray]:
+    def _get_evaluator(self, feature: Feature) -> Callable[[], npt.NDArray]:
         if callable(calc := getattr(self, f"get_{feature}", None)):
             return calc  # custom features
 
@@ -125,10 +108,10 @@ class FeatureExtractor:
 
         raise ValueError(f"Invalid feature: {feature}")
 
-    def _calc_feature(
-        self, calculator: Callable[[], npt.NDArray], **kwargs
+    def _call_evaluator(
+        self, evaluator: Callable[[], npt.NDArray], **kwargs
     ) -> npt.NDArray[np.float32]:
-        res = calculator(**kwargs)
+        res = evaluator(**kwargs)
         if res.dtype != np.float32:
             res = res.astype(np.float32)
 
@@ -141,14 +124,6 @@ class FeatureExtractor:
 
     def get_sholl(self, **kwargs) -> npt.NDArray[np.int32]:
         return Sholl(self.tree, **kwargs).get_count()
-
-    # Feature distribution
-
-    def get_radial_distance_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._node_features.get_radial_distance_distribution(**kwargs)
-
-    def get_node_branch_order_distribution(self, **kwargs) -> npt.NDArray[np.int32]:
-        return self._node_features.get_branch_order_distribution(**kwargs)
 
     # Modules
 
@@ -163,3 +138,58 @@ class FeatureExtractor:
     @cached_property
     def _path_features(self) -> PathFeatures:
         return PathFeatures(self.tree)
+
+
+class PopulationFeatureExtractor:
+    """Extract feature from population."""
+
+    population: Population
+
+    def __init__(self, population: Population) -> None:
+        self.population = population
+
+    # fmt:off
+    @overload
+    def get(self, feature: Feature, **kwargs) -> List[npt.NDArray[np.float32]]: ...
+    @overload
+    def get(self, feature: Dict[Feature, Dict[str, Any]], **kwargs) -> Dict[str, List[npt.NDArray[np.float32]]]: ...
+    # fmt:on
+    def get(self, feature, **kwargs):
+        """Get feature."""
+        if isinstance(feature, dict):
+            return {k: self._get(k, **v) for k, v in feature.items()}
+
+        return self._get(feature, **kwargs)
+
+    # fmt:off
+    @overload
+    def get_distribution(self, feature: Feature, step: float = ..., **kwargs) -> npt.NDArray[np.int32]: ...
+    @overload
+    def get_distribution(self, feature: List[Feature], step: float = ..., **kwargs) -> List[npt.NDArray[np.int32]]: ...
+    @overload
+    def get_distribution(self, feature: Dict[Feature, Dict[str, Any]], step: float = ..., **kwargs) -> Dict[str, npt.NDArray[np.int32]]: ...
+    # fmt:on
+    def get_distribution(self, feature, step: float | None = None, **kwargs):
+        """Get feature distribution."""
+        if isinstance(feature, dict):
+            return {k: self._get_distribution(k, step, **v) for k, v in feature.items()}
+
+        if isinstance(feature, list):
+            return [self._get_distribution(k, step) for k in feature]
+
+        return self._get_distribution(feature, step, **kwargs)
+
+    def _get(self, feature: Feature, **kwargs) -> List[npt.NDArray[np.float32]]:
+        return [ex.get(feature, **kwargs) for ex in self._extractors]
+
+    def _get_distribution(
+        self, feature: Feature, step: float | None, **kwargs
+    ) -> npt.NDArray[np.int32]:
+        feat = np.concatenate(self._get(feature, **kwargs))
+        step = cast(float, feat.max() / 100) if step is None else step
+        distribution = to_distribution(feat, step)
+        return distribution
+
+    @cached_property
+    def _extractors(self) -> List[FeatureExtractor]:
+        return [FeatureExtractor(tree) for tree in self.population]

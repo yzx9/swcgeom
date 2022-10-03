@@ -1,7 +1,7 @@
 """Neuron population is a set of tree."""
 
 import os
-from typing import List, cast, overload
+from typing import Iterator, List, cast, overload
 
 from .tree import Tree
 
@@ -40,6 +40,9 @@ class Population:
 
     def __len__(self) -> int:
         return len(self.swcs)
+
+    def __iter__(self) -> Iterator[Tree]:
+        return (self[i] for i in range(self.__len__()))
 
     def __repr__(self) -> str:
         return f"Neuron population in '{self.swc_dir}'"
