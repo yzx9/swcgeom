@@ -160,8 +160,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
                 tif.write(
                     frame,
                     contiguous=True,
+                    photometric="minisblack",
                     resolution=resolution,
                     metadata={
                         "unit": "um",
+                        "axes": "ZXY",
                     },
                 )
