@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import BranchTree, Tree
-from ..utils import to_distribution
+from ..utils import to_distribution, XYPair
 
 __all__ = ["NodeFeatures"]
 
@@ -40,7 +40,7 @@ class NodeFeatures:
         filter_bifurcation: bool = False,
         filter_tip: bool = False,
         filter_other: bool = False,
-    ) -> npt.NDArray[np.int32]:
+    ) -> XYPair:
         """Get radial distance distribution of tree.
 
         Parameters
@@ -93,7 +93,7 @@ class NodeFeatures:
         filter_bifurcation: bool = False,
         filter_tip: bool = False,
         filter_other: bool = False,
-    ) -> npt.NDArray[np.int32]:
+    ) -> XYPair:
         """Get branch order distribution of tree.
 
         Parameters
@@ -121,7 +121,7 @@ class NodeFeatures:
         filter_bifurcation: bool,
         filter_tip: bool,
         filter_other: bool,
-    ) -> npt.NDArray[np.int32]:
+    ) -> XYPair:
         if filter_bifurcation:
             x[self._bifurcations] = -1
 

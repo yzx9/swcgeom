@@ -1,12 +1,13 @@
 """Numpy related utils."""
 
 from contextlib import contextmanager
-from typing import Any
+import math
+from typing import Any, Tuple
 
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d", "to_distribution", "numpy_printoptions", "numpy_err"]
+__all__ = ["padding1d", "XYPair", "to_distribution", "numpy_printoptions", "numpy_err"]
 
 
 def padding1d(
@@ -43,13 +44,28 @@ def padding1d(
     return np.concatenate([v, padding])
 
 
-def to_distribution(values: npt.NDArray, step: float) -> npt.NDArray[np.int32]:
-    indices = np.floor(values / step).astype(np.int32)
-    dirtribution = np.zeros((indices.max() + 1), dtype=np.int32)
-    for i in indices:
-        dirtribution[i] = dirtribution[i] + 1
+XYPair = Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
 
-    return dirtribution
+
+def to_distribution(
+    values: npt.NDArray,
+    step: float,
+    vmin: float = 0,
+    vmax: float | None = None,
+    norm: bool = False,
+) -> XYPair:
+    indices = np.floor(values / step - vmin).astype(np.int32)
+    size_min = np.max(indices).item() + 1
+    size = math.ceil((vmax - vmin) / step) + 1 if vmax is not None else size_min
+    y = np.zeros(max(size, size_min), dtype=np.float32)
+    for i in indices:
+        y[i] = y[i] + 1
+
+    if norm:
+        y /= values.shape[0]
+
+    x = vmin + step * np.arange(size, dtype=np.float32)
+    return x, y[:size]
 
 
 @contextmanager
