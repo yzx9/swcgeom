@@ -11,7 +11,7 @@ __all__ = ["Population"]
 class Population:
     """Neuron population."""
 
-    swc_dir: str = ""
+    source: str = ""
     swcs: List[str]
     trees: List[Tree | None]
 
@@ -45,7 +45,7 @@ class Population:
         return (self[i] for i in range(self.__len__()))
 
     def __repr__(self) -> str:
-        return f"Neuron population in '{self.swc_dir}'"
+        return f"Neuron population in '{self.source}'"
 
     # fmt:off
     @overload
@@ -66,10 +66,10 @@ class Population:
                 self.trees[i] = Tree.from_swc(self.swcs[i])
 
     @staticmethod
-    def from_swc(swc_dir: str) -> "Population":
-        swcs = Population.find_swcs(swc_dir)
+    def from_swc(swc_dir: str, suffix: str = ".swc") -> "Population":
+        swcs = Population.find_swcs(swc_dir, suffix)
         population = Population(swcs)
-        population.swc_dir = swc_dir
+        population.source = swc_dir
         return population
 
     @staticmethod
