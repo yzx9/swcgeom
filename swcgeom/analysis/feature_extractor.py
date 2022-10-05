@@ -16,7 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import Population, Tree
-from ..utils import XYPair, get_fig_ax, to_distribution
+from ..utils import XYPair, get_fig_ax, to_distribution, padding1d
 from .branch_features import BranchFeatures
 from .node_features import NodeFeatures
 from .path_features import PathFeatures
@@ -77,6 +77,19 @@ class _Features:
 
         raise ValueError(f"Invalid feature: {feature}")
 
+    def get_distribution(
+        self, feature: Feature, step: float | None, **kwargs
+    ) -> XYPair:
+        if callable(method := getattr(self, f"get_{feature}_distribution", None)):
+            if step is not None:
+                kwargs.setdefault("step", step)
+            return method(**kwargs)  # custom feature distribution
+
+        feat = self.get(feature, **kwargs)
+        step = cast(float, feat.max() / 100) if step is None else step
+        x, y = to_distribution(feat, step)
+        return x, y
+
     # Features
 
     def get_length(self, **kwargs) -> npt.NDArray[np.float32]:
@@ -84,6 +97,10 @@ class _Features:
 
     def get_sholl(self, **kwargs) -> npt.NDArray[np.int32]:
         return Sholl(self.tree, **kwargs).get_count()
+
+    def get_sholl_distribution(self, **kwargs) -> XYPair:
+        x, y = Sholl(self.tree, **kwargs).get_distribution()
+        return x, y.astype(np.float32)
 
 
 class FeatureExtractor:
@@ -123,28 +140,22 @@ class FeatureExtractor:
     def get_distribution(self, feature, step: float | None = None, **kwargs):
         """Get feature distribution of shape (S,)."""
         if isinstance(feature, dict):
-            return {k: self._get_distribution(k, step, **v) for k, v in feature.items()}
+            return {
+                k: self.features.get_distribution(k, step, **v)
+                for k, v in feature.items()
+            }
 
         if isinstance(feature, list):
-            return [self._get_distribution(k, step) for k in feature]
+            return [self.features.get_distribution(k, step) for k in feature]
 
-        return self._get_distribution(feature, step, **kwargs)
+        return self.features.get_distribution(feature, step, **kwargs)
 
-    def plot_distribution(self, feature, **kwargs) -> Tuple[Figure, Axes]:
+    def plot_distribution(self, feature: Feature, **kwargs) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
-        x, y = self.get_distribution(feature)
-        return plot(x, y, **kwargs)
-
-    def _get_distribution(
-        self, feature: Feature, step: float | None, **kwargs
-    ) -> XYPair:
-        if callable(calc := getattr(self, f"get_{feature}_distribution", None)):
-            return calc  # custom feature distribution
-
-        feat = self.get(feature, **kwargs)
-        step = cast(float, feat.max() / 100) if step is None else step
-        distribution = to_distribution(feat, step)
-        return distribution
+        x, y = self.get_distribution(feature, **kwargs)
+        fig, ax = get_fig_ax(None, None)
+        sns.lineplot(x=x, y=y, ax=ax)
+        return fig, ax
 
 
 class PopulationFeatureExtractor:
@@ -198,34 +209,38 @@ class PopulationFeatureExtractor:
             Array of shape (N, S).
         """
         if isinstance(feature, dict):
-            return {k: self._get_distribution(k, step, **v) for k, v in feature.items()}
+            return {
+                k: self._get_distribution(k, step=step, **v) for k, v in feature.items()
+            }
 
         if isinstance(feature, list):
-            return [self._get_distribution(k, step) for k in feature]
+            return [self._get_distribution(k, step=step) for k in feature]
 
-        return self._get_distribution(feature, step, **kwargs)
+        return self._get_distribution(feature, step=step, **kwargs)
 
-    def plot_distribution(self, feature, **kwargs) -> Tuple[Figure, Axes]:
+    def plot_distribution(self, feature: Feature, **kwargs) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
-        x, y = self.get_distribution(feature)
-        x = x.repeat(y.shape[0])
-        y = y.flatten()
-        return plot(x, y, **kwargs)
+        x, y = self.get_distribution(feature, **kwargs)
+        x, y = np.tile(x, y.shape[0]), y.flatten()
+
+        fig, ax = get_fig_ax(None, None)
+        sns.lineplot(x=x, y=y, ax=ax)
+        return fig, ax
 
     def _get(self, feature: Feature, **kwargs) -> List[npt.NDArray[np.float32]]:
         return [ex.get(feature, **kwargs) for ex in self._trees]
 
-    def _get_distribution(
-        self, feature: Feature, step: float | None, **kwargs
-    ) -> XYPair:
+    def _get_distribution(self, feature: Feature, **kwargs) -> XYPair:
         assert len(self._trees) != 0
 
-        values = self._get(feature, **kwargs)
-        v_max = np.max([v.max() for v in values])
-        step = cast(float, v_max / 100) if step is None else step
+        x, ys = np.array([], dtype=np.float32), list[npt.NDArray[np.float32]]()
+        for features in self._trees:
+            xx, y = features.get_distribution(feature, **kwargs)
+            x = xx if xx.shape[0] > x.shape[0] else x
+            ys.append(y)
 
-        x = np.arange(0, v_max + step, step, dtype=np.float32)
-        y = np.stack([to_distribution(v, step, vmax=v_max)[1] for v in values])
+        max_len_y = max(y.shape[0] for y in ys)
+        y = np.stack([padding1d(max_len_y, y, 0) for y in ys])
         return x, y
 
 
@@ -243,15 +258,3 @@ def extract_feature(obj):
         return PopulationFeatureExtractor(obj)
 
     raise TypeError("Invalid argument type.")
-
-
-def plot(
-    x: npt.NDArray[np.float32],
-    y: npt.NDArray[np.float32],
-    fig: Figure | None = None,
-    ax: Axes | None = None,
-    **kwargs,
-) -> Tuple[Figure, Axes]:
-    fig, ax = get_fig_ax(fig, ax)
-    sns.lineplot(x=x, y=y, ax=ax, **kwargs)
-    return fig, ax

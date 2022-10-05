@@ -42,6 +42,11 @@ class Sholl:
     def get_count(self) -> npt.NDArray[np.int32]:
         return self.count.copy()
 
+    def get_distribution(self) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.int32]]:
+        y = self.get_count()
+        x = self.step * np.arange(len(y))
+        return x, y
+
     def avg(self) -> float:
         return np.average(self.get_count()).item()
 
@@ -58,10 +63,8 @@ class Sholl:
         ax: Axes | None = None,
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-        y = self.get_count()
-        x = self.step * np.arange(len(y))
-
         fig, ax = get_fig_ax(fig, ax)
+        x, y = self.get_distribution()
 
         match plot_type:
             case "bar":
