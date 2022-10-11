@@ -2,7 +2,7 @@
 
 Notes
 -----
-For development, see method `FeatureExtractor._gen_feature_calculator`
+For development, see method `_Features.get_evaluator`
 to confirm the naming specification.
 """
 
@@ -16,7 +16,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import Population, Tree
-from ..utils import XYPair, get_fig_ax, to_distribution, padding1d
+from ..utils import XYPair, get_fig_ax, padding1d, to_distribution
 from .branch_features import BranchFeatures
 from .node_features import NodeFeatures
 from .path_features import PathFeatures
@@ -44,7 +44,9 @@ Feature = Literal[
 ]
 
 
-class _Features:
+class Features:
+    """Tree features"""
+
     tree: Tree
 
     # Modules
@@ -106,10 +108,10 @@ class _Features:
 class FeatureExtractor:
     """Extract feature from tree."""
 
-    features: _Features
+    features: Features
 
     def __init__(self, tree: Tree) -> None:
-        self.features = _Features(tree)
+        self.features = Features(tree)
 
     # fmt:off
     @overload
@@ -164,8 +166,8 @@ class PopulationFeatureExtractor:
     population: Population
 
     @cached_property
-    def _trees(self) -> List[_Features]:
-        return [_Features(tree) for tree in self.population]
+    def _trees(self) -> List[Features]:
+        return [Features(tree) for tree in self.population]
 
     def __init__(self, population: Population) -> None:
         self.population = population
@@ -218,12 +220,14 @@ class PopulationFeatureExtractor:
 
         return self._get_distribution(feature, step=step, **kwargs)
 
-    def plot_distribution(self, feature: Feature, **kwargs) -> Tuple[Figure, Axes]:
+    def plot_distribution(
+        self, feature: Feature, ax: Axes | None = None, **kwargs
+    ) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
         x, y = self.get_distribution(feature, **kwargs)
         x, y = np.tile(x, y.shape[0]), y.flatten()
 
-        fig, ax = get_fig_ax(None, None)
+        fig, ax = get_fig_ax(None, ax)
         sns.lineplot(x=x, y=y, ax=ax)
         return fig, ax
 
