@@ -152,10 +152,12 @@ class FeatureExtractor:
 
         return self.features.get_distribution(feature, step, **kwargs)
 
-    def plot_distribution(self, feature: Feature, **kwargs) -> Tuple[Figure, Axes]:
+    def plot_distribution(
+        self, feature: Feature, fig: Figure | None, ax: Axes | None = None, **kwargs
+    ) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
         x, y = self.get_distribution(feature, **kwargs)
-        fig, ax = get_fig_ax(None, None)
+        fig, ax = get_fig_ax(fig, ax)
         sns.lineplot(x=x, y=y, ax=ax)
         return fig, ax
 
@@ -221,13 +223,13 @@ class PopulationFeatureExtractor:
         return self._get_distribution(feature, step=step, **kwargs)
 
     def plot_distribution(
-        self, feature: Feature, ax: Axes | None = None, **kwargs
+        self, feature: Feature, fig: Figure | None, ax: Axes | None = None, **kwargs
     ) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
         x, y = self.get_distribution(feature, **kwargs)
         x, y = np.tile(x, y.shape[0]), y.flatten()
 
-        fig, ax = get_fig_ax(None, ax)
+        fig, ax = get_fig_ax(fig, ax)
         sns.lineplot(x=x, y=y, ax=ax)
         return fig, ax
 
