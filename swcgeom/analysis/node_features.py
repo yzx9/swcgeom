@@ -39,7 +39,7 @@ class NodeFeatures:
         /,
         filter_bifurcation: bool = False,
         filter_tip: bool = False,
-        filter_other: bool = False,
+        filter_other: bool = True,
     ) -> XYPair:
         """Get radial distance distribution of tree.
 
@@ -92,7 +92,7 @@ class NodeFeatures:
         /,
         filter_bifurcation: bool = False,
         filter_tip: bool = False,
-        filter_other: bool = False,
+        filter_other: bool = True,
     ) -> XYPair:
         """Get branch order distribution of tree.
 
