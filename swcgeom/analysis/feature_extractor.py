@@ -153,7 +153,11 @@ class FeatureExtractor:
         return self.features.get_distribution(feature, step, **kwargs)
 
     def plot_distribution(
-        self, feature: Feature, fig: Figure | None, ax: Axes | None = None, **kwargs
+        self,
+        feature: Feature,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
+        **kwargs,
     ) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
         x, y = self.get_distribution(feature, **kwargs)
@@ -223,7 +227,11 @@ class PopulationFeatureExtractor:
         return self._get_distribution(feature, step=step, **kwargs)
 
     def plot_distribution(
-        self, feature: Feature, fig: Figure | None, ax: Axes | None = None, **kwargs
+        self,
+        feature: Feature,
+        fig: Figure | None = None,
+        ax: Axes | None = None,
+        **kwargs,
     ) -> Tuple[Figure, Axes]:
         # pylint: disable=unpacking-non-sequence
         x, y = self.get_distribution(feature, **kwargs)
