@@ -11,6 +11,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
@@ -49,15 +50,12 @@ class Tree(SWCLike):
 
         def get_branch(self) -> "Tree.Branch":
             nodes: List["Tree.Node"] = [self]
-            while (
-                not nodes[-1].is_bifurcation()
-                and (parent := nodes[-1].parent()) is not None
-            ):
-                nodes.append(parent)
+            while not (nodes[-1].is_soma() or nodes[-1].is_bifurcation()):
+                nodes.append(cast(Tree.Node, nodes[-1].parent()))
 
             nodes.reverse()
-            while not nodes[-1].is_bifurcation() and not nodes[-1].is_tip():
-                nodes.append(nodes[-1].child_ids()[0])
+            while not (nodes[-1].is_bifurcation() or nodes[-1].is_tip()):
+                nodes.append(nodes[-1].children()[0])
 
             return Tree.Branch(self.attach, [n.id for n in nodes])
 
