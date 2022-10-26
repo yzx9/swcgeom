@@ -7,6 +7,8 @@ from .branch import Branch
 from .tree import Tree
 from .tree_utils import to_sub_tree
 
+__all__ = ["BranchTree"]
+
 
 class BranchTree(Tree):
     """Branch tree keeps topology of tree.
