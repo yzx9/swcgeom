@@ -2,7 +2,17 @@
 
 import itertools
 import os
-from typing import Callable, Dict, Iterable, Iterator, List, Tuple, TypeVar, Union, overload
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -35,7 +45,7 @@ class Tree(SWCLike):
             return self.id == 0
 
         def is_tip(self) -> bool:
-            return self.id in self.attach.pid()
+            return self.id not in self.attach.pid()
 
         def get_branch(self) -> "Tree.Branch":
             nodes: List["Tree.Node"] = [self]
