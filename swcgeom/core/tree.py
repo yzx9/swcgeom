@@ -2,7 +2,7 @@
 
 import itertools
 import os
-from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, Union, overload
+from typing import Callable, Dict, Iterable, Iterator, List, Tuple, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -93,7 +93,7 @@ class Tree(SWCLike):
         kwargs.update(ndata)
         self.ndata = kwargs
 
-    def __iter__(self) -> Iterable[Node]:
+    def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
 
     def __repr__(self) -> str:

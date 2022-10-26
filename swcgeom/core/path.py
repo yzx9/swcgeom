@@ -1,6 +1,6 @@
 """Nueron node."""
 
-from typing import Dict, Generic, Iterable, List, overload
+from typing import Dict, Generic, Iterable, Iterator, List, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -21,7 +21,7 @@ class PathBase(SWCLike):
     class Node(NodeAttached["PathBase"]):
         """Node of neuron tree."""
 
-    def __iter__(self) -> Iterable[Node]:
+    def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
 
     def __len__(self) -> int:
