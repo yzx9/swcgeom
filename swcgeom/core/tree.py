@@ -1,6 +1,7 @@
 """Neuron tree."""
 
 import itertools
+import logging
 import os
 from typing import (
     Callable,
@@ -49,6 +50,12 @@ class Tree(SWCLike):
             return self.id not in self.attach.pid()
 
         def get_branch(self) -> "Tree.Branch":
+            logging.info(
+                "`tree.get_branch` has been renamed to `tree.branch` and will be removed in next version"
+            )
+            return self.branch()
+
+        def branch(self) -> "Tree.Branch":
             nodes: List["Tree.Node"] = [self]
             while not (nodes[-1].is_soma() or nodes[-1].is_bifurcation()):
                 nodes.append(cast(Tree.Node, nodes[-1].parent()))
