@@ -115,8 +115,7 @@ class NodeAttached(_Node, Generic[SWCTypeVar]):
         self.attach.get_ndata(k)[self.idx] = v
 
     def child_ids(self) -> npt.NDArray[np.int32]:
-        pid = self.attach.pid()
-        return pid[pid == self.id]
+        return self.attach.id()[self.attach.pid() == self.id]
 
     def is_bifurcation(self) -> bool:
         return len(self.child_ids()) > 1
