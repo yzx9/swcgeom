@@ -120,7 +120,9 @@ class PathBase(SWCLike):
         points divided by the length of the neuronal path between
         those points.
         """
-        return self.straight_line_distance() / self.length()
+        if (length := self.length()) == 0:
+            return 1
+        return self.straight_line_distance() / length
 
 
 class Path(PathBase):
