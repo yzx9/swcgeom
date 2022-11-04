@@ -77,14 +77,15 @@ def cut_tree(
     if enter:
 
         def _enter(n: Tree.Node, parent: Tuple[T, bool] | None) -> Tuple[T, bool]:
-            if parent is not None and not parent[1]:
+            if parent is not None and parent[1]:
+                idx[n.id] = REMOVE
                 return parent
 
             res, remove = enter(n, parent[0] if parent else None)
             if remove:
                 idx[n.id] = REMOVE
 
-            return res, True
+            return res, remove
 
         tree.traverse(enter=_enter)
 
