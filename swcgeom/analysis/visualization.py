@@ -1,22 +1,27 @@
 """Painter utils."""
 
-
-from typing import Dict, Literal, Tuple
+import weakref
+from typing import Any, Dict, Literal, Tuple
 
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import SWCLike, Tree
-from ..utils import draw_lines, draw_xyz_axes, get_fig_ax, palette, Camera, Vector3D
+from ..utils import (
+    draw_lines,
+    draw_xyz_axes,
+    get_fig_ax,
+    palette,
+    Camera,
+    vaa3dPalette,
+    Vector3D,
+)
 
 __all__ = ["draw"]
 
-DEFAULT_COLOR = palette.momo
-CAMERA_PRESET = Literal[  # pylint: disable=invalid-name
-    "xy", "yz", "zx", "yx", "zy", "xz"
-]
-CAMERA_PRESETS: Dict[CAMERA_PRESET, Camera] = {
+CameraPreset = Literal["xy", "yz", "zx", "yx", "zy", "xz"]
+CameraPresets: Dict[CameraPreset, Camera] = {
     "xy": Camera((0, 0, 0), (0, 0, -1), (0, 1, 0)),
     "yz": Camera((0, 0, 0), (-1, 0, 0), (0, 0, 1)),
     "zx": Camera((0, 0, 0), (0, -1, 0), (1, 0, 0)),
@@ -24,19 +29,20 @@ CAMERA_PRESETS: Dict[CAMERA_PRESET, Camera] = {
     "zy": Camera((0, 0, 0), (-1, 0, 0), (0, 0, -1)),
     "xz": Camera((0, 0, 0), (0, -1, 0), (-1, 0, 0)),
 }
-CAMERA_OPTIONS = (
+CameraOptions = (
     Vector3D | Tuple[Vector3D, Vector3D] | Tuple[Vector3D, Vector3D, Vector3D]
 )
+
+ax_weak_dict = weakref.WeakKeyDictionary[Axes, Dict[str, Any]]({})
 
 
 def draw(
     swc: SWCLike | str,
     *,
-    color: Dict[int, str] | str | None = None,
-    first: bool = True,
     fig: Figure | None = None,
     ax: Axes | None = None,
-    camera: CAMERA_OPTIONS | CAMERA_PRESET = "xy",
+    camera: CameraOptions | CameraPreset = "xy",
+    color: Dict[int, str] | str | None = None,
     **kwargs,
 ) -> tuple[Figure, Axes]:
     """Draw neuron tree.
@@ -45,64 +51,97 @@ def draw(
     ----------
     swc : SWCLike | str
         If it is str, then it is treated as the path of swc file.
-    color : Dict[int, str] | str, optional
-        Color map. If is dict, segments will be colored by the type of
-        parent node.If is string, the value will be use for any type.
+    fig : ~matplotlib.axes.Figure, optional
     ax : ~matplotlib.axes.Axes, optional
-        A subplot of `~matplotlib`. If `None`, a new one will be
-        created.
-    first : bool, default to `True`
-        If multiple neuron plotted on same axes, set to `False` on
-        subsequent calls.
-    camera : CameraOptions | "xy" | "yz" | "zx", default "xy"
+    camera : CameraOptions | CameraPreset, default "xy"
         Camera options (position, look-at, up). One, two, or three
         vectors are supported, if only one vector, then threat it as
         look-at, so camera is ((0, 0, 0), look-at, (0, 1, 0));if two
         vector, then then threat it as (look-at, up), so camera is
         ((0, 0, 0), look-at, up). An easy way is to use the presets
         "xy", "yz" and "zx".
+    color : Dict[int, str] | "vaa3d" | str, optional
+        Color map. If is dict, segments will be colored by the type of
+        parent node.If is string, the value will be use for any type.
     **kwargs : dict[str, Unknown]
         Forwarded to `~matplotlib.collections.LineCollection`.
 
     Returns
     -------
+    fig : ~matplotlib.axes.Figure
     ax : ~matplotlib.axes.Axes
-        If provided, return as-is.
-    collection : ~matplotlib.collections.LineCollection
-        Drawn line collection.
     """
+
+    fig, ax = get_fig_ax(fig, ax)
+    ax_weak_dict.setdefault(ax, {})
+    ax_weak_dict[ax].setdefault("swc", [])
 
     if isinstance(swc, str):
         swc = Tree.from_swc(swc)
+    ax_weak_dict[ax]["swc"].append(swc)
 
-    if isinstance(color, dict):
-        types = swc.type()[:-1]  # colored by type of parent node
-        color_map = list(map(lambda t: color.get(t, DEFAULT_COLOR), types))
-    else:
-        color_map = color if color is not None else DEFAULT_COLOR
-
-    if isinstance(camera, str):
-        camera = CAMERA_PRESETS[camera]
-    elif len(camera) == 1:
-        camera = Camera((0, 0, 0), camera, (0, 1, 0))
-    elif len(camera) == 2:
-        camera = Camera((0, 0, 0), camera[0], camera[1])
-    else:
-        camera = Camera(*camera)
+    my_camera = get_camera(camera)
+    my_color = get_color(swc, color, ax)
 
     xyz = swc.xyz()
     starts, ends = swc.id()[1:], swc.pid()[1:]
     lines = np.stack([xyz[starts], xyz[ends]], axis=1)
 
-    fig, ax = get_fig_ax(fig, ax)
-    draw_lines(lines, ax=ax, camera=camera, color=color_map, **kwargs)
+    draw_lines(lines, ax=ax, camera=my_camera, color=my_color, **kwargs)
+
     ax.autoscale()
-    if first:
+
+    if len(ax_weak_dict[ax]["swc"]) == 1:
         ax.set_aspect(1)
         ax.spines[["top", "right"]].set_visible(False)
-
         ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
-
-        draw_xyz_axes(ax=ax, camera=camera)
+        draw_xyz_axes(ax=ax, camera=my_camera)
+        # TODO: legend
 
     return fig, ax
+
+
+def get_camera(camera: CameraOptions | CameraPreset) -> Camera:
+    if isinstance(camera, str):
+        return CameraPresets[camera]
+
+    if len(camera) == 1:
+        return Camera((0, 0, 0), camera, (0, 1, 0))
+
+    if len(camera) == 2:
+        return Camera((0, 0, 0), camera[0], camera[1])
+
+    return Camera(*camera)
+
+
+colors = [
+    palette.momo,
+    palette.kimirucha,
+    palette.kuchiba,
+    palette.aotake,
+    palette.mizugaki,
+    palette.tsuyukusa,
+    palette.sumire,
+    palette.benikeshinezumi,
+]
+
+
+def get_color(
+    swc: SWCLike, color: Dict[int, str] | str | None, ax: Axes
+) -> str | list[str]:
+    if color == "vaa3d":
+        color = vaa3dPalette
+
+    if isinstance(color, str):
+        return color
+
+    # choose default
+    ax_weak_dict[ax].setdefault("color", -1)
+    ax_weak_dict[ax]["color"] += 1
+    default_color = colors[ax_weak_dict[ax]["color"]]
+
+    if isinstance(color, dict):
+        types = swc.type()[:-1]  # colored by type of parent node
+        return list(map(lambda t: color.get(t, default_color), types))
+
+    return default_color

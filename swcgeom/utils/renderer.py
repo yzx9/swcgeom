@@ -25,6 +25,7 @@ __all__ = [
     "Vector3D",
     "Camera",
     "palette",
+    "vaa3dPalette",
     "draw_lines",
     "draw_xyz_axes",
     "draw_circles",
@@ -40,16 +41,47 @@ class Palette:
     """Palette dataclasss."""
 
     momo: str = "#F596AA"
-    mizugaki: str = "#B9887D"
-    kuchiba: str = "#E2943B"
     kimirucha: str = "#867835"
+    kuchiba: str = "#E2943B"
     aotake: str = "#00896C"
+    mizugaki: str = "#B9887D"
     tsuyukusa: str = "#2EA9DF"
     sumire: str = "#66327C"
     benikeshinezumi: str = "#52433D"
 
 
 palette = Palette()
+
+vaa3dPalette = dict(
+    enumerate(
+        [
+            "#ffffff",  # white, 0-undefined
+            "#141414",  # black, 1-soma
+            "#c81400",  # red, 2-axon
+            "#0014c8",  # blue, 3-dendrite
+            "#c800c8",  # purple, 4-apical dendrite
+            # the following is Hanchuan’s extended color. 090331
+            "#00c8c8",  # cyan, 5
+            "#dcc800",  # yellow, 6
+            "#00c814",  # green, 7
+            "#bc5e25",  # coffee, 8
+            "#b4c878",  # asparagus, 9
+            "#fa6478",  # salmon, 10
+            "#78c8c8",  # ice, 11
+            "#6478c8",  # orchid, 12
+            # the following is Hanchuan’s further extended color. 111003
+            "#ff80a8",  # 13
+            "#80ffa8",  # 14
+            "#80a8ff",  # 15
+            "#a8ff80",  # 16
+            "#ffa880",  # 17
+            "#a880ff",  # 18
+            "#000000",  # 19 # totally black. PHC, 2012-02-15
+            # the following (20-275) is used for matlab heat map. 120209 by WYN
+            "#000083",
+        ]
+    )
+)
 
 
 def draw_lines(
