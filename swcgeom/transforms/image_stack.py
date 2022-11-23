@@ -1,5 +1,7 @@
 """Create image stack from morphology."""
 
+import re
+import os
 import time
 from typing import Any, Iterable, List, Tuple, cast
 
@@ -9,7 +11,7 @@ import numpy.typing as npt
 import tifffile
 from tqdm import tqdm
 
-from ..core import Tree
+from ..core import Tree, Population
 from ..utils import SDF, SDFCompose, SDFRoundCone
 from .base import Transform
 
@@ -91,6 +93,18 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
     def transform_and_save(self, fname: str, x: Tree, verbose: bool = True) -> None:
         self.save_tif(fname, self.transfrom(x, verbose=verbose))
+
+    def transform_population(
+        self, population: Population | str, verbose: bool = True
+    ) -> None:
+        if isinstance(population, str):
+            population = Population.from_swc(population)
+
+        # TODO: multiprocess
+        for tree in population:
+            tif = re.sub(r".swc$", ".tif", tree.source)
+            if not os.path.isfile(tif):
+                self.transform_and_save(tif, tree, verbose=verbose)
 
     def get_grids(
         self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike
