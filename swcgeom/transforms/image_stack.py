@@ -1,10 +1,12 @@
 """Create image stack from morphology."""
 
+import time
 from typing import Any, Iterable, List, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
 import tifffile
+from tqdm import tqdm
 
 from ..core import Tree
 from ..utils import SDF, SDFCompose, SDFRoundCone
@@ -51,7 +53,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ONLY works for small image stacks, use
         :meth`transform_and_save` for big image stack.
         """
-        return np.concatenate(list(self.transfrom(x)), axis=0)
+        return np.concatenate(list(self.transfrom(x, verbose=False)), axis=0)
 
     def __repr__(self) -> str:
         return (
@@ -61,26 +63,37 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         )
 
     def transfrom(
-        self, x: Tree, z_per_iter: int = 1
+        self, x: Tree, z_per_iter: int = 1, verbose: bool = True
     ) -> Iterable[npt.NDArray[np.uint8]]:
+        if verbose:
+            print("To image stack: " + x.source)
+            time_start = time.time()
+
         xyz, r = x.xyz(), np.stack([x.r(), x.r(), x.r()], axis=1)  # TODO: perf
         coord_min = np.floor(np.min(xyz - r, axis=0))  # TODO: snap to grid
         coord_max = np.ceil(np.max(xyz + r, axis=0))
-        grids = self.get_grids(coord_min, coord_max, z_per_iter)
+        grids, total = self.get_grids(coord_min, coord_max, z_per_iter)
 
-        for grid in grids:
+        if verbose:
+            time_end = time.time()
+            print("prerare in: ", time_end - time_start, "s")  # type: ignore
+
+        for grid in tqdm(grids, total=total) if verbose else grids:
             is_in = self.get_sdf(x).is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
             level = np.sum(is_in, axis=3, dtype=np.uint8)
             voxel = (255 / self.msaa * level).astype(np.uint8)
             frames = np.moveaxis(voxel, 2, 0)
-            yield frames
+            for frame in frames:
+                yield frame
 
-    def transform_and_save(self, fname: str, x: Tree, z_per_iter: int = 1) -> None:
-        self.save_tif(fname, self.transfrom(x, z_per_iter))
+    def transform_and_save(
+        self, fname: str, x: Tree, z_per_iter: int = 1, verbose: bool = True
+    ) -> None:
+        self.save_tif(fname, self.transfrom(x, z_per_iter=z_per_iter, verbose=verbose))
 
     def get_grids(
         self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike, z_per_iter: int = 1
-    ) -> Iterable[npt.NDArray[np.float32]]:
+    ) -> Tuple[Iterable[npt.NDArray[np.float32]], int]:
         """Get point grid.
 
         Parameters
@@ -121,8 +134,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         grids = np.expand_dims(point_grid, 3).repeat(k**3, axis=3)
         grids = cast(Any, grids + inter_grid)
 
-        for i in range(0, grids.shape[2], z_per_iter):
-            yield grids[:, :, i : i + z_per_iter]
+        return (
+            grids[:, :, i : i + z_per_iter]
+            for i in range(0, grids.shape[2], z_per_iter)
+        ), grids.shape[2]
 
     def get_sdf(self, x: Tree) -> SDF:
         sdfs: List[SDF] = []
