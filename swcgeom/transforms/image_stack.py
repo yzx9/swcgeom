@@ -3,6 +3,7 @@
 import time
 from typing import Any, Iterable, List, Tuple, cast
 
+import math
 import numpy as np
 import numpy.typing as npt
 import tifffile
@@ -20,11 +21,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
     resolution: npt.NDArray[np.float32]
     msaa: int
+    z_per_iter: int = 1
 
     def __init__(
-        self,
-        resolution: float | npt.ArrayLike = 1,
-        msaa: int = 8,
+        self, resolution: float | npt.ArrayLike = 1, msaa: int = 8, z_per_iter: int = 1
     ) -> None:
         """Transform tree to image stack.
 
@@ -43,6 +43,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         assert tuple(resolution.shape) == (3,), "resolution shoule be vector of 3d."
 
         self.msaa = msaa
+        self.z_per_iter = z_per_iter
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.
@@ -60,39 +61,39 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             "ToImageStack"
             + f"-resolution-{'-'.join(self.resolution)}"
             + f"-mass-{self.msaa}"
+            + f"-z-{self.z_per_iter}"
         )
 
     def transfrom(
-        self, x: Tree, z_per_iter: int = 1, verbose: bool = True
+        self, x: Tree, verbose: bool = True
     ) -> Iterable[npt.NDArray[np.uint8]]:
         if verbose:
             print("To image stack: " + x.source)
             time_start = time.time()
 
+        sdf = self.get_sdf(x)
+
         xyz, r = x.xyz(), np.stack([x.r(), x.r(), x.r()], axis=1)  # TODO: perf
         coord_min = np.floor(np.min(xyz - r, axis=0))  # TODO: snap to grid
         coord_max = np.ceil(np.max(xyz + r, axis=0))
-        grids, total = self.get_grids(coord_min, coord_max, z_per_iter)
+        grids, total = self.get_grids(coord_min, coord_max)
 
         if verbose:
             time_end = time.time()
-            print("prerare in: ", time_end - time_start, "s")  # type: ignore
+            print("Prepare in: ", time_end - time_start, "s")  # type: ignore
 
         for grid in tqdm(grids, total=total) if verbose else grids:
-            is_in = self.get_sdf(x).is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
+            is_in = sdf.is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
             level = np.sum(is_in, axis=3, dtype=np.uint8)
             voxel = (255 / self.msaa * level).astype(np.uint8)
-            frames = np.moveaxis(voxel, 2, 0)
-            for frame in frames:
-                yield frame
+            for i in range(voxel.shape[2]):
+                yield voxel[:, :, i]
 
-    def transform_and_save(
-        self, fname: str, x: Tree, z_per_iter: int = 1, verbose: bool = True
-    ) -> None:
-        self.save_tif(fname, self.transfrom(x, z_per_iter=z_per_iter, verbose=verbose))
+    def transform_and_save(self, fname: str, x: Tree, verbose: bool = True) -> None:
+        self.save_tif(fname, self.transfrom(x, verbose=verbose))
 
     def get_grids(
-        self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike, z_per_iter: int = 1
+        self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike
     ) -> Tuple[Iterable[npt.NDArray[np.float32]], int]:
         """Get point grid.
 
@@ -135,34 +136,42 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         grids = cast(Any, grids + inter_grid)
 
         return (
-            grids[:, :, i : i + z_per_iter]
-            for i in range(0, grids.shape[2], z_per_iter)
-        ), grids.shape[2]
+            grids[:, :, i : i + self.z_per_iter]
+            for i in range(0, grids.shape[2], self.z_per_iter)
+        ), math.ceil(grids.shape[2] / self.z_per_iter)
 
     def get_sdf(self, x: Tree) -> SDF:
-        sdfs: List[SDF] = []
-        T = Tuple[Tree.Node, List[SDF]]
+        T = Tuple[Tree.Node, List[SDF], SDF | None]
 
         def collect(n: Tree.Node, pre: List[T]) -> T:
             if len(pre) == 0:
-                return (n, [])
+                return (n, [], None)
 
             if len(pre) == 1:
-                child, sub_sdfs = pre[0]
+                child, sub_sdfs, last = pre[0]
                 sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
-                return (n, sub_sdfs)
+                return (n, sub_sdfs, last)
 
-            for child, sub_sdfs in pre:
+            sdfs: List[SDF] = []
+            for child, sub_sdfs, last in pre:
                 sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
-                sdfs.append(SDFCompose(sub_sdfs))
+                sdfs.append(SDFCompose.compose(sub_sdfs))
+                if last is not None:
+                    sdfs.append(last)
 
-            return (n, [])
+            return (n, [], SDFCompose.compose(sdfs))
 
-        _, remaining_sdfs = x.traverse(leave=collect)
-        if len(remaining_sdfs) > 1:
-            sdfs.append(SDFCompose(remaining_sdfs))
+        _, sdfs, last = x.traverse(leave=collect)
+        if len(sdfs) != 0:
+            sdf = SDFCompose.compose(sdfs)
+            if last is not None:
+                sdf = SDFCompose.compose([sdf, last])
+        elif last is not None:
+            sdf = last
+        else:
+            raise ValueError("empty tree")
 
-        return SDFCompose(sdfs)
+        return sdf
 
     @staticmethod
     def save_tif(

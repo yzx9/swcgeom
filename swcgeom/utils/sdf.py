@@ -3,7 +3,8 @@
 Refs: https://iquilezles.org/articles/distfunctions/
 """
 
-from typing import List, Tuple
+import warnings
+from typing import List, Tuple, Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -70,6 +71,11 @@ class SDFCompose(SDF):
     """Compose multiple SDFs."""
 
     def __init__(self, sdfs: List[SDF]) -> None:
+        assert len(sdfs) != 0, "must combine at least one SDF"
+
+        if len(sdfs) == 1:
+            warnings.warn("compose only one SDF, use SDFCompose.compose instead")
+
         self.sdfs = sdfs
 
         bounding_boxes = [sdf.bounding_box for sdf in sdfs if sdf.bounding_box]
@@ -88,6 +94,11 @@ class SDFCompose(SDF):
         flags = np.full_like(in_box, False, dtype=np.bool_)
         flags[in_box] = np.any(is_in, axis=0)
         return flags
+
+    @staticmethod
+    def compose(sdfs: Iterable[SDF]) -> SDF:
+        sdfs = list(sdfs)
+        return SDFCompose(sdfs) if len(sdfs) != 1 else sdfs[0]
 
 
 class SDFRoundCone(SDF):
