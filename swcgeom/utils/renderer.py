@@ -1,7 +1,6 @@
 """Painter utils."""
 
-from dataclasses import dataclass
-from typing import NamedTuple, Tuple
+from typing import Dict, NamedTuple, Tuple
 
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -25,7 +24,6 @@ __all__ = [
     "Vector3D",
     "Camera",
     "palette",
-    "vaa3dPalette",
     "draw_lines",
     "draw_xyz_axes",
     "draw_circles",
@@ -36,25 +34,24 @@ Vector3D = Tuple[float, float, float]
 Camera = NamedTuple("Camera", position=Vector3D, look_at=Vector3D, up=Vector3D)
 
 
-@dataclass
 class Palette:
-    """Palette dataclasss."""
+    default: Dict[int, str]
+    vaa3d: Dict[int, str]
 
-    momo: str = "#F596AA"
-    kimirucha: str = "#867835"
-    kuchiba: str = "#E2943B"
-    aotake: str = "#00896C"
-    mizugaki: str = "#B9887D"
-    tsuyukusa: str = "#2EA9DF"
-    sumire: str = "#66327C"
-    benikeshinezumi: str = "#52433D"
+    def __init__(self):
+        default = [
+            "#F596AA",  # momo,
+            "#867835",  # kimirucha,
+            "#E2943B",  # kuchiba,
+            "#00896C",  # aotake,
+            "#B9887D",  # mizugaki,
+            "#2EA9DF",  # tsuyukusa,
+            "#66327C",  # sumire,
+            "#52433D",  # benikeshinezumi,
+        ]
+        self.default = dict(enumerate(default))
 
-
-palette = Palette()
-
-vaa3dPalette = dict(
-    enumerate(
-        [
+        vaa3d = [
             "#ffffff",  # white, 0-undefined
             "#141414",  # black, 1-soma
             "#c81400",  # red, 2-axon
@@ -80,8 +77,10 @@ vaa3dPalette = dict(
             # the following (20-275) is used for matlab heat map. 120209 by WYN
             "#000083",
         ]
-    )
-)
+        self.vaa3d = dict(enumerate(vaa3d))
+
+
+palette = Palette()
 
 
 def draw_lines(
@@ -121,10 +120,10 @@ def draw_lines(
 
 
 def draw_xyz_axes(
-    ax: Axes, camera: Camera, position: Tuple[float, float] = (0.85, 0.85)
+    ax: Axes, camera: Camera, position: Tuple[float, float] = (0.8, 0.10)
 ) -> None:
     x, y = position
-    arrow_length = 0.1
+    arrow_length = 0.05
 
     direction = np.array(
         [
@@ -140,7 +139,7 @@ def draw_xyz_axes(
         direction[:3],
         [["x", "red"], ["y", "green"], ["z", "blue"]],
     ):
-        if 1 - abs(dz) < 1e-2:
+        if 1 - abs(dz) < 1e-5:
             continue
 
         ax.arrow(
@@ -154,8 +153,8 @@ def draw_xyz_axes(
             transform=ax.transAxes,
         )
         ax.text(
-            x + (arrow_length + 0.1) * dx,
-            y + (arrow_length + 0.1) * dy,
+            x + (arrow_length + 0.06) * dx,
+            y + (arrow_length + 0.06) * dy,
             text,
             color=color,
             transform=ax.transAxes,

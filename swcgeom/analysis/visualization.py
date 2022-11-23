@@ -1,5 +1,6 @@
 """Painter utils."""
 
+import os
 import weakref
 from typing import Any, Dict, Literal, Tuple
 
@@ -14,7 +15,6 @@ from ..utils import (
     get_fig_ax,
     palette,
     Camera,
-    vaa3dPalette,
     Vector3D,
 )
 
@@ -43,6 +43,7 @@ def draw(
     ax: Axes | None = None,
     camera: CameraOptions | CameraPreset = "xy",
     color: Dict[int, str] | str | None = None,
+    label: str | Literal[True] = True,  # TODO: support False
     **kwargs,
 ) -> tuple[Figure, Axes]:
     """Draw neuron tree.
@@ -63,6 +64,8 @@ def draw(
     color : Dict[int, str] | "vaa3d" | str, optional
         Color map. If is dict, segments will be colored by the type of
         parent node.If is string, the value will be use for any type.
+    label : str | bool, default True
+        Label of legend, disable if False.
     **kwargs : dict[str, Unknown]
         Forwarded to `~matplotlib.collections.LineCollection`.
 
@@ -81,13 +84,18 @@ def draw(
     ax_weak_dict[ax]["swc"].append(swc)
 
     my_camera = get_camera(camera)
-    my_color = get_color(swc, color, ax)
+    my_color = get_color(ax, swc, color)
 
     xyz = swc.xyz()
     starts, ends = swc.id()[1:], swc.pid()[1:]
     lines = np.stack([xyz[starts], xyz[ends]], axis=1)
 
-    draw_lines(lines, ax=ax, camera=my_camera, color=my_color, **kwargs)
+    collection = draw_lines(lines, ax=ax, camera=my_camera, color=my_color, **kwargs)
+
+    # legend
+    ax_weak_dict[ax].setdefault("handles", [])
+    ax_weak_dict[ax]["handles"].append(collection)
+    set_lable(ax, swc, label)
 
     ax.autoscale()
 
@@ -96,7 +104,11 @@ def draw(
         ax.spines[["top", "right"]].set_visible(False)
         ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
         draw_xyz_axes(ax=ax, camera=my_camera)
-        # TODO: legend
+    else:
+        # legend
+        handles = ax_weak_dict[ax].get("handles", [])
+        labels = ax_weak_dict[ax].get("labels", [])
+        ax.legend(handles, labels, loc="upper right")
 
     return fig, ax
 
@@ -114,23 +126,11 @@ def get_camera(camera: CameraOptions | CameraPreset) -> Camera:
     return Camera(*camera)
 
 
-colors = [
-    palette.momo,
-    palette.kimirucha,
-    palette.kuchiba,
-    palette.aotake,
-    palette.mizugaki,
-    palette.tsuyukusa,
-    palette.sumire,
-    palette.benikeshinezumi,
-]
-
-
 def get_color(
-    swc: SWCLike, color: Dict[int, str] | str | None, ax: Axes
+    ax: Axes, swc: SWCLike, color: Dict[int, str] | str | None
 ) -> str | list[str]:
     if color == "vaa3d":
-        color = vaa3dPalette
+        color = palette.vaa3d
 
     if isinstance(color, str):
         return color
@@ -138,10 +138,26 @@ def get_color(
     # choose default
     ax_weak_dict[ax].setdefault("color", -1)
     ax_weak_dict[ax]["color"] += 1
-    default_color = colors[ax_weak_dict[ax]["color"]]
+    c = palette.default[ax_weak_dict[ax]["color"]]
 
     if isinstance(color, dict):
         types = swc.type()[:-1]  # colored by type of parent node
-        return list(map(lambda t: color.get(t, default_color), types))
+        return list(map(lambda type: color.get(type, c), types))
 
-    return default_color
+    return c
+
+
+def set_lable(ax: Axes, swc: SWCLike, label: str | bool):
+    ax_weak_dict[ax].setdefault("labels", [])
+    if label is False:
+        ax_weak_dict[ax]["labels"].append(False)
+        return
+
+    if label is True:
+        try:
+            (_, tail) = os.path.split(swc.source)
+            label = tail
+        except:
+            label = swc.source
+
+    ax_weak_dict[ax]["labels"].append(label)
