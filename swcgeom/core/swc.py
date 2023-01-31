@@ -121,13 +121,19 @@ class SWCLike:
         """Get the number of edges."""
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
-    def to_swc(self, swc_path: str, extra_cols: List[str] | None = None) -> None:
+    def to_swc(
+        self, swc_path: str, extra_cols: List[str] | None = None, id_offset: int = 1
+    ) -> None:
         """Write swc file."""
         names = [name for name, _ in swc_cols]
-        if extra_cols:
+        if extra_cols is not None:
             names.extend(extra_cols)
 
-        def get_v(value: npt.NDArray, idx: int) -> str:
+        def get_v(name: str, idx: int) -> str:
+            value = self.get_ndata(name)
+            if name == "id" or (name == "pid" and value != -1):
+                value += id_offset
+
             if np.issubdtype(value.dtype, np.floating):
                 return f"{value[idx]:.4f}"
 
@@ -137,8 +143,7 @@ class SWCLike:
             f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
             f.write(f"# {' '.join(names)}\n")
             for idx in self.id():
-                values = [get_v(self.get_ndata(name), idx) for name in names]
-                f.write(f"{' '.join(values)}\n")
+                f.write(" ".join(get_v(name, idx) for name in names) + "\n")
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
