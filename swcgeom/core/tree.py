@@ -9,6 +9,7 @@ from typing import (
     Iterable,
     Iterator,
     List,
+    Literal,
     Tuple,
     TypeVar,
     Union,
@@ -220,7 +221,12 @@ class Tree(SWCLike):
         return [self.Path(self, idx) for idx in paths]
 
     @overload
-    def traverse(self, *, enter: Callable[[Node, T | None], T]) -> None:
+    def traverse(
+        self,
+        *,
+        enter: Callable[[Node, T | None], T],
+        mode: Literal["dfs"] = ...,
+    ) -> None:
         ...
 
     @overload
@@ -229,10 +235,11 @@ class Tree(SWCLike):
         *,
         enter: Callable[[Node, T | None], T] | None = ...,
         leave: Callable[[Node, list[K]], K],
+        mode: Literal["dfs"] = ...,
     ) -> K:
         ...
 
-    def traverse(self, *, enter=None, leave=None):
+    def traverse(self, *, enter=None, leave=None, mode="dfs"):
         """Traverse each nodes.
 
         Parameters
@@ -248,6 +255,14 @@ class Tree(SWCLike):
             children's information T, and the leaf node receives an empty list.
         """
 
+        match mode:
+            case "dfs":
+                return self._traverse_dfs(enter=enter, leave=leave)
+            case _:
+                raise ValueError(f"unsupported mode: `{mode}`")
+
+    def _traverse_dfs(self, *, enter=None, leave=None):
+        """Traverse each nodes by dfs."""
         children_map = dict[int, list[int]]()
         for idx, pid in enumerate(self.pid()):
             children_map.setdefault(pid, [])

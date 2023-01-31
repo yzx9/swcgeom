@@ -8,10 +8,35 @@ import numpy.typing as npt
 from .swc import SWCLike
 from .tree import Tree
 
-__all__ = ["REMOVE", "to_sub_tree", "cut_tree", "propagate_remove"]
+__all__ = ["REMOVE", "sort_tree", "to_sub_tree", "cut_tree", "propagate_remove"]
 
-REMOVE = -2
+REMOVE = -2  # Set to `id`, mark as removed
 T, K = TypeVar("T"), TypeVar("K")
+
+
+def sort_tree(tree: Tree) -> Tree:
+    """Sort the indices of neuron tree.
+
+    The index for parent compartments are always less than child
+    compartments.
+    """
+    new_id_map = np.zeros_like(tree.id())
+    new_pids = np.zeros_like(tree.id())
+    i = 0
+
+    def enter(n: Tree.Node, pid: int | None) -> int:
+        nonlocal i
+        new_id_map[i] = n.id
+        new_pids[i] = pid if pid is not None else -1
+        i = i + 1
+        return i - 1
+
+    tree.traverse(enter=enter)
+    new_tree = tree.copy()
+    new_tree.ndata = {k: tree.ndata[k][new_id_map] for k in tree.ndata}
+    new_tree.ndata["id"] = np.arange(tree.number_of_nodes())
+    new_tree.ndata["pid"] = new_pids
+    return new_tree
 
 
 def to_sub_tree(

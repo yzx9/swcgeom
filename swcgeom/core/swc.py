@@ -130,14 +130,15 @@ class SWCLike:
             names.extend(extra_cols)
 
         def get_v(name: str, idx: int) -> str:
-            value = self.get_ndata(name)
-            if name == "id" or (name == "pid" and value != -1):
-                value += id_offset
+            vs = self.get_ndata(name)
+            v = vs[idx]
+            if np.issubdtype(vs.dtype, np.floating):
+                return f"{v:.4f}"
 
-            if np.issubdtype(value.dtype, np.floating):
-                return f"{value[idx]:.4f}"
+            if name == "id" or (name == "pid" and v != -1):
+                v += id_offset
 
-            return str(value[idx])
+            return str(v)
 
         with open(swc_path, "w", encoding="utf-8") as f:
             f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
