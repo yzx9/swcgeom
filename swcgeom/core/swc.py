@@ -1,6 +1,6 @@
 """SWC format."""
 
-from typing import Any, Iterable, List, Tuple, TypeVar, cast
+from typing import Any, Iterable, List, Tuple, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -129,14 +129,28 @@ class SWCLike:
         """Get the number of edges."""
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
+    # fmt: off
+    @overload
+    def to_swc(self, swc_path: str, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> None: pass
+    @overload
+    def to_swc(self, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> str: pass
+    # fmt: on
     def to_swc(
-        self, swc_path: str, extra_cols: List[str] | None = None, id_offset: int = 1
-    ) -> None:
+        self,
+        swc_path: str | None = None,
+        *,
+        extra_cols: List[str] | None = None,
+        id_offset: int = 1,
+    ) -> str | None:
         """Write swc file."""
-        names = [name for name, _ in swc_cols]
-        if extra_cols is not None:
-            names.extend(extra_cols)
+        it = self._to_swc(extra_cols=extra_cols, id_offset=id_offset)
+        if swc_path is None:
+            return "".join(it)
 
+        with open(swc_path, "w", encoding="utf-8") as f:
+            f.writelines(it)
+
+    def _to_swc(self, extra_cols: List[str] | None, id_offset: int) -> Iterable[str]:
         def get_v(name: str, idx: int) -> str:
             vs = self.get_ndata(name)
             v = vs[idx]
@@ -148,11 +162,14 @@ class SWCLike:
 
             return str(v)
 
-        with open(swc_path, "w", encoding="utf-8") as f:
-            f.write(f"# source: {self.source if self.source else 'Unknown'}\n")
-            f.write(f"# {' '.join(names)}\n")
-            for idx in self.id():
-                f.write(" ".join(get_v(name, idx) for name in names) + "\n")
+        names = [name for name, _ in swc_cols]
+        if extra_cols is not None:
+            names.extend(extra_cols)
+
+        yield f"# source: {self.source if self.source else 'Unknown'}\n"
+        yield f"# {' '.join(names)}\n"
+        for idx in self.id():
+            yield " ".join(get_v(name, idx) for name in names) + "\n"
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
