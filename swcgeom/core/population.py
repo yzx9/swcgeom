@@ -1,9 +1,10 @@
 """Neuron population is a set of tree."""
 
 import os
-from typing import Iterator, List, cast, overload
+from typing import Any, Dict, Iterator, List, cast, overload
 
 from .tree import Tree
+from .swc import eswc_cols
 
 __all__ = ["Population"]
 
@@ -14,6 +15,7 @@ class Population:
     source: str = ""
     swcs: List[str]
     trees: List[Tree | None]
+    read_kwargs: Dict[str, Any]
 
     def __init__(self, swcs: list[str], lazy_loading=True) -> None:
         super().__init__()
@@ -63,14 +65,21 @@ class Population:
 
         for i in idx:
             if self.trees[i] is None:
-                self.trees[i] = Tree.from_swc(self.swcs[i])
+                self.trees[i] = Tree.from_swc(self.swcs[i], **self.read_kwargs)
 
     @staticmethod
-    def from_swc(swc_dir: str, suffix: str = ".swc") -> "Population":
+    def from_swc(swc_dir: str, suffix: str = ".swc", **kwargs) -> "Population":
         swcs = Population.find_swcs(swc_dir, suffix)
         population = Population(swcs)
         population.source = swc_dir
+        population.read_kwargs = kwargs
         return population
+
+    @staticmethod
+    def from_eswc(swc_dir: str, suffix: str = ".eswc", **kwargs) -> "Population":
+        kwargs.setdefault("extra_cols", [])
+        kwargs["extra_cols"].extend(k for k, t in eswc_cols)
+        return Population.from_swc(swc_dir, suffix, **kwargs)
 
     @staticmethod
     def find_swcs(swc_dir: str, suffix: str = ".swc") -> list[str]:

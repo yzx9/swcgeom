@@ -7,7 +7,7 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
-__all__ = ["swc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
+__all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
 
 swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("id", np.int32),
@@ -17,6 +17,14 @@ swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("z", np.float32),
     ("r", np.float32),
     ("pid", np.int32),
+]
+
+eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
+    ("level", np.int32),
+    ("mode", np.int32),
+    ("timestamp", np.int32),
+    ("teraflyindex", np.int32),
+    ("feature_value", np.int32),
 ]
 
 

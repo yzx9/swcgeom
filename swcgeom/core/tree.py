@@ -25,7 +25,7 @@ from .branch import BranchAttached
 from .node import NodeAttached
 from .path import PathAttached
 from .segment import SegmentAttached, Segments
-from .swc import SWCLike, read_swc, swc_cols
+from .swc import SWCLike, read_swc, swc_cols, eswc_cols
 
 __all__ = ["Tree"]
 
@@ -311,3 +311,16 @@ class Tree(SWCLike):
         tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
         tree.source = os.path.abspath(swc_file)
         return tree
+
+    @staticmethod
+    def from_eswc(swc_file: str, **kwargs) -> "Tree":
+        """Read neuron tree from eswc file.
+
+        See Also
+        --------
+        ~swcgeom.read_swc
+        """
+
+        kwargs.setdefault("extra_cols", [])
+        kwargs["extra_cols"].extend(k for k, t in eswc_cols)
+        return Tree.from_swc(swc_file, **kwargs)
