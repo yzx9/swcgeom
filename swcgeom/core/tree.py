@@ -7,7 +7,6 @@ from typing import (
     Callable,
     Dict,
     Iterable,
-    Iterator,
     List,
     Literal,
     Tuple,
@@ -86,6 +85,7 @@ class Tree(SWCLike):
         self,
         n_nodes: int,
         *,
+        id: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
         type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
         x: npt.NDArray[np.float32] | None = None,
         y: npt.NDArray[np.float32] | None = None,
@@ -94,11 +94,11 @@ class Tree(SWCLike):
         pid: npt.NDArray[np.int32] | None = None,
         **kwargs: npt.NDArray,
     ) -> None:
-        if pid is None:
-            pid = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
+        id = np.arange(0, n_nodes, step=1, dtype=np.int32) if id is None else id
+        pid = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32) if pid is None else pid
 
         ndata = {
-            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
+            "id": padding1d(n_nodes, id, dtype=np.int32),
             "type": padding1d(n_nodes, type, dtype=np.int32),
             "x": padding1d(n_nodes, x),
             "y": padding1d(n_nodes, y),
@@ -109,7 +109,7 @@ class Tree(SWCLike):
         kwargs.update(ndata)
         self.ndata = kwargs
 
-    def __iter__(self) -> Iterator[Node]:
+    def __iter__(self) -> Iterable[Node]:
         return (self[i] for i in range(len(self)))
 
     def __repr__(self) -> str:
@@ -220,24 +220,16 @@ class Tree(SWCLike):
         # pylint: disable-next=not-an-iterable
         return [self.Path(self, idx) for idx in paths]
 
+    # fmt: off
     @overload
-    def traverse(
-        self,
-        *,
-        enter: Callable[[Node, T | None], T],
-        mode: Literal["dfs"] = ...,
-    ) -> None:
-        ...
-
+    def traverse(self, *, enter: Callable[[Node, T | None], T], mode: Literal["dfs"] = ...) -> None: ...
     @overload
-    def traverse(
-        self,
-        *,
-        enter: Callable[[Node, T | None], T] | None = ...,
-        leave: Callable[[Node, list[K]], K],
-        mode: Literal["dfs"] = ...,
-    ) -> K:
-        ...
+    def traverse(self, *, leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...) -> K: ...
+    @overload
+    def traverse(self, *,
+        enter: Callable[[Node, T | None], T], leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...,
+    ) -> K: ...
+    # fmt: on
 
     def traverse(self, *, enter=None, leave=None, mode="dfs"):
         """Traverse each nodes.
