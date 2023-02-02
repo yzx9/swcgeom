@@ -1,6 +1,7 @@
 """SWC format."""
 
-from typing import Any, Iterable, List, Tuple, TypeVar, cast, overload
+import warnings
+from typing import Any, Iterable, Literal, List, Tuple, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +30,10 @@ eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
 
 
 def read_swc(
-    swc_file: str, extra_cols: List[str] | None = None, reindex=True
+    swc_file: str,
+    extra_cols: List[str] | None = None,
+    fix_roots: Literal["somas", "nearest", False] = False,
+    reindex: bool = True,
 ) -> pd.DataFrame:
     """Read swc file.
 
@@ -39,6 +43,10 @@ def read_swc(
         Path of swc file, the id should be consecutively incremented.
     extra_cols : List[str], optional
         Read more cols in swc file.
+    fix_roots : `somas`|`nearest`|False, default `False`
+        Fix multiple roots.
+    reindex : bool, default `True`
+        Reset node index to start with zero.
     """
 
     names = [k for k, v in swc_cols]
@@ -54,13 +62,27 @@ def read_swc(
         index_col=False,
     )
 
-    if reindex:
-        root = df.loc[0]["id"]
-        if root != 0:
-            df["id"] = df["id"] - root
-            df["pid"] = df["pid"] - root
+    # check swc
+    if (k := np.count_nonzero(df["pid"] == -1)) == 0:
+        warnings.warn(f"core: no root found, swc: {swc_file}")
+    elif k > 1:
+        warnings.warn(f"core: more than one root found, swc: {swc_file}")
 
-        df.loc[0, "pid"] = -1
+    if (df["pid"] == -1).argmax() != 0:
+        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
+
+    # fix swc
+    if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
+        match fix_roots:
+            case "somas":
+                swc_fix_roots_as_somas(df)
+            case "nearest":
+                swc_fix_roots_by_link_nearest(df)
+            case _:
+                raise ValueError(f"unknown fix type: {fix_roots}")
+
+    if reindex:
+        swc_reindex(df)
 
     return df
 
@@ -131,9 +153,9 @@ class SWCLike:
 
     # fmt: off
     @overload
-    def to_swc(self, swc_path: str, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> None: pass
+    def to_swc(self, swc_path: str, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> None: ...
     @overload
-    def to_swc(self, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> str: pass
+    def to_swc(self, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> str: ...
     # fmt: on
     def to_swc(
         self,
@@ -173,3 +195,50 @@ class SWCLike:
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
+
+
+def swc_fix_roots_as_somas(df: pd.DataFrame) -> None:
+    """Merge multiple roots in swc.
+
+    The first root are reserved and others are linked to it.
+    """
+    roots = df["pid"] == -1
+    root_loc = roots.argmax()
+    root_id = df.loc[root_loc, "id"]
+    df["pid"] = np.where(df["pid"] != -1, df["pid"], root_id)
+    df.loc[root_loc, "pid"] = -1
+
+
+def swc_fix_roots_by_link_nearest(df: pd.DataFrame) -> None:
+    """Merge multiple roots in swc.
+
+    The first root are reserved, and the others was.
+    """
+    id2idx = dict(zip(df["id"], range(len(df))))
+    dsu = df["pid"].copy()  # Disjoint Set Union
+    dsu[dsu == -1] = (dsu == -1) * df["id"]
+    flag = False
+    while not flag:
+        flag = True
+        for i, p in enumerate(dsu):
+            if dsu[i] != dsu[id2idx[p]]:
+                dsu[i] = dsu[id2idx[p]]
+                flag = False
+
+    roots = df[df["pid"] == -1].iterrows()
+    next(roots)  # skip first one
+    for i, row in roots:
+        vs = df[["x", "y", "z"]] - row[["x", "y", "z"]]
+        dis = np.linalg.norm(vs.to_numpy(), axis=1)
+        dis = np.where(dsu == dsu[i], np.Infinity, dis)
+        df.loc[i, "pid"] = dis.argmin()
+
+
+def swc_reindex(df: pd.DataFrame) -> None:
+    """Reset node index to start with zero."""
+    roots = df["pid"] == -1
+    root_loc = roots.argmax()
+    root_id = df.loc[root_loc, "id"]
+    df["id"] = df["id"] - root_id
+    df["pid"] = df["pid"] - root_id
+    df.loc[root_loc, "pid"] = -1
