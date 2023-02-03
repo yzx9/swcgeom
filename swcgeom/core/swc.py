@@ -70,7 +70,7 @@ def read_swc(
     if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
         match fix_roots:
             case "somas":
-                swc_fix_roots_as_somas(df)
+                swc_fix_roots_by_mark_somas(df)
             case "nearest":
                 swc_fix_roots_by_link_nearest(df)
             case _:
@@ -82,10 +82,8 @@ def read_swc(
         swc_reindex(df)
 
     # check swc
-    if (k := np.count_nonzero(df["pid"] == -1)) == 0:
-        warnings.warn(f"core: no root found, swc: {swc_file}")
-    elif k > 1:
-        warnings.warn(f"core: more than one root found, swc: {swc_file}")
+    if not swc_check_single_root(df):
+        warnings.warn(f"core: not signle root, swc: {swc_file}")
 
     if (df["pid"] == -1).argmax() != 0:
         warnings.warn(f"core: root is not the first node, swc: {swc_file}")
@@ -203,7 +201,9 @@ class SWCLike:
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
 
 
-def swc_fix_roots_as_somas(df: pd.DataFrame) -> None:
+def swc_fix_roots_by_mark_somas(
+    df: pd.DataFrame, update_type: int | Literal[False] = 1
+) -> None:
     """Merge multiple roots in swc.
 
     The first root are reserved and others are linked to it.
@@ -212,6 +212,8 @@ def swc_fix_roots_as_somas(df: pd.DataFrame) -> None:
     root_loc = roots.argmax()
     root_id = df.loc[root_loc, "id"]
     df["pid"] = np.where(df["pid"] != -1, df["pid"], root_id)
+    if update_type is not False:
+        df["type"] = np.where(df["pid"] != -1, df["type"], update_type)
     df.loc[root_loc, "pid"] = -1
 
 
@@ -239,19 +241,18 @@ def swc_sort(df: pd.DataFrame):
     compartments.
     """
     ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
-    indices, new_pids = swc_sort_tree_impl(ids, pids)
+    indices, new_ids, new_pids = swc_sort_impl(ids, pids)
     for col in df.columns:
-        df[col] = df[col][indices]  # type: ignore
+        df[col] = df[col][indices].to_numpy()
 
-    df["id"] = np.arange(len(new_pids))
-    df["pid"] = new_pids
+    df["id"], df["pid"] = new_ids, new_pids
 
 
-def swc_sort_tree_impl(
+def swc_sort_impl(
     old_ids: npt.NDArray[np.int32], old_pids: npt.NDArray[np.int32]
-) -> Tuple[List[int], npt.NDArray[np.int32]]:
+) -> Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32], npt.NDArray[np.int32]]:
     """Sort the indices of neuron tree."""
-    assert np.count_nonzero(old_pids == -1) == 1, "not only one root"
+    assert np.count_nonzero(old_pids == -1) == 1, "should be single root"
 
     id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
     new_pids = np.full_like(old_ids, fill_value=-3)
@@ -267,8 +268,9 @@ def swc_sort_tree_impl(
         new_id = new_id + 1
 
     id2idx = dict(zip(old_ids, range(len(old_ids))))  # old_id to old_idx
-    indices = [id2idx[i] for i in id_map]  # new_id to old_idx
-    return indices, new_pids
+    indices = np.array([id2idx[i] for i in id_map], dtype=np.int32)  # new_id to old_idx
+    new_ids = np.arange(len(new_pids))
+    return indices, new_ids, new_pids
 
 
 def swc_reindex(df: pd.DataFrame) -> None:
@@ -279,6 +281,11 @@ def swc_reindex(df: pd.DataFrame) -> None:
     df["id"] = df["id"] - root_id
     df["pid"] = df["pid"] - root_id
     df.loc[root_loc, "pid"] = -1
+
+
+def swc_check_single_root(df: pd.DataFrame) -> bool:
+    """Check is it only one root."""
+    return len(np.unique(_get_dsu(df))) == 1
 
 
 def _get_dsu(df: pd.DataFrame) -> npt.NDArray[np.int32]:

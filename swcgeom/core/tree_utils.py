@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Tuple, TypeVar, cast, overload
 import numpy as np
 import numpy.typing as npt
 
-from .swc import SWCLike, swc_sort_tree_impl
+from .swc import SWCLike, swc_sort_impl
 from .tree import Tree
 
 __all__ = ["REMOVE", "sort_tree", "to_sub_tree", "cut_tree", "propagate_remove"]
@@ -21,10 +21,10 @@ def sort_tree(tree: Tree) -> Tree:
     --------
     ~core.swc.swc_sort_tree
     """
-    new_id_map, new_pids = swc_sort_tree_impl(tree.id(), tree.pid())
+    indices, new_ids, new_pids = swc_sort_impl(tree.id(), tree.pid())
     new_tree = tree.copy()
-    new_tree.ndata = {k: tree.ndata[k][new_id_map] for k in tree.ndata}
-    new_tree.ndata["id"] = np.arange(tree.number_of_nodes())
+    new_tree.ndata = {k: tree.ndata[k][indices] for k in tree.ndata}
+    new_tree.ndata["id"] = new_ids
     new_tree.ndata["pid"] = new_pids
     return new_tree
 
