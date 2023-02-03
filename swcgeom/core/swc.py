@@ -77,7 +77,7 @@ def read_swc(
                 raise ValueError(f"unknown fix type: {fix_roots}")
 
     if sort:
-        swc_sort_tree(df)
+        swc_sort(df)
     elif reindex:
         swc_reindex(df)
 
@@ -222,41 +222,53 @@ def swc_fix_roots_by_link_nearest(df: pd.DataFrame) -> None:
     """
     dsu = _get_dsu(df)
     roots = df[df["pid"] == -1].iterrows()
-    next(roots)  # skip the first one
+    next(roots)  # type: ignore # skip the first one
     for i, row in roots:
         vs = df[["x", "y", "z"]] - row[["x", "y", "z"]]
         dis = np.linalg.norm(vs.to_numpy(), axis=1)
-        dis = np.where(dsu == dsu[i], np.Infinity, dis)  # avoid link to same tree
-        dsu = np.where(dsu == dsu[i], dsu[dis.argmin()], dsu)  # merge set
-        df.loc[i, "pid"] = df["id"][dis.argmin()]
+        subtree = dsu == dsu[i]  # type: ignore
+        dis = np.where(subtree, np.Infinity, dis)  # avoid link to same tree
+        dsu = np.where(subtree, dsu[dis.argmin()], dsu)  # merge set
+        df.loc[i, "pid"] = df["id"][dis.argmin()]  # type: ignore
 
 
-def swc_sort_tree(df: pd.DataFrame):
+def swc_sort(df: pd.DataFrame):
     """Sort the indices of neuron tree.
 
     The index for parent compartments are always less than child
     compartments.
     """
-    assert np.count_nonzero(df["pid"] == -1) == 1, "not only one root"
-
-    old_ids = np.full_like(df["id"], fill_value=-3)  # new_id to old_id
-    new_pids = np.full_like(df["id"], fill_value=-3)
-    new_id = 0
-    s = [(df["id"][(df["pid"] == -1).argmax()], -1)]  # (old_id, new_pid)
-    while len(s) != 0:
-        old_id, new_pid = s.pop()
-        old_ids[new_id] = old_id
-        new_pids[new_id] = new_pid
-        s.extend((j, new_id) for j in df["id"][df["pid"] == old_id])
-        new_id = new_id + 1
-
-    id2idx = dict(zip(df["id"], range(len(df))))  # old_id to old_idx
-    old_indices = [id2idx[i] for i in old_ids]  # new_id to old_idx
+    ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
+    indices, new_pids = swc_sort_tree_impl(ids, pids)
     for col in df.columns:
-        df[col] = df[col][old_indices]
+        df[col] = df[col][indices]  # type: ignore
 
     df["id"] = np.arange(len(new_pids))
     df["pid"] = new_pids
+
+
+def swc_sort_tree_impl(
+    old_ids: npt.NDArray[np.int32], old_pids: npt.NDArray[np.int32]
+) -> Tuple[List[int], npt.NDArray[np.int32]]:
+    """Sort the indices of neuron tree."""
+    assert np.count_nonzero(old_pids == -1) == 1, "not only one root"
+
+    id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
+    new_pids = np.full_like(old_ids, fill_value=-3)
+    new_id = 0
+    s: List[Tuple[int, int]] = [
+        (old_ids[(old_pids == -1).argmax()], -1)
+    ]  # (old_id, new_pid)
+    while len(s) != 0:
+        old_id, new_pid = s.pop()
+        id_map[new_id] = old_id
+        new_pids[new_id] = new_pid
+        s.extend((j, new_id) for j in old_ids[old_pids == old_id])
+        new_id = new_id + 1
+
+    id2idx = dict(zip(old_ids, range(len(old_ids))))  # old_id to old_idx
+    indices = [id2idx[i] for i in id_map]  # new_id to old_idx
+    return indices, new_pids
 
 
 def swc_reindex(df: pd.DataFrame) -> None:
