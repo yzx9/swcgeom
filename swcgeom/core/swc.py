@@ -33,6 +33,7 @@ def read_swc(
     swc_file: str,
     extra_cols: List[str] | None = None,
     fix_roots: Literal["somas", "nearest", False] = False,
+    sort: bool = False,
     reindex: bool = True,
 ) -> pd.DataFrame:
     """Read swc file.
@@ -45,8 +46,11 @@ def read_swc(
         Read more cols in swc file.
     fix_roots : `somas`|`nearest`|False, default `False`
         Fix multiple roots.
+    sort : bool, default `False`
+        TODO
     reindex : bool, default `True`
-        Reset node index to start with zero.
+        Reset node index to start with zero, DO NOT set to false if
+        you are not sure what will happend.
     """
 
     names = [k for k, v in swc_cols]
@@ -62,15 +66,6 @@ def read_swc(
         index_col=False,
     )
 
-    # check swc
-    if (k := np.count_nonzero(df["pid"] == -1)) == 0:
-        warnings.warn(f"core: no root found, swc: {swc_file}")
-    elif k > 1:
-        warnings.warn(f"core: more than one root found, swc: {swc_file}")
-
-    if (df["pid"] == -1).argmax() != 0:
-        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
-
     # fix swc
     if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
         match fix_roots:
@@ -81,8 +76,19 @@ def read_swc(
             case _:
                 raise ValueError(f"unknown fix type: {fix_roots}")
 
-    if reindex:
+    if sort:
+        swc_sort_tree(df)
+    elif reindex:
         swc_reindex(df)
+
+    # check swc
+    if (k := np.count_nonzero(df["pid"] == -1)) == 0:
+        warnings.warn(f"core: no root found, swc: {swc_file}")
+    elif k > 1:
+        warnings.warn(f"core: more than one root found, swc: {swc_file}")
+
+    if (df["pid"] == -1).argmax() != 0:
+        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
 
     return df
 
@@ -214,24 +220,43 @@ def swc_fix_roots_by_link_nearest(df: pd.DataFrame) -> None:
 
     The first root are reserved, and the others was.
     """
-    id2idx = dict(zip(df["id"], range(len(df))))
-    dsu = df["pid"].copy()  # Disjoint Set Union
-    dsu[dsu == -1] = (dsu == -1) * df["id"]
-    flag = False
-    while not flag:
-        flag = True
-        for i, p in enumerate(dsu):
-            if dsu[i] != dsu[id2idx[p]]:
-                dsu[i] = dsu[id2idx[p]]
-                flag = False
-
+    dsu = _get_dsu(df)
     roots = df[df["pid"] == -1].iterrows()
-    next(roots)  # skip first one
+    next(roots)  # skip the first one
     for i, row in roots:
         vs = df[["x", "y", "z"]] - row[["x", "y", "z"]]
         dis = np.linalg.norm(vs.to_numpy(), axis=1)
-        dis = np.where(dsu == dsu[i], np.Infinity, dis)
-        df.loc[i, "pid"] = dis.argmin()
+        dis = np.where(dsu == dsu[i], np.Infinity, dis)  # avoid link to same tree
+        dsu = np.where(dsu == dsu[i], dsu[dis.argmin()], dsu)  # merge set
+        df.loc[i, "pid"] = df["id"][dis.argmin()]
+
+
+def swc_sort_tree(df: pd.DataFrame):
+    """Sort the indices of neuron tree.
+
+    The index for parent compartments are always less than child
+    compartments.
+    """
+    assert np.count_nonzero(df["pid"] == -1) == 1, "not only one root"
+
+    old_ids = np.full_like(df["id"], fill_value=-3)  # new_id to old_id
+    new_pids = np.full_like(df["id"], fill_value=-3)
+    new_id = 0
+    s = [(df["id"][(df["pid"] == -1).argmax()], -1)]  # (old_id, new_pid)
+    while len(s) != 0:
+        old_id, new_pid = s.pop()
+        old_ids[new_id] = old_id
+        new_pids[new_id] = new_pid
+        s.extend((j, new_id) for j in df["id"][df["pid"] == old_id])
+        new_id = new_id + 1
+
+    id2idx = dict(zip(df["id"], range(len(df))))  # old_id to old_idx
+    old_indices = [id2idx[i] for i in old_ids]  # new_id to old_idx
+    for col in df.columns:
+        df[col] = df[col][old_indices]
+
+    df["id"] = np.arange(len(new_pids))
+    df["pid"] = new_pids
 
 
 def swc_reindex(df: pd.DataFrame) -> None:
@@ -242,3 +267,22 @@ def swc_reindex(df: pd.DataFrame) -> None:
     df["id"] = df["id"] - root_id
     df["pid"] = df["pid"] - root_id
     df.loc[root_loc, "pid"] = -1
+
+
+def _get_dsu(df: pd.DataFrame) -> npt.NDArray[np.int32]:
+    dsu = np.where(df["pid"] == -1, df["id"], df["pid"])  # Disjoint Set Union
+
+    id2idx = dict(zip(df["id"], range(len(df))))
+    dsu = np.array([id2idx[i] for i in dsu], dtype=np.int32)
+
+    while True:
+        flag = True
+        for i, p in enumerate(dsu):
+            if dsu[i] != dsu[p]:
+                dsu[i] = dsu[p]
+                flag = False
+
+        if flag:
+            break
+
+    return dsu
