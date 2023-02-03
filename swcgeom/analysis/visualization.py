@@ -138,7 +138,7 @@ def get_color(
     # choose default
     ax_weak_dict[ax].setdefault("color", -1)
     ax_weak_dict[ax]["color"] += 1
-    c = palette.default[ax_weak_dict[ax]["color"]]
+    c = palette.default[ax_weak_dict[ax]["color"] % len(palette.default)]
 
     if isinstance(color, dict):
         types = swc.type()[:-1]  # colored by type of parent node
@@ -157,7 +157,7 @@ def set_lable(ax: Axes, swc: SWCLike, label: str | bool):
         try:
             (_, tail) = os.path.split(swc.source)
             label = tail
-        except:
+        except:  # type: ignore
             label = swc.source
 
     ax_weak_dict[ax]["labels"].append(label)
