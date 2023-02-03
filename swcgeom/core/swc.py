@@ -197,6 +197,18 @@ class SWCLike:
         for idx in self.id():
             yield " ".join(get_v(name, idx) for name in names) + "\n"
 
+    # fmt: off
+    @overload
+    def to_eswc(self, swc_path: str, **kwargs) -> None: ...
+    @overload
+    def to_eswc(self, **kwargs) -> str: ...
+    # fmt: on
+    def to_eswc(self, swc_path: str | None = None, **kwargs) -> str | None:
+        kwargs.setdefault("swc_path", swc_path)
+        kwargs.setdefault("extra_cols", [])
+        kwargs["extra_cols"].extend(k for k, t in eswc_cols)
+        return self.to_swc(**kwargs)
+
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
 
