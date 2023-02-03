@@ -29,68 +29,6 @@ eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
 ]
 
 
-def read_swc(
-    swc_file: str,
-    extra_cols: List[str] | None = None,
-    fix_roots: Literal["somas", "nearest", False] = False,
-    sort: bool = False,
-    reindex: bool = True,
-) -> pd.DataFrame:
-    """Read swc file.
-
-    Parameters
-    ----------
-    swc_file : str
-        Path of swc file, the id should be consecutively incremented.
-    extra_cols : List[str], optional
-        Read more cols in swc file.
-    fix_roots : `somas`|`nearest`|False, default `False`
-        Fix multiple roots.
-    sort : bool, default `False`
-        TODO
-    reindex : bool, default `True`
-        Reset node index to start with zero, DO NOT set to false if
-        you are not sure what will happend.
-    """
-
-    names = [k for k, v in swc_cols]
-    if extra_cols:
-        names.extend(extra_cols)
-
-    df = pd.read_csv(
-        swc_file,
-        sep=" ",
-        comment="#",
-        names=names,
-        dtype=cast(Any, dict(swc_cols)),
-        index_col=False,
-    )
-
-    # fix swc
-    if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
-        match fix_roots:
-            case "somas":
-                swc_fix_roots_by_mark_somas(df)
-            case "nearest":
-                swc_fix_roots_by_link_nearest(df)
-            case _:
-                raise ValueError(f"unknown fix type: {fix_roots}")
-
-    if sort:
-        swc_sort(df)
-    elif reindex:
-        swc_reindex(df)
-
-    # check swc
-    if not swc_check_single_root(df):
-        warnings.warn(f"core: not signle root, swc: {swc_file}")
-
-    if (df["pid"] == -1).argmax() != 0:
-        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
-
-    return df
-
-
 class SWCLike:
     """Abstract class that including swc infomation."""
 
@@ -213,6 +151,69 @@ class SWCLike:
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
 
 
+def read_swc(
+    swc_file: str,
+    extra_cols: List[str] | None = None,
+    fix_roots: Literal["somas", "nearest", False] = False,
+    sort: bool = False,
+    reset_index: bool = True,
+) -> pd.DataFrame:
+    """Read swc file.
+
+    Parameters
+    ----------
+    swc_file : str
+        Path of swc file, the id should be consecutively incremented.
+    extra_cols : List[str], optional
+        Read more cols in swc file.
+    fix_roots : `somas`|`nearest`|False, default `False`
+        Fix multiple roots.
+    sort : bool, default `False`
+        Sort the indices of neuron tree, the index for parent are
+        always less than children.
+    reset_index : bool, default `True`
+        Reset node index to start with zero, DO NOT set to false if
+        you are not sure what will happend.
+    """
+
+    names = [k for k, v in swc_cols]
+    if extra_cols:
+        names.extend(extra_cols)
+
+    df = pd.read_csv(
+        swc_file,
+        sep=" ",
+        comment="#",
+        names=names,
+        dtype=cast(Any, dict(swc_cols)),
+        index_col=False,
+    )
+
+    # fix swc
+    if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
+        match fix_roots:
+            case "somas":
+                swc_fix_roots_by_mark_somas(df)
+            case "nearest":
+                swc_fix_roots_by_link_nearest(df)
+            case _:
+                raise ValueError(f"unknown fix type: {fix_roots}")
+
+    if sort:
+        swc_sort(df)
+    elif reset_index:
+        swc_reset_index(df)
+
+    # check swc
+    if not swc_check_single_root(df):
+        warnings.warn(f"core: not signle root, swc: {swc_file}")
+
+    if (df["pid"] == -1).argmax() != 0:
+        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
+
+    return df
+
+
 def swc_fix_roots_by_mark_somas(
     df: pd.DataFrame, update_type: int | Literal[False] = 1
 ) -> None:
@@ -249,8 +250,7 @@ def swc_fix_roots_by_link_nearest(df: pd.DataFrame) -> None:
 def swc_sort(df: pd.DataFrame):
     """Sort the indices of neuron tree.
 
-    The index for parent compartments are always less than child
-    compartments.
+    The index for parent are always less than children.
     """
     ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
     indices, new_ids, new_pids = swc_sort_impl(ids, pids)
@@ -269,14 +269,12 @@ def swc_sort_impl(
     id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
     new_pids = np.full_like(old_ids, fill_value=-3)
     new_id = 0
-    s: List[Tuple[int, int]] = [
-        (old_ids[(old_pids == -1).argmax()], -1)
-    ]  # (old_id, new_pid)
+    s: List[Tuple[int, int]] = [(old_ids[(old_pids == -1).argmax()], -1)]
     while len(s) != 0:
         old_id, new_pid = s.pop()
         id_map[new_id] = old_id
         new_pids[new_id] = new_pid
-        s.extend((j, new_id) for j in old_ids[old_pids == old_id])
+        s.extend((j, new_id) for j in old_ids[old_pids == old_id])  # (old_id, new_pid)
         new_id = new_id + 1
 
     id2idx = dict(zip(old_ids, range(len(old_ids))))  # old_id to old_idx
@@ -285,7 +283,7 @@ def swc_sort_impl(
     return indices, new_ids, new_pids
 
 
-def swc_reindex(df: pd.DataFrame) -> None:
+def swc_reset_index(df: pd.DataFrame) -> None:
     """Reset node index to start with zero."""
     roots = df["pid"] == -1
     root_loc = roots.argmax()
