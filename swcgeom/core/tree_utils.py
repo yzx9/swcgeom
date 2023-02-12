@@ -51,37 +51,26 @@ def to_sub_tree(
     id_map = {idx: i for i, idx in enumerate(sub_id)}
     new_pid = [id_map[i] if i != -1 else -1 for i in sub_pid]
 
-    ndata = {k: swc_like.get_ndata(k)[sub_id] for k in swc_like.keys()}
+    ndata = {k: swc_like.get_ndata(k)[sub_id].copy() for k in swc_like.keys()}
     ndata.update(
         id=np.arange(0, n_nodes),
         pid=np.array(new_pid, dtype=np.int32),
     )
 
-    swc_like = Tree(n_nodes, **ndata)
-    swc_like.source = swc_like.source
-    return swc_like, id_map
+    new_tree = Tree(n_nodes, **ndata)
+    new_tree.source = swc_like.source
+    return new_tree, id_map
 
 
+# fmt:off
 @overload
-def cut_tree(
-    tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool]]
-) -> Tree:
-    ...
-
-
+def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool]]) -> Tree: ...
 @overload
-def cut_tree(
-    tree: Tree, *, leave: Callable[[Tree.Node, list[K]], Tuple[K, bool]]
-) -> Tree:
-    ...
+def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, list[K]], Tuple[K, bool]]) -> Tree: ...
+# fmt:on
 
 
-def cut_tree(
-    tree: Tree,
-    *,
-    enter: Callable[[Tree.Node, T | None], Tuple[T, bool]] | None = None,
-    leave: Callable[[Tree.Node, list[K]], Tuple[K, bool]] | None = None
-):
+def cut_tree(tree: Tree, *, enter=None, leave=None):
     """Cut tree.
 
     Returning a `True` can delete the current node and all its
