@@ -9,7 +9,7 @@ description = "A neuron geometry library for swc format"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-  { name = "yzx9", email = "yuan.zx@outlook.com", url = "https://github.com/yzx9" },
+  { name = "yzx9", email = "yuan.zx@outlook.com" },
 ]
 keywords = [ "neuron", "swc", "geom" ]
 license = {text = "CC4.0 BY-NC-SA"}
