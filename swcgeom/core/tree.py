@@ -20,11 +20,11 @@ import numpy as np
 import numpy.typing as npt
 
 from ..utils import padding1d
-from .branch import BranchAttached
-from .node import NodeAttached
-from .path import PathAttached
-from .segment import SegmentAttached, Segments
-from .swc import SWCLike, read_swc, swc_cols, eswc_cols
+from .branch import Branch
+from .node import Node
+from .path import Path
+from .segment import Segment, Segments
+from .swc import SWCLike, eswc_cols, read_swc, swc_cols
 
 __all__ = ["Tree"]
 
@@ -34,8 +34,8 @@ T, K = TypeVar("T"), TypeVar("K")
 class Tree(SWCLike):
     """A neuron tree, which should be a binary tree in most cases."""
 
-    class Node(NodeAttached["Tree"]):
-        """Node of neuron tree."""
+    class Node(Node["Tree"]):
+        """Neural node."""
 
         def parent(self) -> Union["Tree.Node", None]:
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
@@ -70,14 +70,14 @@ class Tree(SWCLike):
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
 
-    class Path(PathAttached["Tree"]):
-        """Path of neuron tree."""
+    class Path(Path["Tree"]):
+        """Neural path."""
 
-    class Segment(SegmentAttached["Tree"]):
-        """Segment of neuron tree."""
+    class Segment(Segment["Tree"]):
+        """Neural segment."""
 
-    class Branch(BranchAttached["Tree"]):
-        """Branch of neuron tree."""
+    class Branch(Branch["Tree"]):
+        """Neural branch."""
 
     ndata: dict[str, npt.NDArray]
 

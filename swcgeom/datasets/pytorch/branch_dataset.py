@@ -7,7 +7,7 @@ from typing import Generic, Iterable, TypeVar, cast
 import torch
 import torch.utils.data
 
-from ...core import BranchBase
+from ...core import Branch
 from ...transforms import Identity, Transform
 from ...utils import numpy_err
 from .tree_folder_dataset import TreeFolderDataset
@@ -15,7 +15,7 @@ from .tree_folder_dataset import TreeFolderDataset
 __all__ = ["BranchDataset"]
 
 T = TypeVar("T")
-identity = Identity[BranchBase]()
+identity = Identity[Branch]()
 
 
 class BranchDataset(torch.utils.data.Dataset, Generic[T]):
@@ -23,7 +23,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
 
     swc_dir: str
     save: str | None
-    transform: Transform[BranchBase, T]
+    transform: Transform[Branch, T]
 
     branches: list[T]
 
@@ -31,7 +31,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         self,
         swc_dir: str,
         save: str | bool = True,
-        transform: Transform[BranchBase, T] = identity,
+        transform: Transform[Branch, T] = identity,
     ) -> None:
         """Create branch dataset.
 

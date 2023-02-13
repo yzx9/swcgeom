@@ -1,25 +1,33 @@
 """Nueron node."""
 
-from typing import Dict, Generic, Iterable, Iterator, List, overload
+from typing import Generic, Iterable, Iterator, List, overload
 
 import numpy as np
 import numpy.typing as npt
 
-from ..utils import padding1d
-from .node import NodeAttached
-from .swc import SWCLike, SWCTypeVar
+from .node import Node
+from .swc import DictSWC, SWCLike, SWCTypeVar
 
-__all__ = ["PathBase", "Path", "PathAttached"]
+__all__ = ["Path"]
 
 
-class PathBase(SWCLike):
-    """Path of neuron tree.
+class Path(SWCLike, Generic[SWCTypeVar]):
+    """Neural path.
+
 
     A path is a linear set of points without bifurcations.
     """
 
-    class Node(NodeAttached["PathBase"]):
+    attach: SWCTypeVar
+    idx: npt.NDArray[np.int32]
+
+    class Node(Node["Path"]):
         """Node of neuron tree."""
+
+    def __init__(self, attach: SWCTypeVar, idx: npt.ArrayLike) -> None:
+        super().__init__()
+        self.attach = attach
+        self.idx = np.array(idx, dtype=np.int32)
 
     def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
@@ -30,17 +38,14 @@ class PathBase(SWCLike):
     def __repr__(self) -> str:
         return f"Neuron path with {len(self)} nodes."
 
+    # fmt:off
     @overload
-    def __getitem__(self, key: int) -> Node:
-        ...
-
+    def __getitem__(self, key: int) -> Node: ...
     @overload
-    def __getitem__(self, key: slice) -> List[Node]:
-        ...
-
+    def __getitem__(self, key: slice) -> List[Node]: ...
     @overload
-    def __getitem__(self, key: str) -> npt.NDArray:
-        ...
+    def __getitem__(self, key: str) -> npt.NDArray: ...
+    # fmt:on
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -62,13 +67,18 @@ class PathBase(SWCLike):
         raise TypeError("Invalid argument type.")
 
     def keys(self) -> Iterable[str]:
-        raise NotImplementedError()
+        return self.attach.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
-        raise NotImplementedError()
+        return self.attach.get_ndata(key)[self.idx]
 
     def get_node(self, idx: int) -> Node:
         return self.Node(self, idx)
+
+    def detach(self) -> "Path":
+        """Detach from current attached object."""
+        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        return Path(attact, self.idx.copy())
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,).
@@ -123,61 +133,3 @@ class PathBase(SWCLike):
         if (length := self.length()) == 0:
             return 1
         return self.straight_line_distance() / length
-
-
-class Path(PathBase):
-    r"""A path of neuron tree."""
-
-    ndata: Dict[str, npt.NDArray]
-
-    def __init__(
-        self,
-        n_nodes: int,
-        *,
-        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
-        x: npt.NDArray[np.float32] | None = None,
-        y: npt.NDArray[np.float32] | None = None,
-        z: npt.NDArray[np.float32] | None = None,
-        r: npt.NDArray[np.float32] | None = None,
-        **kwargs: npt.NDArray,
-    ) -> None:
-        super().__init__()
-        ndata = {
-            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
-            "type": padding1d(n_nodes, type, dtype=np.int32),
-            "x": padding1d(n_nodes, x),
-            "y": padding1d(n_nodes, y),
-            "z": padding1d(n_nodes, z),
-            "r": padding1d(n_nodes, r, padding_value=1),
-            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
-        }
-        kwargs.update(ndata)
-        self.ndata = kwargs
-        self.source = ""  # TODO
-
-    def keys(self) -> Iterable[str]:
-        return self.ndata.keys()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.ndata[key]
-
-
-class PathAttached(PathBase, Generic[SWCTypeVar]):
-    """Path attached to external object."""
-
-    attach: SWCTypeVar
-    idx: npt.NDArray[np.int32]
-
-    def __init__(self, attach: SWCTypeVar, idx: npt.ArrayLike) -> None:
-        super().__init__()
-        self.attach = attach
-        self.idx = np.array(idx, dtype=np.int32)
-
-    def keys(self) -> Iterable[str]:
-        return self.attach.keys()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.attach.get_ndata(key)[self.idx]
-
-    def detach(self) -> Path:
-        return Path(len(self), **{k: self[k] for k in self.keys()})

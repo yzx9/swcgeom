@@ -5,7 +5,7 @@ from typing import cast
 import numpy as np
 import numpy.typing as npt
 
-from ..core import Branch, BranchBase
+from ..core import Branch
 from ..utils import (
     angle,
     rotate3d_x,
@@ -20,7 +20,7 @@ from .base import Transform
 __all__ = ["BranchLinearResampler", "BranchStandardizer"]
 
 
-class _BranchResampler(Transform[BranchBase, Branch]):
+class _BranchResampler(Transform[Branch, Branch]):
     r"""Resample branch."""
 
     def __call__(self, x: Branch) -> Branch:
@@ -74,14 +74,14 @@ class BranchLinearResampler(_BranchResampler):
         return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
 
 
-class BranchStandardizer(Transform[BranchBase, Branch]):
+class BranchStandardizer(Transform[Branch, Branch]):
     r"""Standarize branch.
 
     Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
     and scale max radius to 1.
     """
 
-    def __call__(self, x: BranchBase) -> Branch:
+    def __call__(self, x: Branch) -> Branch:
         xyzr = x.xyzr()
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
         T = self.get_matrix(xyz)

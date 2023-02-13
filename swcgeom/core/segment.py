@@ -5,70 +5,20 @@ from typing import Dict, Generic, Iterable, List, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from ..utils import padding1d
-from .path import PathBase
-from .swc import SWCTypeVar
+from .path import Path
+from .swc import DictSWC, SWCTypeVar
 
-__all__ = ["SegmentBase", "Segment", "SegmentAttached", "Segments"]
-
-
-class SegmentBase(PathBase):
-    r"""A segment is a branch with two nodes."""
-
-    def keys(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        raise NotImplementedError()
+__all__ = ["Segment", "Segments"]
 
 
-class Segment(SegmentBase):
-    r"""A segment is a path with two nodes."""
-
-    ndata: Dict[str, npt.NDArray]
-
-    def __init__(
-        self,
-        *,
-        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
-        x: npt.NDArray[np.float32] | None = None,
-        y: npt.NDArray[np.float32] | None = None,
-        z: npt.NDArray[np.float32] | None = None,
-        r: npt.NDArray[np.float32] | None = None,
-        **kwargs: npt.NDArray,
-    ) -> None:
-        super().__init__()
-        n_nodes = 2
-        ndata = {
-            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
-            "type": padding1d(n_nodes, type, dtype=np.int32),
-            "x": padding1d(n_nodes, x),
-            "y": padding1d(n_nodes, y),
-            "z": padding1d(n_nodes, z),
-            "r": padding1d(n_nodes, r, padding_value=1),
-            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
-        }
-        kwargs.update(ndata)
-        self.ndata = kwargs
-        self.source = ""  # TODO
-
-    def keys(self) -> Iterable[str]:
-        return self.ndata.keys()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.ndata[key]
-
-
-class SegmentAttached(SegmentBase, Generic[SWCTypeVar]):
+class Segment(Path, Generic[SWCTypeVar]):
     r"""Segment attached to external object."""
 
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
 
     def __init__(self, attach: SWCTypeVar, pid: int, idx: int) -> None:
-        super().__init__()
-        self.attach = attach
-        self.idx = np.array([pid, idx])
+        super().__init__(attach, np.array([pid, idx]))
 
     def keys(self) -> Iterable[str]:
         return self.attach.keys()
@@ -76,11 +26,13 @@ class SegmentAttached(SegmentBase, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    def detach(self) -> Segment:
-        return Segment(**{k: self[k] for k in self.keys()})
+    def detach(self) -> "Segment":
+        """Detach from current attached object."""
+        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        return Segment(attact, self.idx[0], self.idx[1])
 
 
-SegmentT = TypeVar("SegmentT", bound=SegmentBase)
+SegmentT = TypeVar("SegmentT", bound=Segment)
 
 
 class Segments(List[SegmentT]):

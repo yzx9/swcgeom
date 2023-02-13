@@ -6,35 +6,15 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self  # TODO: move to typing in python 3.11
 
-from ..utils import padding1d
-from .path import PathBase
-from .segment import SegmentAttached, Segments
-from .swc import SWCTypeVar
+from .path import Path
+from .segment import Segment, Segments
+from .swc import DictSWC, SWCTypeVar
 
-__all__ = ["BranchBase", "Branch", "BranchAttached"]
-
-
-class BranchBase(PathBase):
-    r"""Neuron branch."""
-
-    class Segment(SegmentAttached["BranchBase"]):
-        """Segment of branch."""
-
-    def __repr__(self) -> str:
-        return f"Neuron branch with {len(self)} nodes."
-
-    def keys(self) -> Iterable[str]:
-        raise NotImplementedError()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        raise NotImplementedError()
-
-    def get_segments(self) -> Segments[Segment]:
-        return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
+__all__ = ["Branch"]
 
 
-class Branch(BranchBase):
-    r"""A branch of neuron tree.
+class Branch(Path, Generic[SWCTypeVar]):
+    r"""Neural branch.
 
     Notes
     -----
@@ -42,38 +22,28 @@ class Branch(BranchBase):
     `r`, but the `id` and `pid` is usually invalid.
     """
 
-    ndata: Dict[str, npt.NDArray]
+    attach: SWCTypeVar
+    idx: npt.NDArray[np.int32]
 
-    def __init__(
-        self,
-        n_nodes: int,
-        *,
-        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
-        x: npt.NDArray[np.float32] | None = None,
-        y: npt.NDArray[np.float32] | None = None,
-        z: npt.NDArray[np.float32] | None = None,
-        r: npt.NDArray[np.float32] | None = None,
-        **kwargs: npt.NDArray,
-    ) -> None:
-        super().__init__()
-        ndata = {
-            "id": np.arange(0, n_nodes, step=1, dtype=np.int32),
-            "type": padding1d(n_nodes, type, dtype=np.int32),
-            "x": padding1d(n_nodes, x),
-            "y": padding1d(n_nodes, y),
-            "z": padding1d(n_nodes, z),
-            "r": padding1d(n_nodes, r, padding_value=1),
-            "pid": np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
-        }
-        kwargs.update(ndata)
-        self.ndata = kwargs
-        self.source = ""  # TODO
+    class Segment(Segment["Branch"]):
+        """Segment of branch."""
+
+    def __repr__(self) -> str:
+        return f"Neuron branch with {len(self)} nodes."
 
     def keys(self) -> Iterable[str]:
-        return self.ndata.keys()
+        return self.attach.keys()
 
     def get_ndata(self, key: str) -> npt.NDArray:
-        return self.ndata[key]
+        return self.attach.get_ndata(key)[self.idx]
+
+    def get_segments(self) -> Segments[Segment]:
+        return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
+
+    def detach(self) -> "Branch":
+        """Detach from current attached object."""
+        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        return Branch(attact, self.idx.copy())
 
     @classmethod
     def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> Self:
@@ -91,13 +61,22 @@ class Branch(BranchBase):
             4,
         ), f"xyzr should be of shape (N, 3) or (N, 4), got {xyzr.shape}"
 
+        n_nodes = xyzr.shape[0]
         if xyzr.shape[1] == 3:
-            ones = np.ones([xyzr.shape[0], 1], dtype=np.float32)
+            ones = np.ones([n_nodes, 1], dtype=np.float32)
             xyzr = np.concatenate([xyzr, ones], axis=1)
 
-        return cls(
-            xyzr.shape[0], x=xyzr[:, 0], y=xyzr[:, 1], z=xyzr[:, 2], r=xyzr[:, 3]
+        idx = np.arange(0, n_nodes, step=1, dtype=np.int32)
+        attact = DictSWC(
+            id=idx,
+            type=np.full((n_nodes), fill_value=3, dtype=np.int32),
+            x=xyzr[:, 0],
+            y=xyzr[:, 1],
+            z=xyzr[:, 2],
+            r=xyzr[:, 3],
+            pid=np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
         )
+        return cls(attact, idx)
 
     @classmethod
     def from_xyzr_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
@@ -122,34 +101,17 @@ class Branch(BranchBase):
 
         branches = list[Branch]()
         for xyzr in xyzr_batch:
-            branch = cls(
-                xyzr.shape[0],
+            n_nodes = xyzr.shape[0]
+            idx = np.arange(0, n_nodes, step=1, dtype=np.int32)
+            attact = DictSWC(
+                id=idx,
+                type=np.full((n_nodes), fill_value=3, dtype=np.int32),
                 x=xyzr[:, 0],
                 y=xyzr[:, 1],
                 z=xyzr[:, 2],
                 r=xyzr[:, 3],
+                pid=np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
             )
-            branches.append(branch)
+            branches.append(cls(attact, idx))
 
         return branches
-
-
-class BranchAttached(BranchBase, Generic[SWCTypeVar]):
-    r"""Branch attached to external object."""
-
-    attach: SWCTypeVar
-    idx: npt.NDArray[np.int32]
-
-    def __init__(self, attach: SWCTypeVar, idx: npt.ArrayLike) -> None:
-        super().__init__()
-        self.attach = attach
-        self.idx = np.array(idx, dtype=np.int32)
-
-    def keys(self) -> Iterable[str]:
-        return self.attach.keys()
-
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.attach.get_ndata(key)[self.idx]
-
-    def detach(self) -> Branch:
-        return Branch(len(self), **{k: self[k] for k in self.keys()})

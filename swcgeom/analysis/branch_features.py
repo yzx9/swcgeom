@@ -6,11 +6,11 @@ from typing import List, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from ..core import BranchBase, Tree
+from ..core import Branch, Tree
 
 __all__ = ["BranchFeatures"]
 
-T = TypeVar("T", bound=BranchBase)
+T = TypeVar("T", bound=Branch)
 
 
 class BranchFeatures:

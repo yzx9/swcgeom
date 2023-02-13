@@ -1,7 +1,7 @@
 """SWC format."""
 
 import warnings
-from typing import Any, Iterable, Literal, List, Tuple, TypeVar, cast, overload
+from typing import Any, Dict, Iterable, List, Literal, Tuple, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -148,6 +148,19 @@ class SWCLike:
         return self.to_swc(**kwargs)
 
 
+class DictSWC(SWCLike):
+    ndata: Dict[str, npt.NDArray]
+
+    def __init__(self, **kwargs: npt.NDArray):
+        self.ndata = kwargs
+
+    def keys(self) -> Iterable[str]:
+        return self.ndata.keys()
+
+    def get_ndata(self, key: str) -> npt.NDArray[Any]:
+        return self.ndata[key]
+
+
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
 
 
@@ -269,7 +282,7 @@ def swc_sort_impl(
     id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
     new_pids = np.full_like(old_ids, fill_value=-3)
     new_id = 0
-    s: List[Tuple[int, int]] = [(old_ids[(old_pids == -1).argmax()], -1)]
+    s = [(old_ids[(old_pids == -1).argmax()], -1)]
     while len(s) != 0:
         old_id, new_pid = s.pop()
         id_map[new_id] = old_id
