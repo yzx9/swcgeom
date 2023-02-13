@@ -14,7 +14,6 @@ __all__ = ["Path"]
 class Path(SWCLike, Generic[SWCTypeVar]):
     """Neural path.
 
-
     A path is a linear set of points without bifurcations.
     """
 

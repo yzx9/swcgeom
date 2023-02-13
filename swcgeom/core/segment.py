@@ -1,6 +1,6 @@
 """The segment is a branch with two nodes."""
 
-from typing import Dict, Generic, Iterable, List, TypeVar
+from typing import Generic, Iterable, List, TypeVar
 
 import numpy as np
 import numpy.typing as npt

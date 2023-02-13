@@ -4,7 +4,6 @@ from typing import Any, Generic, Iterable
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Self
 
 from .swc import DictSWC, SWCTypeVar
 

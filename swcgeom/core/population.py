@@ -3,8 +3,8 @@
 import os
 from typing import Any, Dict, Iterator, List, cast, overload
 
-from .tree import Tree
 from .swc import eswc_cols
+from .tree import Tree
 
 __all__ = ["Population"]
 
