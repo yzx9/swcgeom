@@ -1,3 +1,7 @@
+## **0.3.1** <sub><sup>2023-02-13 ([557693b...fc9335f](https://github.com/yzx9/swcgeom/compare/557693b...fc9335f?diff=split))</sup></sub>
+
+_no relevant changes_
+
 ## **0.3.0** <sub><sup>2023-02-12 ([40ff824...cedf52f](https://github.com/yzx9/swcgeom/compare/40ff824...cedf52f?diff=split))</sup></sub>
 
 ### Features
