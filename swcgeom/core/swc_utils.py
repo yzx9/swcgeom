@@ -1,6 +1,6 @@
 """SWC format."""
 
-from typing import Literal, Tuple
+from typing import List, Literal, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -64,7 +64,8 @@ def sort_swc_impl(
     id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
     new_pids = np.full_like(old_ids, fill_value=-3)
     new_id = 0
-    s = [(old_ids[(old_pids == -1).argmax()], -1)]
+    first_root = old_ids[(old_pids == -1).argmax()]
+    s: List[Tuple[npt.NDArray[np.int32], int]] = [(first_root, -1)]
     while len(s) != 0:
         old_id, new_pid = s.pop()
         id_map[new_id] = old_id
