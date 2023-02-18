@@ -18,6 +18,7 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd
 
 from ..utils import padding1d
 from .branch import Branch
@@ -291,6 +292,13 @@ class Tree(SWCLike):
         return sum(s.length() for s in self.get_segments())
 
     @staticmethod
+    def from_data_frame(df: pd.DataFrame, source: str = "") -> "Tree":
+        """Read neuron tree from data frame."""
+        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
+        tree.source = source
+        return tree
+
+    @staticmethod
     def from_swc(swc_file: str, **kwargs) -> "Tree":
         """Read neuron tree from swc file.
 
@@ -300,19 +308,18 @@ class Tree(SWCLike):
         """
 
         df = read_swc(swc_file, **kwargs)
-        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
-        tree.source = os.path.abspath(swc_file)
-        return tree
+        source = os.path.abspath(swc_file)
+        return Tree.from_data_frame(df, source)
 
     @staticmethod
-    def from_eswc(swc_file: str, **kwargs) -> "Tree":
+    def from_eswc(swc_file: str, extra_cols: List[str] = [], **kwargs) -> "Tree":
         """Read neuron tree from eswc file.
 
         See Also
         --------
+        ~swcgeom.Tree.from_swc
         ~swcgeom.read_swc
         """
 
-        kwargs.setdefault("extra_cols", [])
-        kwargs["extra_cols"].extend(k for k, t in eswc_cols)
-        return Tree.from_swc(swc_file, **kwargs)
+        extra_cols.extend(k for k, t in eswc_cols)
+        return Tree.from_swc(swc_file, extra_cols=extra_cols, **kwargs)
