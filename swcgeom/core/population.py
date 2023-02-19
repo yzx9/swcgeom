@@ -71,8 +71,8 @@ class Population:
                 self.trees[i] = Tree.from_swc(self.swcs[i], **self.read_kwargs)
 
     @classmethod
-    def from_swc(cls, root: str, suffix: str = ".swc", **kwargs) -> Self:
-        swcs = cls.find_swcs(root, suffix)
+    def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
+        swcs = cls.find_swcs(root, ext)
         population = Population(swcs)
         population.root = root
         population.read_kwargs = kwargs
@@ -80,20 +80,18 @@ class Population:
 
     @classmethod
     def from_eswc(
-        cls, root: str, suffix: str = ".eswc", extra_cols: List[str] = [], **kwargs
+        cls, root: str, ext: str = ".eswc", extra_cols: List[str] = [], **kwargs
     ) -> Self:
         extra_cols.extend(k for k, t in eswc_cols)
-        return cls.from_swc(root, suffix, extra_cols=extra_cols, **kwargs)
+        return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
     @staticmethod
-    def find_swcs(root: str, suffix: str = ".swc") -> List[str]:
+    def find_swcs(root: str, ext: str = ".swc") -> List[str]:
         """Find all swc files."""
         swcs: List[str] = []
         for root, _, files in os.walk(root):
             swcs.extend(
-                os.path.join(root, f)
-                for f in files
-                if os.path.splitext(f)[-1] == suffix
+                os.path.join(root, f) for f in files if os.path.splitext(f)[-1] == ext
             )
 
         return swcs
