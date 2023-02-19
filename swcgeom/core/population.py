@@ -1,6 +1,8 @@
 """Neuron population is a set of tree."""
 
 import os
+import warnings
+from functools import reduce
 from itertools import chain
 from typing import Any, Dict, Iterator, List, cast, overload
 
@@ -15,15 +17,19 @@ __all__ = ["Population", "Populations"]
 class Population:
     """Neuron population."""
 
-    root: str = ""
+    root: str
     swcs: List[str]
     trees: List[Tree | None]
-    read_kwargs: Dict[str, Any]
+    kwargs: Dict[str, Any]
 
-    def __init__(self, swcs: List[str], lazy_loading=True) -> None:
+    def __init__(
+        self, swcs: List[str], lazy_loading: bool = True, root: str = "", **kwargs
+    ) -> None:
         super().__init__()
+        self.root = root
         self.swcs = swcs
         self.trees = [None for _ in swcs]
+        self.kwargs = kwargs
         if not lazy_loading:
             self.load(slice(len(swcs)))
 
@@ -68,15 +74,14 @@ class Population:
 
         for i in idx:
             if self.trees[i] is None:
-                self.trees[i] = Tree.from_swc(self.swcs[i], **self.read_kwargs)
+                self.trees[i] = Tree.from_swc(self.swcs[i], **self.kwargs)
 
     @classmethod
     def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
         swcs = cls.find_swcs(root, ext)
-        population = Population(swcs)
-        population.root = root
-        population.read_kwargs = kwargs
-        return population
+        if len(swcs):
+            warnings.warn(f"no trees in population from '{root}'")
+        return Population(swcs, root=root, **kwargs)
 
     @classmethod
     def from_eswc(
@@ -86,13 +91,13 @@ class Population:
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
     @staticmethod
-    def find_swcs(root: str, ext: str = ".swc") -> List[str]:
+    def find_swcs(root: str, ext: str = ".swc", relpath: bool = False) -> List[str]:
         """Find all swc files."""
         swcs: List[str] = []
-        for root, _, files in os.walk(root):
-            swcs.extend(
-                os.path.join(root, f) for f in files if os.path.splitext(f)[-1] == ext
-            )
+        for r, _, files in os.walk(root):
+            rr = os.path.relpath(r, root) if relpath else r
+            fs = filter(lambda f: os.path.splitext(f)[-1] == ext, files)
+            swcs.extend(os.path.join(rr, f) for f in fs)
 
         return swcs
 
@@ -134,15 +139,41 @@ class Populations:
         return Population(swcs)
 
     @classmethod
-    def from_swc(cls, *dirs: str, check_same: bool = True, **kwargs) -> Self:
-        populations = [Population.from_swc(d, **kwargs) for d in dirs]
-        if check_same:
-            get_swcs = lambda p: [os.path.relpath(i, p.root) for i in p.swcs]
-            t0 = get_swcs(populations[0])
-            assert all(
-                t0 == get_swcs(p) for p in populations[1:]
-            ), "the trees in these population are not the same"
+    def from_swc(
+        cls,
+        *dirs: str,
+        ext: str = ".swc",
+        intersect: bool = False,
+        check_same: bool = True,
+        **kwargs,
+    ) -> Self:
+        """Get population from dirs.
 
+        Parameters
+        ----------
+        *dirs : list of str
+        intersect : bool, default `False`
+            Take the intersection of these populations.
+        check_same : bool, default `True`
+            Check if the directories contains the same swc.
+        **kwargs : Any
+            Forwarding to `Population`.
+        """
+
+        fs = [Population.find_swcs(d, ext=ext, relpath=True) for d in dirs]
+        if intersect:
+            inter = list(reduce(lambda a, b: set(a).intersection(set(b)), fs))
+            if len(inter) == 0:
+                warnings.warn("no intersection among populations")
+
+            fs = [inter for _ in dirs]
+        elif check_same:
+            assert reduce(lambda a, b: a == b, fs), "not the same among populations"
+
+        populations = [
+            Population([os.path.join(dirs[i], p) for p in fs[i]], root=d, **kwargs)
+            for i, d in enumerate(dirs)
+        ]
         return cls(populations)
 
     @classmethod
