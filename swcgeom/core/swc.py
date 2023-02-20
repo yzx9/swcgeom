@@ -10,7 +10,7 @@ import scipy.sparse as sp
 
 from .swc_utils import check_single_root, link_roots_to_nearest, mark_roots_as_somas
 from .swc_utils import reset_index as _reset_index
-from .swc_utils import sort_swc
+from .swc_utils import sort_nodes
 
 __all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
 
@@ -217,7 +217,7 @@ def read_swc(
                 raise ValueError(f"unknown fix type: {fix_roots}")
 
     if sort:
-        sort_swc(df)
+        sort_nodes(df)
     elif reset_index:
         _reset_index(df)
 

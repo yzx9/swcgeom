@@ -1,5 +1,6 @@
 """SWC format."""
 
+import warnings
 from copy import copy
 from typing import List, Literal, Tuple
 
@@ -73,7 +74,7 @@ def assemble_lines(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
 
     tree = tree.reset_index()
     link_roots_to_nearest(tree)
-    sort_swc(tree)
+    sort_nodes(tree)
     return tree
 
 
@@ -140,11 +141,19 @@ def try_assemble_lines(
             break
 
     if sort:
-        sort_swc(tree)
+        sort_nodes(tree)
     return tree, lines
 
 
 def sort_swc(df: pd.DataFrame):
+    warnings.warn(
+        "`sort_swc` has been renamed to `sort_nodes`, and will be remove in next version",
+        DeprecationWarning,
+    )
+    return sort_nodes(df)
+
+
+def sort_nodes(df: pd.DataFrame):
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
