@@ -66,13 +66,14 @@ def assemble_lines(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
     ~swcgeom.core.swc_utils.try_assemble_lines
     """
 
-    tree, lines = try_assemble_lines(lines, **kwargs)
+    tree, lines = try_assemble_lines(lines, sort=False, **kwargs)
     while len(lines) > 0:
-        t, lines = try_assemble_lines(lines, id_offset=len(tree), **kwargs)
+        t, lines = try_assemble_lines(lines, id_offset=len(tree), sort=False, **kwargs)
         tree = pd.concat([tree, t])
 
     tree = tree.reset_index()
     link_roots_to_nearest(tree)
+    sort_swc(tree)
     return tree
 
 
@@ -81,6 +82,7 @@ def try_assemble_lines(
     undirected: bool = True,
     thre: float = 0.2,
     id_offset: int = 0,
+    sort: bool = True,
 ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
     """Trying assemble lines to a tree.
 
@@ -99,8 +101,10 @@ def try_assemble_lines(
         `False`, only the starting point.
     thre : float, default `0.2`
         Connection threshold.
-    id_offset : int
+    id_offset : int, default `0`
         The offset of the line node id.
+    sort : bool, default `True`
+        sort nodes of subtree
 
     Returns
     -------
@@ -135,6 +139,8 @@ def try_assemble_lines(
         else:
             break
 
+    if sort:
+        sort_swc(tree)
     return tree, lines
 
 
