@@ -99,26 +99,29 @@ class SWCLike:
 
     # fmt: off
     @overload
-    def to_swc(self, swc_path: str, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> None: ...
+    def to_swc(self, fname: str, *, extra_cols: List[str] | None = ..., source: bool = ..., id_offset: int = ...) -> None: ...
     @overload
-    def to_swc(self, *, extra_cols: List[str] | None = ..., id_offset: int = ...) -> str: ...
+    def to_swc(self, *, extra_cols: List[str] | None = ..., source: bool = ..., id_offset: int = ...) -> str: ...
     # fmt: on
     def to_swc(
         self,
-        swc_path: str | None = None,
+        fname: str | None = None,
         *,
         extra_cols: List[str] | None = None,
+        source: bool = True,
         id_offset: int = 1,
     ) -> str | None:
         """Write swc file."""
-        it = self._to_swc(extra_cols=extra_cols, id_offset=id_offset)
-        if swc_path is None:
+        it = self._to_swc(extra_cols=extra_cols, source=source, id_offset=id_offset)
+        if fname is None:
             return "".join(it)
 
-        with open(swc_path, "w", encoding="utf-8") as f:
+        with open(fname, "w", encoding="utf-8") as f:
             f.writelines(it)
 
-    def _to_swc(self, extra_cols: List[str] | None, id_offset: int) -> Iterable[str]:
+    def _to_swc(
+        self, extra_cols: List[str] | None, source: bool, id_offset: int
+    ) -> Iterable[str]:
         def get_v(name: str, idx: int) -> str:
             vs = self.get_ndata(name)
             v = vs[idx]
@@ -134,7 +137,8 @@ class SWCLike:
         if extra_cols is not None:
             names.extend(extra_cols)
 
-        yield f"# source: {self.source if self.source else 'Unknown'}\n"
+        if source:
+            yield f"# source: {self.source if self.source else 'Unknown'}\n"
         yield f"# {' '.join(names)}\n"
         for idx in self.id():
             yield " ".join(get_v(name, idx) for name in names) + "\n"
