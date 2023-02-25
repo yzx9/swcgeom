@@ -3,15 +3,14 @@
 from typing import Dict, NamedTuple, Tuple
 
 import matplotlib.pyplot as plt
+import numpy as np
+import numpy.typing as npt
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
-
-import numpy as np
-import numpy.typing as npt
 
 from .transforms import (
     model_view_trasformation,

@@ -1,17 +1,17 @@
 """Create image stack from morphology."""
 
-import re
+import math
 import os
+import re
 import time
 from typing import Any, Iterable, List, Tuple, cast
 
-import math
 import numpy as np
 import numpy.typing as npt
 import tifffile
 from tqdm import tqdm
 
-from ..core import Tree, Population
+from ..core import Population, Tree
 from ..utils import SDF, SDFCompose, SDFRoundCone
 from .base import Transform
 

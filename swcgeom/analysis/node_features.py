@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 
 from ..core import BranchTree, Tree
-from ..utils import to_distribution, XYPair
+from ..utils import XYPair, to_distribution
 
 __all__ = ["NodeFeatures"]
 

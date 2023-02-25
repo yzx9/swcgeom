@@ -4,7 +4,7 @@ Refs: https://iquilezles.org/articles/distfunctions/
 """
 
 import warnings
-from typing import List, Tuple, Iterable
+from typing import Iterable, List, Tuple
 
 import numpy as np
 import numpy.typing as npt

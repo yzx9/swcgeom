@@ -1,7 +1,7 @@
 """Debug helpers"""
 
-from functools import wraps
 import time
+from functools import wraps
 
 __all__ = ["func_timer"]
 

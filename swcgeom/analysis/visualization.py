@@ -9,14 +9,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import SWCLike, Tree
-from ..utils import (
-    draw_lines,
-    draw_xyz_axes,
-    get_fig_ax,
-    palette,
-    Camera,
-    Vector3D,
-)
+from ..utils import Camera, Vector3D, draw_lines, draw_xyz_axes, get_fig_ax, palette
 
 __all__ = ["draw"]
 

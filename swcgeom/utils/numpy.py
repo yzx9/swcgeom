@@ -1,7 +1,7 @@
 """Numpy related utils."""
 
-from contextlib import contextmanager
 import math
+from contextlib import contextmanager
 from typing import Any, Tuple
 
 import numpy as np
