@@ -1,8 +1,8 @@
 """Neuron tree."""
 
 import itertools
-import logging
 import os
+import warnings
 from typing import (
     Callable,
     Dict,
@@ -42,17 +42,15 @@ class Tree(SWCLike):
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
 
         def children(self) -> List["Tree.Node"]:
-            return [Tree.Node(self.attach, idx) for idx in self.child_ids()]
-
-        def is_soma(self) -> bool:
-            return self.id == 0
-
-        def is_tip(self) -> bool:
-            return self.id not in self.attach.pid()
+            children = self.attach.id()[self.attach.pid() == self.id]
+            return [Tree.Node(self.attach, idx) for idx in children]
 
         def get_branch(self) -> "Tree.Branch":
-            logging.info(
-                "`tree.get_branch` has been renamed to `tree.branch` and will be removed in next version"
+            warnings.warn(
+                "`Tree.Node.get_branch` has been renamed to "
+                "`Tree.Node.branch` since v0.3.1 and will be removed "
+                "in next version",
+                DeprecationWarning,
             )
             return self.branch()
 
@@ -66,6 +64,9 @@ class Tree(SWCLike):
                 nodes.append(nodes[-1].children()[0])
 
             return Tree.Branch(self.attach, [n.id for n in nodes])
+
+        def is_soma(self) -> bool:
+            return self.id == 0
 
         def radial_distance(self) -> float:
             """The end-to-end straight-line distance to soma."""

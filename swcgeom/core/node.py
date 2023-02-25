@@ -1,5 +1,6 @@
 """Nueron node."""
 
+import warnings
 from typing import Any, Generic, Iterable
 
 import numpy as np
@@ -92,13 +93,18 @@ class Node(Generic[SWCTypeVar]):
         return " ".join(map(str, items))
 
     def child_ids(self) -> npt.NDArray[np.int32]:
+        warnings.warn(
+            "`Node.child_ids` has been deprecated since v0.3.1 and "
+            "will be removed in next version",
+            DeprecationWarning,
+        )
         return self.attach.id()[self.attach.pid() == self.id]
 
     def is_bifurcation(self) -> bool:
-        return len(self.child_ids()) > 1
+        return len(self.attach.pid() == self.id) > 1
 
     def is_tip(self) -> bool:
-        return len(self.child_ids()) == 0
+        return self.id not in self.attach.pid()
 
     def detach(self) -> "Node":
         """Detach from current attached object."""
