@@ -1,8 +1,8 @@
-"""A seires of common feature.
+"""Easy way to compute and visualize common features for feature.
 
 Notes
 -----
-For development, see method `_Features.get_evaluator`
+For development, see method `Features.get_evaluator`
 to confirm the naming specification.
 """
 
@@ -155,14 +155,14 @@ class FeatureExtractor:
     def plot_distribution(
         self,
         feature: Feature,
+        feature_args: Dict[Any, Any] = {},
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-        # pylint: disable=unpacking-non-sequence
-        x, y = self.get_distribution(feature, **kwargs)
+        x, y = self.get_distribution(feature, **feature_args)
         fig, ax = get_fig_ax(fig, ax)
-        sns.lineplot(x=x, y=y, ax=ax)
+        sns.lineplot(x=x, y=y, ax=ax, **kwargs)
         return fig, ax
 
 
@@ -229,16 +229,16 @@ class PopulationFeatureExtractor:
     def plot_distribution(
         self,
         feature: Feature,
+        feature_args: Dict[Any, Any] = {},
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-        # pylint: disable=unpacking-non-sequence
-        x, y = self.get_distribution(feature, **kwargs)
+        x, y = self.get_distribution(feature, **feature_args)
         x, y = np.tile(x, y.shape[0]), y.flatten()
 
         fig, ax = get_fig_ax(fig, ax)
-        sns.lineplot(x=x, y=y, ax=ax)
+        sns.lineplot(x=x, y=y, ax=ax, **kwargs)
         return fig, ax
 
     def _get(self, feature: Feature, **kwargs) -> List[npt.NDArray[np.float32]]:
