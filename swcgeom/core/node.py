@@ -101,7 +101,7 @@ class Node(Generic[SWCTypeVar]):
         return self.attach.id()[self.attach.pid() == self.id]
 
     def is_bifurcation(self) -> bool:
-        return len(self.attach.pid() == self.id) > 1
+        return np.count_nonzero(self.attach.pid() == self.id) > 1
 
     def is_tip(self) -> bool:
         return self.id not in self.attach.pid()
