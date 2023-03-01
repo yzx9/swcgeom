@@ -1,3 +1,33 @@
+## **0.4.0** <sub><sup>2023-02-27 ([af51d11...1d9aeb5](https://github.com/yzx9/swcgeom/compare/af51d11...1d9aeb5?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- forward kwarg to plot method ([1d9aeb5](https://github.com/yzx9/swcgeom/commit/1d9aeb5))
+
+##### `core`
+
+- add \`Tree\.from_data_frame\` ([b36f382](https://github.com/yzx9/swcgeom/commit/b36f382))
+- assemble lines into swc ([382df7b](https://github.com/yzx9/swcgeom/commit/382df7b))
+- sort nodes after assemble ([d00687c](https://github.com/yzx9/swcgeom/commit/d00687c))
+- rename \`sort_swc\` to \`sort_nodes\` ([b7f27d6](https://github.com/yzx9/swcgeom/commit/b7f27d6))
+- support export swc without source ([a8da734](https://github.com/yzx9/swcgeom/commit/a8da734))
+
+##### `transform`
+
+- support cut short branch ([0bc2f2c](https://github.com/yzx9/swcgeom/commit/0bc2f2c))
+
+### Performance Improvements
+
+##### `core`
+
+- reduce the number of value fetches ([33169d1](https://github.com/yzx9/swcgeom/commit/33169d1))
+
+### BREAKING CHANGES
+
+- `analysis` forward kwarg to plot method ([1d9aeb5](https://github.com/yzx9/swcgeom/commit/1d9aeb5))
+
 ## **0.3.1** <sub><sup>2023-02-13 ([557693b...fc9335f](https://github.com/yzx9/swcgeom/compare/557693b...fc9335f?diff=split))</sup></sub>
 
 _no relevant changes_
