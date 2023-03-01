@@ -1,3 +1,11 @@
+## **0.4.1** <sub><sup>2023-03-01 ([4efbcef...4efbcef](https://github.com/yzx9/swcgeom/compare/4efbcef...4efbcef?diff=split))</sup></sub>
+
+### Bug Fixes
+
+##### `core`
+
+- should count nonzero nodes ([4efbcef](https://github.com/yzx9/swcgeom/commit/4efbcef))
+
 ## **0.4.0** <sub><sup>2023-02-27 ([af51d11...1d9aeb5](https://github.com/yzx9/swcgeom/compare/af51d11...1d9aeb5?diff=split))</sup></sub>
 
 ### Features
