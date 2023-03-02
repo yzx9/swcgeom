@@ -37,9 +37,11 @@ def draw(
     camera: CameraOptions | CameraPreset = "xy",
     color: Dict[int, str] | str | None = None,
     label: str | Literal[True] = True,  # TODO: support False
+    xyz_axes: bool = True,
+    unit: str | None = None,
     **kwargs,
 ) -> tuple[Figure, Axes]:
-    """Draw neuron tree.
+    r"""Draw neuron tree.
 
     Parameters
     ----------
@@ -59,6 +61,10 @@ def draw(
         parent node.If is string, the value will be use for any type.
     label : str | bool, default True
         Label of legend, disable if False.
+    xyz_axes : bool, default True
+        Draw xyz axes.
+    unit : optional[str]
+        Add unit text, e.g.: r"$\mu m$".
     **kwargs : dict[str, Unknown]
         Forwarded to `~matplotlib.collections.LineCollection`.
 
@@ -95,8 +101,10 @@ def draw(
     if len(ax_weak_dict[ax]["swc"]) == 1:
         ax.set_aspect(1)
         ax.spines[["top", "right"]].set_visible(False)
-        ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
-        draw_xyz_axes(ax=ax, camera=my_camera)
+        if xyz_axes:
+            draw_xyz_axes(ax=ax, camera=my_camera)
+        if unit is not None:
+            ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
     else:
         # legend
         handles = ax_weak_dict[ax].get("handles", [])
