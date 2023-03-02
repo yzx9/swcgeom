@@ -8,9 +8,13 @@ import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
 
-from .swc_utils import check_single_root, link_roots_to_nearest, mark_roots_as_somas
-from .swc_utils import reset_index as _reset_index
-from .swc_utils import sort_nodes
+from .swc_utils import (
+    check_single_root,
+    link_roots_to_nearest_,
+    mark_roots_as_somas_,
+    reset_index_,
+    sort_nodes_,
+)
 
 __all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
 
@@ -176,7 +180,7 @@ def read_swc(
     swc_file: str,
     extra_cols: List[str] | None = None,
     fix_roots: Literal["somas", "nearest", False] = False,
-    sort: bool = False,
+    sort_nodes: bool = False,
     reset_index: bool = True,
 ) -> pd.DataFrame:
     """Read swc file.
@@ -189,7 +193,7 @@ def read_swc(
         Read more cols in swc file.
     fix_roots : `somas`|`nearest`|False, default `False`
         Fix multiple roots.
-    sort : bool, default `False`
+    sort_nodes : bool, default `False`
         Sort the indices of neuron tree, the index for parent are
         always less than children.
     reset_index : bool, default `True`
@@ -214,16 +218,16 @@ def read_swc(
     if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
         match fix_roots:
             case "somas":
-                mark_roots_as_somas(df)
+                mark_roots_as_somas_(df)
             case "nearest":
-                link_roots_to_nearest(df)
+                link_roots_to_nearest_(df)
             case _:
                 raise ValueError(f"unknown fix type: {fix_roots}")
 
-    if sort:
-        sort_nodes(df)
+    if sort_nodes:
+        sort_nodes_(df)
     elif reset_index:
-        _reset_index(df)
+        reset_index_(df)
 
     # check swc
     if not check_single_root(df):

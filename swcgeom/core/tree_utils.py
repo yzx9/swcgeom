@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .swc import SWCLike
-from .swc_utils import sort_swc_impl
+from .swc_utils import sort_nodes_impl
 from .tree import Tree
 
 __all__ = ["REMOVE", "sort_tree", "to_sub_tree", "cut_tree", "propagate_remove"]
@@ -22,7 +22,7 @@ def sort_tree(tree: Tree) -> Tree:
     --------
     ~core.swc.swc_sort_tree
     """
-    indices, new_ids, new_pids = sort_swc_impl(tree.id(), tree.pid())
+    indices, new_ids, new_pids = sort_nodes_impl(tree.id(), tree.pid())
     new_tree = tree.copy()
     new_tree.ndata = {k: tree.ndata[k][indices] for k in tree.ndata}
     new_tree.ndata["id"] = new_ids

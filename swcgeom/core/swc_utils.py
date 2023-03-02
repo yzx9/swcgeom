@@ -1,8 +1,7 @@
-"""SWC format."""
+"""SWC format utils."""
 
-import warnings
 from copy import copy
-from typing import List, Literal, Tuple
+from typing import Any, List, Literal, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -12,6 +11,12 @@ __all__ = []  # do not export anything
 
 
 def mark_roots_as_somas(
+    df: pd.DataFrame, update_type: int | Literal[False] = 1
+) -> pd.DataFrame:
+    return _copy_and_apply(mark_roots_as_somas_, df, update_type=update_type)
+
+
+def mark_roots_as_somas_(
     df: pd.DataFrame, update_type: int | Literal[False] = 1
 ) -> None:
     """Merge multiple roots in swc.
@@ -27,7 +32,11 @@ def mark_roots_as_somas(
     df.loc[root_loc, "pid"] = -1
 
 
-def link_roots_to_nearest(df: pd.DataFrame) -> None:
+def link_roots_to_nearest(df: pd.DataFrame) -> pd.DataFrame:
+    return _copy_and_apply(link_roots_to_nearest_, df)
+
+
+def link_roots_to_nearest_(df: pd.DataFrame) -> None:
     """Merge multiple roots in swc.
 
     The first root are reserved, and the others was.
@@ -67,9 +76,11 @@ def assemble_lines(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
     ~swcgeom.core.swc_utils.try_assemble_lines
     """
 
-    tree, lines = try_assemble_lines(lines, sort=False, **kwargs)
+    tree, lines = try_assemble_lines(lines, sort_nodes=False, **kwargs)
     while len(lines) > 0:
-        t, lines = try_assemble_lines(lines, id_offset=len(tree), sort=False, **kwargs)
+        t, lines = try_assemble_lines(
+            lines, id_offset=len(tree), sort_nodes=False, **kwargs
+        )
         tree = pd.concat([tree, t])
 
     tree = tree.reset_index()
@@ -83,7 +94,7 @@ def try_assemble_lines(
     undirected: bool = True,
     thre: float = 0.2,
     id_offset: int = 0,
-    sort: bool = True,
+    sort_nodes: bool = True,
 ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
     """Trying assemble lines to a tree.
 
@@ -104,7 +115,7 @@ def try_assemble_lines(
         Connection threshold.
     id_offset : int, default `0`
         The offset of the line node id.
-    sort : bool, default `True`
+    sort_nodes : bool, default `True`
         sort nodes of subtree
 
     Returns
@@ -140,33 +151,33 @@ def try_assemble_lines(
         else:
             break
 
-    if sort:
-        sort_nodes(tree)
+    if sort_nodes:
+        sort_nodes_(tree)
     return tree, lines
 
 
-def sort_swc(df: pd.DataFrame):
-    warnings.warn(
-        "`sort_swc` has been renamed to `sort_nodes`, and will be remove in next version",
-        DeprecationWarning,
-    )
-    return sort_nodes(df)
+def sort_nodes(df: pd.DataFrame) -> pd.DataFrame:
+    """Sort the indices of neuron tree.
+
+    The index for parent are always less than children.
+    """
+    return _copy_and_apply(sort_nodes_, df)
 
 
-def sort_nodes(df: pd.DataFrame):
+def sort_nodes_(df: pd.DataFrame) -> None:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
     """
     ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
-    indices, new_ids, new_pids = sort_swc_impl(ids, pids)
+    indices, new_ids, new_pids = sort_nodes_impl(ids, pids)
     for col in df.columns:
         df[col] = df[col][indices].to_numpy()
 
     df["id"], df["pid"] = new_ids, new_pids
 
 
-def sort_swc_impl(
+def sort_nodes_impl(
     old_ids: npt.NDArray[np.int32], old_pids: npt.NDArray[np.int32]
 ) -> Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32], npt.NDArray[np.int32]]:
     """Sort the indices of neuron tree."""
@@ -190,8 +201,12 @@ def sort_swc_impl(
     return indices, new_ids, new_pids
 
 
-def reset_index(df: pd.DataFrame) -> None:
+def reset_index(df: pd.DataFrame) -> pd.DataFrame:
     """Reset node index to start with zero."""
+    return _copy_and_apply(reset_index_, df)
+
+
+def reset_index_(df: pd.DataFrame) -> None:
     roots = df["pid"] == -1
     root_loc = roots.argmax()
     root_id = df.loc[root_loc, "id"]
@@ -223,3 +238,9 @@ def _get_dsu(df: pd.DataFrame) -> npt.NDArray[np.int32]:
             break
 
     return dsu
+
+
+def _copy_and_apply(fn_: Any, df: pd.DataFrame, *args, **kwargs):
+    df = df.copy()
+    fn_(df, *args, **kwargs)
+    return df
