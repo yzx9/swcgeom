@@ -19,6 +19,7 @@ from typing import (
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from typing_extensions import Self
 
 from ..utils import padding1d
 from .branch import Branch
@@ -73,12 +74,15 @@ class Tree(SWCLike):
             return self.distance(self.attach.soma())
 
     class Path(Path["Tree"]):
+        # TODO: should returns `Tree.Node`
         """Neural path."""
 
     class Segment(Segment["Tree"]):
+        # TODO: should returns `Tree.Node`
         """Neural segment."""
 
     class Branch(Branch["Tree"]):
+        # TODO: should returns `Tree.Node`
         """Neural branch."""
 
     ndata: dict[str, npt.NDArray]
@@ -174,8 +178,7 @@ class Tree(SWCLike):
         return [self.node(i) for i in tip_ids]
 
     def get_segments(self) -> Segments[Segment]:
-        # pylint: disable-next=not-an-iterable
-        return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
+        return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
 
     def get_branches(self) -> List[Branch]:
         Info = Tuple[List[Tree.Branch], List[int]]
@@ -292,15 +295,15 @@ class Tree(SWCLike):
         """Get length of tree."""
         return sum(s.length() for s in self.get_segments())
 
-    @staticmethod
-    def from_data_frame(df: pd.DataFrame, source: str = "") -> "Tree":
+    @classmethod
+    def from_data_frame(cls, df: pd.DataFrame, source: str = "") -> "Tree":
         """Read neuron tree from data frame."""
         tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
         tree.source = source
         return tree
 
-    @staticmethod
-    def from_swc(swc_file: str, **kwargs) -> "Tree":
+    @classmethod
+    def from_swc(cls, swc_file: str, **kwargs) -> Self:
         """Read neuron tree from swc file.
 
         See Also
@@ -310,10 +313,10 @@ class Tree(SWCLike):
 
         df = read_swc(swc_file, **kwargs)
         source = os.path.abspath(swc_file)
-        return Tree.from_data_frame(df, source)
+        return cls.from_data_frame(df, source)
 
-    @staticmethod
-    def from_eswc(swc_file: str, extra_cols: List[str] = [], **kwargs) -> "Tree":
+    @classmethod
+    def from_eswc(cls, swc_file: str, extra_cols: List[str] = [], **kwargs) -> Self:
         """Read neuron tree from eswc file.
 
         See Also
@@ -323,4 +326,4 @@ class Tree(SWCLike):
         """
 
         extra_cols.extend(k for k, t in eswc_cols)
-        return Tree.from_swc(swc_file, extra_cols=extra_cols, **kwargs)
+        return cls.from_swc(swc_file, extra_cols=extra_cols, **kwargs)

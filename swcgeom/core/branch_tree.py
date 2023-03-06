@@ -3,6 +3,8 @@
 import itertools
 from typing import Dict, List
 
+import pandas as pd
+
 from .branch import Branch
 from .tree import Tree
 from .tree_utils import to_sub_tree
@@ -50,7 +52,7 @@ class BranchTree(Tree):
 
         return branch_tree
 
-    @staticmethod
-    def from_swc(swc_file: str, **kwargs) -> "BranchTree":
-        tree = super().from_swc(swc_file, **kwargs)
+    @classmethod
+    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> "BranchTree":
+        tree = super().from_data_frame(df, *args, **kwargs)
         return BranchTree.from_tree(tree)
