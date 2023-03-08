@@ -7,16 +7,16 @@ naming specification.
 """
 
 from functools import cached_property
+from itertools import chain
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, overload
 
 import numpy as np
 import numpy.typing as npt
 import seaborn as sns
 from matplotlib.axes import Axes
-from matplotlib.figure import Figure
 
-from ..core import Population, Tree
-from ..utils import get_fig_ax, padding1d
+from ..core import Population, Populations, Tree
+from ..utils import padding1d
 from .branch_features import BranchFeatures
 from .node_features import NodeFeatures
 from .path_features import PathFeatures
@@ -63,7 +63,11 @@ class Features:
         self.tree = tree
 
     def get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
-        feat, kwargs = _get_feature_and_kwargs(feature)
+        if isinstance(feature, tuple):
+            feat, kwargs = feature[0], {**feature[1], **kwargs}
+        else:
+            feat, kwargs = feature, kwargs
+
         evaluator = self.get_evaluator(feat)
         feat = evaluator(**kwargs)
         return feat
@@ -129,15 +133,16 @@ class FeatureExtractor:
 class TreeFeatureExtractor(FeatureExtractor):
     """Extract feature from tree."""
 
-    features: Features
+    _tree: Tree
+    _features: Features
 
     def __init__(self, tree: Tree) -> None:
         super().__init__()
-        self.features = Features(tree)
+        self._tree = tree
+        self._features = Features(tree)
 
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
-        feat, kwargs = _get_feature_and_kwargs(feature, **kwargs)
-        return self.features.get(feat, **kwargs)
+        return self._features.get(feature, **kwargs)
 
     def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
         return sns.histplot(x=vals, **kwargs)
@@ -146,18 +151,16 @@ class TreeFeatureExtractor(FeatureExtractor):
 class PopulationFeatureExtractor(FeatureExtractor):
     """Extract feature from population."""
 
-    population: Population
-
-    @cached_property
-    def _trees(self) -> List[Features]:
-        return [Features(t) for t in self.population]
+    _population: Population
+    _features: List[Features]
 
     def __init__(self, population: Population) -> None:
         super().__init__()
-        self.population = population
+        self._population = population
+        self._features = [Features(t) for t in self._population]
 
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
-        vals = [f.get(feature, **kwargs) for f in self._trees]
+        vals = [f.get(feature, **kwargs) for f in self._features]
         len_max = max(len(v) for v in vals)
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
@@ -167,6 +170,39 @@ class PopulationFeatureExtractor(FeatureExtractor):
         return sns.histplot(x=vals, **kwargs)
 
 
+class PopulationsFeatureExtractor(FeatureExtractor):
+    """Extract feature from population."""
+
+    _populations: Populations
+    _features: List[List[Features]]
+
+    def __init__(self, populations: Populations) -> None:
+        super().__init__()
+        self._populations = populations
+        self._features = [
+            [Features(t) for t in p] for p in self._populations.populations
+        ]
+
+    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+        vals = [[f.get(feature, **kwargs) for f in fs] for fs in self._features]
+        len_max1 = max(len(v) for v in vals)
+        len_max2 = max(*chain.from_iterable(((len(vv) for vv in v) for v in vals)))
+        out = np.zeros((len(vals), len_max1, len_max2), dtype=np.float32)
+        for i, v in enumerate(vals):
+            for j, vv in enumerate(v):
+                out[i, j, : len(vv)] = vv
+
+        return out
+
+    def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        x = vals.flatten()
+        length = vals.shape[1] * vals.shape[2]
+        labels = self._populations.labels
+        hues = [np.full((length), fill_value=labels[i]) for i in range(vals.shape[0])]
+        hue = np.concatenate(hues)
+        return sns.histplot(x=x, hue=hue, multiple="dodge", **kwargs)
+
+
 def extract_feature(obj: Tree | Population) -> FeatureExtractor:
     if isinstance(obj, Tree):
         return TreeFeatureExtractor(obj)
@@ -174,13 +210,7 @@ def extract_feature(obj: Tree | Population) -> FeatureExtractor:
     if isinstance(obj, Population):
         return PopulationFeatureExtractor(obj)
 
+    if isinstance(obj, Populations):
+        return PopulationsFeatureExtractor(obj)
+
     raise TypeError("Invalid argument type.")
-
-
-def _get_feature_and_kwargs(
-    feature: FeatureWithKwargs, **kwargs
-) -> Tuple[Feature, Dict[str, Any]]:
-    if isinstance(feature, tuple):
-        return feature[0], {**feature[1], **kwargs}
-
-    return feature, kwargs
