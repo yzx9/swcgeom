@@ -119,9 +119,21 @@ class FeatureExtractor:
 
         return self._get(feature, **kwargs)
 
-    def plot(self, feature: FeatureWithKwargs, **kwargs) -> Axes:  # TODO: sholl
+    def plot(
+        self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
+    ) -> Axes:  # TODO: sholl
         vals = self._get(feature)
-        return self._plot(vals, **kwargs)
+        ax = self._plot(vals, **kwargs)
+
+        if isinstance(title, str):
+            ax.set_title(title)
+        elif title is True:
+            title = feature[0] if isinstance(feature, tuple) else feature
+            title = title.replace("_", " ").title()
+            ax.set_title(title)
+
+        ax.set_ylabel("Count")
+        return ax
 
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
@@ -165,9 +177,17 @@ class PopulationFeatureExtractor(FeatureExtractor):
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
-    def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        vals = vals.flatten()
-        return sns.histplot(x=vals, **kwargs)
+    def _plot(
+        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+    ) -> Axes:
+        bin_edges = np.histogram_bin_edges(vals, bins, range)
+        hists = [
+            np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
+            for v in vals
+        ]
+        hist = np.concatenate(hists)
+        x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, len(self._population))
+        return sns.lineplot(x=x, y=hist, **kwargs)
 
 
 class PopulationsFeatureExtractor(FeatureExtractor):
@@ -194,13 +214,27 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
-    def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        x = vals.flatten()
-        length = vals.shape[1] * vals.shape[2]
+    def _plot(
+        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+    ) -> Axes:
+        bin_edges = np.histogram_bin_edges(vals, bins, range)
+        hists = [
+            [
+                np.histogram(t, bins=bin_edges, weights=(t != 0).astype(np.int32))[0]
+                for t in p
+            ]
+            for p in vals
+        ]
+        hist = np.concatenate(hists).flatten()
+
+        repeats = np.prod(vals.shape[:2]).item()
+        x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, repeats)
+
         labels = self._populations.labels
-        hues = [np.full((length), fill_value=labels[i]) for i in range(vals.shape[0])]
-        hue = np.concatenate(hues)
-        return sns.histplot(x=x, hue=hue, multiple="dodge", **kwargs)
+        length = (len(bin_edges) - 1) * vals.shape[1]
+        hue = np.concatenate([np.full(length, fill_value=i) for i in labels])
+
+        return sns.lineplot(x=x, y=hist, hue=hue, **kwargs)
 
 
 def extract_feature(obj: Tree | Population) -> FeatureExtractor:
