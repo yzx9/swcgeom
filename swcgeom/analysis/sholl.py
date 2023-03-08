@@ -1,6 +1,7 @@
 """Sholl analysis."""
 
 import math
+import warnings
 from typing import Literal, Tuple
 
 import numpy as np
@@ -21,52 +22,75 @@ class Sholl:
        cortices of the cat J. Anat., 87 (1953), pp. 387-406
     """
 
-    count: npt.NDArray[np.int32]
+    count: npt.NDArray[np.int64]
     step: float
+    steps: npt.NDArray[np.float32]
 
     def __init__(self, tree: Tree, step: float = 1) -> None:
         xyz = tree.get_segments().xyz() - tree.soma().xyz()  # shift
-        radius = np.linalg.norm(xyz, axis=2)
-        max_radius = math.ceil(np.max(radius[:, 1]))
-        count = [
-            np.count_nonzero(np.logical_and(radius[:, 0] <= i, radius[:, 1] > i))
-            for i in np.arange(0, max_radius, step)
-        ]
+        r = np.linalg.norm(xyz, axis=2)
+        steps = np.arange(step, int(np.ceil(r.max())), step)
+        intersections = [np.logical_and(r[:, 0] <= i, r[:, 1] > i) for i in steps]
+        count = np.count_nonzero(intersections, axis=1)
 
-        self.count = np.array(count, dtype=np.int32)
+        self.count = count
         self.step = step
+        self.steps = steps
 
     def __getitem__(self, idx: int) -> int:
         return self.count[idx] if 0 <= idx < len(self.count) else 0
 
-    def get_count(self) -> npt.NDArray[np.int32]:
+    def get(self) -> npt.NDArray[np.int64]:
         return self.count.copy()
 
-    def get_distribution(self) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.int32]]:
-        y = self.get_count()
-        x = self.step * np.arange(len(y))
-        return x, y
+    def get_count(self) -> npt.NDArray[np.int32]:
+        warnings.warn(
+            "`Sholl.get_count` has been renamed to `get` since v0.5.0, "
+            "and will be removed in next version",
+            DeprecationWarning,
+        )
+        return self.get().astype(np.int32)
 
     def avg(self) -> float:
-        return np.average(self.get_count()).item()
+        warnings.warn(
+            "`Sholl.avg` will be removed in next version",
+            DeprecationWarning,
+        )
+        return self.count.mean()
 
     def std(self) -> float:
-        return np.std(self.get_count()).item()
+        warnings.warn(
+            "`Sholl.std` will be removed in next version",
+            DeprecationWarning,
+        )
+        return self.count.std()
 
     def sum(self) -> int:
-        return np.sum(self.get_count()).item()
+        warnings.warn(
+            "`Sholl.sum` will be removed in next version",
+            DeprecationWarning,
+        )
+        return self.count.sum()
 
     def plot(
         self,
-        plot_type: Literal["bar", "linechart", "circles"] = "linechart",
+        plot_type: str | None = None,
+        kind: Literal["bar", "linechart", "circles"] = "linechart",
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
     ) -> Tuple[Figure, Axes]:
-        fig, ax = get_fig_ax(fig, ax)
-        x, y = self.get_distribution()
+        if plot_type is not None:
+            warnings.warn(
+                "`plot_type` has been renamed to `kind` since v0.5.0, "
+                "and will be removed in next version",
+                DeprecationWarning,
+            )
+            kind = plot_type  # type: ignore
 
-        match plot_type:
+        x, y = self.steps, self.count
+        fig, ax = get_fig_ax(fig, ax)
+        match kind:
             case "bar":
                 kwargs.setdefault("width", self.step)
                 ax.bar(x, y, **kwargs)
@@ -76,6 +100,6 @@ class Sholl:
                 kwargs.setdefault("y_min", 0)
                 draw_circles(fig, ax, x, y, **kwargs)
             case _:
-                raise ValueError(f"unsupported plot type: {plot_type}")
+                raise ValueError(f"unsupported plot kind: {kind}")
 
         return fig, ax

@@ -1,13 +1,12 @@
 """Numpy related utils."""
 
-import math
 from contextlib import contextmanager
-from typing import Any, Tuple
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d", "XYPair", "to_distribution", "numpy_printoptions", "numpy_err"]
+__all__ = ["padding1d", "numpy_printoptions", "numpy_err"]
 
 
 def padding1d(
@@ -42,30 +41,6 @@ def padding1d(
 
     padding = np.full(n - v.shape[0], padding_value, dtype=dtype)
     return np.concatenate([v, padding])
-
-
-XYPair = Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
-
-
-def to_distribution(
-    values: npt.NDArray,
-    step: float,
-    vmin: float = 0,
-    vmax: float | None = None,
-    norm: bool = False,
-) -> XYPair:
-    indices = np.floor(values / step - vmin).astype(np.int32)
-    size_min = np.max(indices).item() + 1
-    size = math.ceil((vmax - vmin) / step) + 1 if vmax is not None else size_min
-    y = np.zeros(max(size, size_min), dtype=np.float32)
-    for i in indices:
-        y[i] = y[i] + 1
-
-    if norm:
-        y /= values.shape[0]
-
-    x = vmin + step * np.arange(size, dtype=np.float32)
-    return x, y[:size]
 
 
 @contextmanager
