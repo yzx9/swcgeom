@@ -8,6 +8,7 @@ naming specification.
 
 from functools import cached_property
 from itertools import chain
+from os.path import basename
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, overload
 
 import numpy as np
@@ -63,14 +64,9 @@ class Features:
         self.tree = tree
 
     def get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
-        if isinstance(feature, tuple):
-            feat, kwargs = feature[0], {**feature[1], **kwargs}
-        else:
-            feat, kwargs = feature, kwargs
-
+        feat, kwargs = _get_feature_and_kwargs(feature, **kwargs)
         evaluator = self.get_evaluator(feat)
-        feat = evaluator(**kwargs)
-        return feat
+        return evaluator(**kwargs)
 
     def get_evaluator(self, feature: Feature) -> Callable[[], npt.NDArray]:
         if callable(calc := getattr(self, f"get_{feature}", None)):
@@ -122,17 +118,18 @@ class FeatureExtractor:
     def plot(
         self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
     ) -> Axes:  # TODO: sholl
+        feat, _ = _get_feature_and_kwargs(feature)
+        if not callable(plot := getattr(self, f"_plot_{feat}", None)):
+            plot = self._plot  # default plot
+
         vals = self._get(feature)
-        ax = self._plot(vals, **kwargs)
+        ax = plot(vals, **kwargs)
 
         if isinstance(title, str):
             ax.set_title(title)
         elif title is True:
-            title = feature[0] if isinstance(feature, tuple) else feature
-            title = title.replace("_", " ").title()
-            ax.set_title(title)
+            ax.set_title(feat.replace("_", " ").title())
 
-        ax.set_ylabel("Count")
         return ax
 
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
@@ -157,7 +154,15 @@ class TreeFeatureExtractor(FeatureExtractor):
         return self._features.get(feature, **kwargs)
 
     def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        return sns.histplot(x=vals, **kwargs)
+        ax: Axes = sns.histplot(x=vals, **kwargs)
+        ax.set_ylabel("Count")
+        return ax
+
+    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        name = basename(self._tree.source)
+        ax: Axes = sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
+        ax.set_ylabel("Length")
+        return ax
 
 
 class PopulationFeatureExtractor(FeatureExtractor):
@@ -187,7 +192,20 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ]
         hist = np.concatenate(hists)
         x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, len(self._population))
-        return sns.lineplot(x=x, y=hist, **kwargs)
+
+        ax: Axes = sns.lineplot(x=x, y=hist, **kwargs)
+        ax.set_ylabel("Count")
+        return ax
+
+    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        vals = vals.squeeze(axis=1)
+        x = [basename(t.source) for t in self._population]
+        y = vals.flatten()
+        ax: Axes = sns.barplot(x=x, y=y, **kwargs)
+        ax.axhline(y=y.mean(), ls="--", lw=1)
+        ax.set_ylabel("Length")
+        ax.set_xticks([])
+        return ax
 
 
 class PopulationsFeatureExtractor(FeatureExtractor):
@@ -218,13 +236,10 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
     ) -> Axes:
         bin_edges = np.histogram_bin_edges(vals, bins, range)
-        hists = [
-            [
-                np.histogram(t, bins=bin_edges, weights=(t != 0).astype(np.int32))[0]
-                for t in p
-            ]
-            for p in vals
-        ]
+        histogram = lambda v: np.histogram(
+            v, bins=bin_edges, weights=(v != 0).astype(np.int32)
+        )
+        hists = [[histogram(t)[0] for t in p] for p in vals]
         hist = np.concatenate(hists).flatten()
 
         repeats = np.prod(vals.shape[:2]).item()
@@ -234,7 +249,18 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         length = (len(bin_edges) - 1) * vals.shape[1]
         hue = np.concatenate([np.full(length, fill_value=i) for i in labels])
 
-        return sns.lineplot(x=x, y=hist, hue=hue, **kwargs)
+        ax: Axes = sns.lineplot(x=x, y=hist, hue=hue, **kwargs)
+        ax.set_ylabel("Count")
+        return ax
+
+    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        vals = vals.squeeze(axis=2)
+        labels = self._populations.labels
+        x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
+        y = vals.flatten()
+        ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
+        ax.set_ylabel("Length")
+        return ax
 
 
 def extract_feature(obj: Tree | Population) -> FeatureExtractor:
@@ -248,3 +274,10 @@ def extract_feature(obj: Tree | Population) -> FeatureExtractor:
         return PopulationsFeatureExtractor(obj)
 
     raise TypeError("Invalid argument type.")
+
+
+def _get_feature_and_kwargs(feature: FeatureWithKwargs, **kwargs):
+    if isinstance(feature, tuple):
+        return feature[0], {**feature[1], **kwargs}
+    else:
+        return feature, kwargs
