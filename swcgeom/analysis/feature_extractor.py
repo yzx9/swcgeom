@@ -118,6 +118,14 @@ class FeatureExtractor:
     def plot(
         self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
     ) -> Axes:  # TODO: sholl
+        """Plot feature with appropriate way.
+
+        Notes
+        -----
+        The drawing method is different in different classes, different
+        in different features, and may different between versions,
+        there are NO guarantees.
+        """
         feat, _ = _get_feature_and_kwargs(feature)
         if not callable(plot := getattr(self, f"_plot_{feat}", None)):
             plot = self._plot  # default plot
@@ -135,8 +143,22 @@ class FeatureExtractor:
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
-    def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        raise NotImplementedError()
+    def _plot(
+        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+    ) -> Axes:
+        bin_edges = np.histogram_bin_edges(vals, bins, range)
+        return self._plot_histogram(vals, bin_edges, **kwargs)
+
+    def _plot_histogram(
+        self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
+    ) -> Axes:
+        raise NotImplementedError
+
+    # custom features
+
+    def _plot_node_branch_order(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
+        return self._plot_histogram(vals, bin_edges, **kwargs)
 
 
 class TreeFeatureExtractor(FeatureExtractor):
@@ -153,8 +175,14 @@ class TreeFeatureExtractor(FeatureExtractor):
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         return self._features.get(feature, **kwargs)
 
-    def _plot(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        ax: Axes = sns.histplot(x=vals, **kwargs)
+    def _plot_histogram(
+        self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
+    ) -> Axes:
+        weights = (vals != 0).astype(np.int32)
+        hist, _ = np.histogram(vals, bins=bin_edges, weights=weights)
+        x = (bin_edges[:-1] + bin_edges[1:]) / 2
+
+        ax: Axes = sns.barplot(x=x, y=hist, **kwargs)
         ax.set_ylabel("Count")
         return ax
 
@@ -182,10 +210,9 @@ class PopulationFeatureExtractor(FeatureExtractor):
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
-    def _plot(
-        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+    def _plot_histogram(
+        self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        bin_edges = np.histogram_bin_edges(vals, bins, range)
         hists = [
             np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
             for v in vals
@@ -198,7 +225,6 @@ class PopulationFeatureExtractor(FeatureExtractor):
         return ax
 
     def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        vals = vals.squeeze(axis=1)
         x = [basename(t.source) for t in self._population]
         y = vals.flatten()
         ax: Axes = sns.barplot(x=x, y=y, **kwargs)
@@ -232,10 +258,9 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
-    def _plot(
-        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+    def _plot_histogram(
+        self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        bin_edges = np.histogram_bin_edges(vals, bins, range)
         histogram = lambda v: np.histogram(
             v, bins=bin_edges, weights=(v != 0).astype(np.int32)
         )
@@ -254,7 +279,6 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         return ax
 
     def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
-        vals = vals.squeeze(axis=2)
         labels = self._populations.labels
         x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
         y = vals.flatten()
