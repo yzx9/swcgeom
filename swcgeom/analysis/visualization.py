@@ -49,7 +49,7 @@ def draw(
     ax: Optional[Axes] = None,
     camera: CameraOptions | CameraPreset = "xy",
     color: Optional[Dict[int, str] | str] = None,
-    label: str | Literal[True] = True,  # TODO: support False
+    label: str | bool = True,
     direction_indicator: Positions | Literal[False] = "rb",
     unit: Optional[str] = None,
     **kwargs,
@@ -146,11 +146,18 @@ def get_ax_color(
     return c
 
 
-def set_ax_legend(ax: Axes, *args, **kwargs) -> Legend:
-    ax_weak_memo.setdefault(ax, {})
-    handles = ax_weak_memo[ax].get("handles", [])
+def set_ax_legend(ax: Axes, *args, **kwargs) -> Legend | None:
     labels = ax_weak_memo[ax].get("labels", [])
-    return ax.legend(handles, labels, *args, **kwargs)
+    handles = ax_weak_memo[ax].get("handles", [])
+
+    # filter `label = False`
+    handles = [a for i, a in enumerate(handles) if labels[i] != False]
+    labels = [a for i, a in enumerate(labels) if labels[i] != False]
+
+    if len(labels) > 0:
+        return ax.legend(handles, labels, *args, **kwargs)
+    else:
+        return None
 
 
 def _set_ax_memo(
