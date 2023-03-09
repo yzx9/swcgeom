@@ -9,7 +9,14 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
 from ..core import SWCLike, Tree
-from ..utils import Camera, Vector3D, draw_lines, draw_xyz_axes, get_fig_ax, palette
+from ..utils import (
+    Camera,
+    Vec3f,
+    draw_direction_indicator,
+    draw_lines,
+    get_fig_ax,
+    palette,
+)
 
 __all__ = ["draw"]
 
@@ -22,9 +29,14 @@ CameraPresets: Dict[CameraPreset, Camera] = {
     "zy": Camera((0, 0, 0), (-1, 0, 0), (0, 0, -1)),
     "xz": Camera((0, 0, 0), (0, -1, 0), (-1, 0, 0)),
 }
-CameraOptions = (
-    Vector3D | Tuple[Vector3D, Vector3D] | Tuple[Vector3D, Vector3D, Vector3D]
-)
+CameraOptions = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
+Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
+positions = {
+    "lt": (0.10, 0.90),
+    "lb": (0.10, 0.10),
+    "rt": (0.90, 0.90),
+    "rb": (0.90, 0.10),
+}
 
 ax_weak_dict = weakref.WeakKeyDictionary[Axes, Dict[str, Any]]({})
 
@@ -37,7 +49,7 @@ def draw(
     camera: CameraOptions | CameraPreset = "xy",
     color: Dict[int, str] | str | None = None,
     label: str | Literal[True] = True,  # TODO: support False
-    xyz_axes: bool = True,
+    direction_indicator: Positions | Literal[False] = "rb",
     unit: str | None = None,
     **kwargs,
 ) -> tuple[Figure, Axes]:
@@ -61,8 +73,9 @@ def draw(
         parent node.If is string, the value will be use for any type.
     label : str | bool, default True
         Label of legend, disable if False.
-    xyz_axes : bool, default True
-        Draw xyz axes.
+    direction_indicator : str or (float, float), default 'rb'
+        Draw a xyz direction indicator, can be place on 'lt', 'lb',
+        'rt', 'rb', or custom position.
     unit : optional[str]
         Add unit text, e.g.: r"$\mu m$".
     **kwargs : dict[str, Unknown]
@@ -101,10 +114,15 @@ def draw(
     if len(ax_weak_dict[ax]["swc"]) == 1:
         ax.set_aspect(1)
         ax.spines[["top", "right"]].set_visible(False)
-        if xyz_axes:
-            draw_xyz_axes(ax=ax, camera=my_camera)
+        if direction_indicator is not False:
+            p = (
+                positions[direction_indicator]
+                if isinstance(direction_indicator, str)
+                else direction_indicator
+            )
+            draw_direction_indicator(ax=ax, camera=my_camera, position=p)
         if unit is not None:
-            ax.text(0.05, 0.95, r"$\mu m$", transform=ax.transAxes)
+            ax.text(0.05, 0.95, unit, transform=ax.transAxes)
     else:
         # legend
         handles = ax_weak_dict[ax].get("handles", [])

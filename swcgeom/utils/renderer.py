@@ -1,6 +1,6 @@
 """Painter utils."""
 
-from typing import Dict, NamedTuple, Tuple
+from typing import Dict, Literal, NamedTuple, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,17 +20,17 @@ from .transforms import (
 )
 
 __all__ = [
-    "Vector3D",
+    "Vec3f",
     "Camera",
     "palette",
     "draw_lines",
-    "draw_xyz_axes",
+    "draw_direction_indicator",
     "draw_circles",
     "get_fig_ax",
 ]
 
-Vector3D = Tuple[float, float, float]
-Camera = NamedTuple("Camera", position=Vector3D, look_at=Vector3D, up=Vector3D)
+Vec3f = Tuple[float, float, float]
+Camera = NamedTuple("Camera", position=Vec3f, look_at=Vec3f, up=Vec3f)
 
 
 class Palette:
@@ -113,17 +113,13 @@ def draw_lines(
     ends = np.dot(T, ends.T).T[:, 0:2]
 
     edges = np.stack([starts, ends], axis=1)
-    collection = LineCollection(edges, **kwargs)  # type: ignore
-    ax.add_collection(collection)  # type: ignore
-    return collection
+    return ax.add_collection(LineCollection(edges, **kwargs))  # type: ignore
 
 
-def draw_xyz_axes(
-    ax: Axes, camera: Camera, position: Tuple[float, float] = (0.8, 0.10)
+def draw_direction_indicator(
+    ax: Axes, camera: Camera, position: Tuple[float, float]
 ) -> None:
     x, y = position
-    arrow_length = 0.05
-
     direction = np.array(
         [
             [1, 0, 0, 1],
@@ -134,29 +130,31 @@ def draw_xyz_axes(
     )
     direction = model_view_trasformation(*camera).dot(direction)
 
-    for (dx, dy, dz, _), (text, color) in zip(
-        direction[:3],
-        [["x", "red"], ["y", "green"], ["z", "blue"]],
-    ):
+    ARROW_LENTH, TEXT_OFFSET = 0.05, 0.05
+    text_colors = [["x", "red"], ["y", "green"], ["z", "blue"]]
+    for (dx, dy, dz, _), (text, color) in zip(direction, text_colors):
         if 1 - abs(dz) < 1e-5:
             continue
 
         ax.arrow(
             x,
             y,
-            arrow_length * dx,
-            arrow_length * dy,
-            head_length=0.04,
-            head_width=0.03,
+            ARROW_LENTH * dx,
+            ARROW_LENTH * dy,
+            head_length=0.02,
+            head_width=0.01,
             color=color,
             transform=ax.transAxes,
         )
+
         ax.text(
-            x + (arrow_length + 0.06) * dx,
-            y + (arrow_length + 0.06) * dy,
+            x + (ARROW_LENTH + TEXT_OFFSET) * dx,
+            y + (ARROW_LENTH + TEXT_OFFSET) * dy,
             text,
             color=color,
             transform=ax.transAxes,
+            horizontalalignment="center",
+            verticalalignment="center",
         )
 
 
@@ -166,8 +164,8 @@ def draw_circles(
     x: npt.NDArray,
     y: npt.NDArray,
     /,
-    y_min: float | None = None,
-    y_max: float | None = None,
+    y_min: Optional[float] = None,
+    y_max: Optional[float] = None,
     cmap: str = "viridis",
 ) -> None:
     """Draw a sequential of circles."""
