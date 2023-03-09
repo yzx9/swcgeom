@@ -19,7 +19,7 @@ from matplotlib.axes import Axes
 from ..core import Population, Populations, Tree
 from ..utils import padding1d
 from .branch_features import BranchFeatures
-from .node_features import NodeFeatures
+from .node_features import BifurcationFeatures, NodeFeatures, TipFeatures
 from .path_features import PathFeatures
 from .sholl import Sholl
 
@@ -31,6 +31,12 @@ Feature = Literal[
     # node
     "node_radial_distance",
     "node_branch_order",
+    # bifurcation nodes
+    "bifurcation_radial_distance",
+    "bifurcation_branch_order",
+    # tip nodes
+    "tip_radial_distance",
+    "tip_branch_order",
     # branch
     "branch_length",
     "branch_tortuosity",
@@ -54,6 +60,10 @@ class Features:
     # fmt:off
     @cached_property
     def _node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
+    @cached_property
+    def _bifurcation_features(self) -> BifurcationFeatures: return BifurcationFeatures(self._node_features)
+    @cached_property
+    def _tip_features(self) -> TipFeatures: return TipFeatures(self._node_features)
     @cached_property
     def _branch_features(self) -> BranchFeatures: return BranchFeatures(self.tree)
     @cached_property
@@ -156,16 +166,27 @@ class FeatureExtractor:
 
     # custom features
 
-    def _plot_node_branch_order(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
-        vals = self._get(feature)
-        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
-        return self._plot_histogram(vals, bin_edges, **kwargs)
+    def _plot_node_branch_order(self, *args, **kwargs) -> Axes:
+        return self._impl_plot_node_branch_order(*args, **kwargs)
+
+    def _plot_bifurcation_branch_order(self, *args, **kwargs) -> Axes:
+        return self._impl_plot_node_branch_order(*args, **kwargs)
+
+    def _plot_tip_branch_order(self, *args, **kwargs) -> Axes:
+        return self._impl_plot_node_branch_order(*args, **kwargs)
 
     def _plot_sholl(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
         _, feat_kwargs = _get_feature_and_kwargs(feature)
         step = feat_kwargs.get("step", 1)  # TODO: remove hard code
         vals = self._get(feature)
         bin_edges = np.arange(step / 2, step * (vals.shape[-1] + 1), step)
+        return self._plot_histogram(vals, bin_edges, **kwargs)
+
+    def _impl_plot_node_branch_order(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> Axes:
+        vals = self._get(feature)
+        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
         return self._plot_histogram(vals, bin_edges, **kwargs)
 
 
