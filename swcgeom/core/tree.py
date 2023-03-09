@@ -7,6 +7,7 @@ from typing import (
     Callable,
     Dict,
     Iterable,
+    Iterator,
     List,
     Literal,
     Tuple,
@@ -115,7 +116,7 @@ class Tree(SWCLike):
         kwargs.update(ndata)
         self.ndata = kwargs
 
-    def __iter__(self) -> Iterable[Node]:
+    def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
 
     def __repr__(self) -> str:
