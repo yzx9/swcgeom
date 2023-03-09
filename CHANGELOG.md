@@ -1,3 +1,40 @@
+## **0.5.0**&emsp;<sub><sup>2023-03-09 ([711ebb1...80acd75](https://github.com/yzx9/swcgeom/compare/711ebb1308d2a70eddcf6295a40883a7815e887e...80acd75f7a9c232008f5ce4c9ec1f43488efd21c?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- custom draw ([bdc1291](https://github.com/yzx9/swcgeom/commit/bdc1291eb4e213ad3918c70dad54f00d81be6769))
+- re\-design feature_extractor ([e5affa7](https://github.com/yzx9/swcgeom/commit/e5affa700128d62e175bb6243ba1d7f00ac27c85))
+- add populations feature extractor ([94a2bc6](https://github.com/yzx9/swcgeom/commit/94a2bc69a9eb1856138e54fc858a48480c324c61))
+- plot histogram ([0dc05d7](https://github.com/yzx9/swcgeom/commit/0dc05d72a7b1dcff8f2e64e6b79a91e3d040ac8a))
+- custom length plot ([d32272d](https://github.com/yzx9/swcgeom/commit/d32272d242274e8bdf2acd4d3dc80e5858481449))
+- custom position of direction indicator ([b84b57e](https://github.com/yzx9/swcgeom/commit/b84b57eb912da55b54b4d72e526d4cf7e96abc64))
+- support hidden swc in legend ([80acd75](https://github.com/yzx9/swcgeom/commit/80acd75f7a9c232008f5ce4c9ec1f43488efd21c))
+
+##### `core`
+
+- add populations ([711ebb1](https://github.com/yzx9/swcgeom/commit/711ebb1308d2a70eddcf6295a40883a7815e887e))
+- rename class method option ([7003c1d](https://github.com/yzx9/swcgeom/commit/7003c1dc017a0ca432265c003434e871ea9c1fc6))
+- take intersection among populations ([6442572](https://github.com/yzx9/swcgeom/commit/6442572c9fe32621dd93b6288d82e40a45e6012f))
+- add pure\-func style utils ([7f9cba1](https://github.com/yzx9/swcgeom/commit/7f9cba14dd4bc0e018fe03bccd1cf845d4a3a421))
+- add \`BranchTree\.from_eswc\` ([d01cd04](https://github.com/yzx9/swcgeom/commit/d01cd04505649cc782edbc34d5ac7205093b57de))
+- add labels for populations ([998566e](https://github.com/yzx9/swcgeom/commit/998566e4c478716ad57a77b52dc6774608d4e797))
+
+### Merges
+
+- branch 'feature/populations' ([1c7d1e8](https://github.com/yzx9/swcgeom/commit/1c7d1e87a6a34ab79146adfe9e5e95b24f636432))
+
+### BREAKING CHANGES
+
+- `analysis` ([e5affa7](https://github.com/yzx9/swcgeom/commit/e5affa700128d62e175bb6243ba1d7f00ac27c85))
+  - \`extract_feature\` has been fully re\-designed
+  - \`NodeFeatures\.get_distribution\` has been removed
+  - \`Sholl\.get_distribution\` has been removed
+- `analysis` remove filters in \`NodeFeatures\` ([f0b37bf](https://github.com/yzx9/swcgeom/commit/f0b37bf075fef80a71442d75ae84132796f52c28))
+- `core` \`Population.from_swc\` and \`Population\.from_eswc\` argument \`suffix\` has been renamed to \`ext\` ([7003c1d](https://github.com/yzx9/swcgeom/commit/7003c1dc017a0ca432265c003434e871ea9c1fc6))
+- `core` add pure\-func style utils ([7f9cba1](https://github.com/yzx9/swcgeom/commit/7f9cba14dd4bc0e018fe03bccd1cf845d4a3a421))
+
 ## **0.4.1** <sub><sup>2023-03-01 ([4efbcef...4efbcef](https://github.com/yzx9/swcgeom/compare/4efbcef...4efbcef?diff=split))</sup></sub>
 
 ### Bug Fixes
