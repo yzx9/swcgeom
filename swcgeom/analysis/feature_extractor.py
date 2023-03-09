@@ -117,7 +117,7 @@ class FeatureExtractor:
 
     def plot(
         self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
-    ) -> Axes:  # TODO: sholl
+    ) -> Axes:
         """Plot feature with appropriate way.
 
         Notes
@@ -130,8 +130,7 @@ class FeatureExtractor:
         if not callable(plot := getattr(self, f"_plot_{feat}", None)):
             plot = self._plot  # default plot
 
-        vals = self._get(feature)
-        ax = plot(vals, **kwargs)
+        ax = plot(feature, **kwargs)
 
         if isinstance(title, str):
             ax.set_title(title)
@@ -144,8 +143,9 @@ class FeatureExtractor:
         raise NotImplementedError()
 
     def _plot(
-        self, vals: npt.NDArray[np.float32], bins="auto", range=None, **kwargs
+        self, feature: FeatureWithKwargs, bins="auto", range=None, **kwargs
     ) -> Axes:
+        vals = self._get(feature)
         bin_edges = np.histogram_bin_edges(vals, bins, range)
         return self._plot_histogram(vals, bin_edges, **kwargs)
 
@@ -156,8 +156,16 @@ class FeatureExtractor:
 
     # custom features
 
-    def _plot_node_branch_order(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+    def _plot_node_branch_order(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
+        vals = self._get(feature)
         bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
+        return self._plot_histogram(vals, bin_edges, **kwargs)
+
+    def _plot_sholl(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
+        _, feat_kwargs = _get_feature_and_kwargs(feature)
+        step = feat_kwargs.get("step", 1)  # TODO: remove hard code
+        vals = self._get(feature)
+        bin_edges = np.arange(step / 2, step * (vals.shape[-1] + 1), step)
         return self._plot_histogram(vals, bin_edges, **kwargs)
 
 
@@ -186,9 +194,9 @@ class TreeFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
-    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+    def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
         name = basename(self._tree.source)
-        ax: Axes = sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
+        ax: Axes = sns.barplot(x=[name], y=self._get(feature).squeeze(), **kwargs)
         ax.set_ylabel("Length")
         return ax
 
@@ -224,9 +232,9 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
-    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+    def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
         x = [basename(t.source) for t in self._population]
-        y = vals.flatten()
+        y = self._get(feature).flatten()
         ax: Axes = sns.barplot(x=x, y=y, **kwargs)
         ax.axhline(y=y.mean(), ls="--", lw=1)
         ax.set_ylabel("Length")
@@ -278,7 +286,8 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
-    def _plot_length(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+    def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
+        vals = self._get(feature)
         labels = self._populations.labels
         x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
         y = vals.flatten()
