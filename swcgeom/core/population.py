@@ -6,6 +6,7 @@ from functools import reduce
 from itertools import chain
 from typing import Any, Dict, Iterator, List, Optional, cast, overload
 
+import numpy as np
 from typing_extensions import Self
 
 from .swc import eswc_cols
@@ -44,7 +45,7 @@ class Population:
         if isinstance(key, slice):
             return [cast(Tree, self.trees[i]) for i in range(*key.indices(len(self)))]
 
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             return cast(Tree, self.trees[key])
 
         raise TypeError("Invalid argument type.")
@@ -67,7 +68,7 @@ class Population:
     def load(self, key):
         if isinstance(key, slice):
             idx = range(*key.indices(len(self)))
-        elif isinstance(key, int):
+        elif isinstance(key, (int, np.integer)):
             idx = [key]
         else:
             raise TypeError("Invalid argument type.")

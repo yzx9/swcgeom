@@ -50,7 +50,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         if isinstance(key, slice):
             return [self.get_node(i) for i in range(*key.indices(len(self)))]
 
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             length = len(self)
             if key < -length or key >= length:
                 raise IndexError(f"The index ({key}) is out of range.")
@@ -71,7 +71,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    def get_node(self, idx: int) -> Node:
+    def get_node(self, idx: int | np.integer) -> Node:
         return self.Node(self, idx)
 
     def detach(self) -> "Path":

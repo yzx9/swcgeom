@@ -154,7 +154,7 @@ class Tree(SWCLike):
         if isinstance(key, slice):
             return [self.node(i) for i in range(*key.indices(len(self)))]
 
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             length = len(self)
             if key < -length or key >= length:
                 raise IndexError(f"The index ({key}) is out of range.")
@@ -172,7 +172,7 @@ class Tree(SWCLike):
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()
 
-    def node(self, idx: int) -> Node:
+    def node(self, idx: int | np.integer) -> Node:
         return self.Node(self, idx)
 
     def soma(self) -> Node:
@@ -248,15 +248,15 @@ class Tree(SWCLike):
     # fmt: off
     @overload
     def traverse(
-        self, *, enter: Callable[[Node, T | None], T], root: int = ..., mode: Literal["dfs"] = ...
+        self, *, enter: Callable[[Node, T | None], T], root: int | np.integer = ..., mode: Literal["dfs"] = ...
     ) -> None: ...
     @overload
     def traverse(
-        self, *, leave: Callable[[Node, List[K]], K], root: int = ..., mode: Literal["dfs"] = ...
+        self, *, leave: Callable[[Node, List[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...
     ) -> K: ...
     @overload
     def traverse(
-        self, *, enter: Callable[[Node, T | None], T], leave: Callable[[Node, List[K]], K], root: int = ..., mode: Literal["dfs"] = ...,
+        self, *, enter: Callable[[Node, T | None], T], leave: Callable[[Node, List[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...,
     ) -> K: ...
     # fmt: on
 

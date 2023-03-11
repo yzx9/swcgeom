@@ -15,7 +15,7 @@ class Node(Generic[SWCTypeVar]):
     """Neural node."""
 
     attach: SWCTypeVar
-    idx: int
+    idx: int | np.integer
 
     # fmt: off
     @property
@@ -54,7 +54,7 @@ class Node(Generic[SWCTypeVar]):
     def pid(self, v: int): self["pid"] = v
     # fmt: on
 
-    def __init__(self, attach: SWCTypeVar, idx: int) -> None:
+    def __init__(self, attach: SWCTypeVar, idx: int | np.integer) -> None:
         super().__init__()
         self.attach = attach
         self.idx = idx
