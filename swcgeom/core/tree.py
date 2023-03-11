@@ -74,6 +74,25 @@ class Tree(SWCLike):
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
 
+        # fmt: off
+        @overload
+        def traverse(self, *, enter: Callable[[Node, T | None], T], mode: Literal["dfs"] = ...) -> None: ...
+        @overload
+        def traverse(self, *, leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...) -> K: ...
+        @overload
+        def traverse(self, *,
+            enter: Callable[[Node, T | None], T], leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...,
+        ) -> K: ...
+        # fmt: on
+        def traverse(self, **kwargs):  # type: ignore
+            """Traverse from node.
+
+            See Also
+            --------
+            ~Tree.traverse
+            """
+            return self.attach.traverse(root=self.idx, **kwargs)
+
     class Path(Path["Tree"]):
         # TODO: should returns `Tree.Node`
         """Neural path."""
@@ -228,38 +247,46 @@ class Tree(SWCLike):
 
     # fmt: off
     @overload
-    def traverse(self, *, enter: Callable[[Node, T | None], T], mode: Literal["dfs"] = ...) -> None: ...
+    def traverse(
+        self, *, enter: Callable[[Node, T | None], T], root: int = ..., mode: Literal["dfs"] = ...
+    ) -> None: ...
     @overload
-    def traverse(self, *, leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...) -> K: ...
+    def traverse(
+        self, *, leave: Callable[[Node, List[K]], K], root: int = ..., mode: Literal["dfs"] = ...
+    ) -> K: ...
     @overload
-    def traverse(self, *,
-        enter: Callable[[Node, T | None], T], leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...,
+    def traverse(
+        self, *, enter: Callable[[Node, T | None], T], leave: Callable[[Node, List[K]], K], root: int = ..., mode: Literal["dfs"] = ...,
     ) -> K: ...
     # fmt: on
 
-    def traverse(self, *, enter=None, leave=None, mode="dfs"):
-        """Traverse each nodes.
+    def traverse(self, *, mode="dfs", **kwargs):
+        """Traverse nodes.
 
         Parameters
         ----------
         enter : Callable[[Node, list[T]], T], optional
-            The callback when entering each node, it accepts two parameters,
-            the first parameter is the current node, the second parameter is
-            the parent's information T, and the root node receives an None.
+            The callback when entering each node, it accepts two
+            parameters, the first parameter is the current node, the
+            second parameter is the parent's information T, and the
+            root node receives an None.
         leave : Callable[[Node, T | None], T], optional
-            The callback when leaving each node. When leaving a node, subtree
-            has already been traversed. Callback accepts two parameters, the
-            first parameter is the current node, the second parameter is the
-            children's information T, and the leaf node receives an empty list.
+            The callback when leaving each node. When leaving a node,
+            subtree has already been traversed. Callback accepts two
+            parameters, the first parameter is the current node, the
+            second parameter is the children's information T, and the
+            leaf node receives an empty list.
+        root : int, default to `0`
+            Start from the root node of the subtree
         """
 
         match mode:
             case "dfs":
-                return self._traverse_dfs(enter=enter, leave=leave)
+                return self._traverse_dfs(**kwargs)
             case _:
                 raise ValueError(f"unsupported mode: `{mode}`")
 
-    def _traverse_dfs(self, *, enter=None, leave=None):
+    def _traverse_dfs(self, *, enter=None, leave=None, root=0):
         """Traverse each nodes by dfs."""
         children_map = dict[int, list[int]]()
         for idx, pid in enumerate(self.pid()):
@@ -267,13 +294,13 @@ class Tree(SWCLike):
             children_map[pid].append(idx)
 
         # manual stack to avoid stack overflow in long projection
-        stack: List[Tuple[int, bool]] = [(0, True)]  # (idx, first)
-        params = {0: None}
+        stack: List[Tuple[int, bool]] = [(root, True)]  # (idx, is_first)
+        params = {root: None}
         vals = {}
 
         while len(stack) != 0:
-            idx, first = stack.pop()
-            if first:
+            idx, is_first = stack.pop()
+            if is_first:
                 pre = params.pop(idx)
                 cur = enter(self[idx], pre) if enter is not None else None
                 stack.append((idx, False))
@@ -284,7 +311,7 @@ class Tree(SWCLike):
                 children = [vals.pop(i) for i in children_map.get(idx, [])]
                 vals[idx] = leave(self[idx], children) if leave is not None else None
 
-        return vals[0]
+        return vals[root]
 
     def copy(self) -> "Tree":
         """Make a copy."""
