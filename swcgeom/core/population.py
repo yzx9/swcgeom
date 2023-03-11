@@ -86,8 +86,13 @@ class Population:
 
     @classmethod
     def from_eswc(
-        cls, root: str, ext: str = ".eswc", extra_cols: List[str] = [], **kwargs
+        cls,
+        root: str,
+        ext: str = ".eswc",
+        extra_cols: Optional[List[str]] = None,
+        **kwargs,
     ) -> Self:
+        extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
@@ -184,12 +189,15 @@ class Populations:
             assert reduce(lambda a, b: a == b, fs), "not the same among populations"
 
         populations = [
-            Population([os.path.join(roots[i], p) for p in fs[i]], root=d, **kwargs)
+            Population([os.path.join(d, p) for p in fs[i]], root=d, **kwargs)
             for i, d in enumerate(roots)
         ]
         return cls(populations, labels=labels)
 
     @classmethod
-    def from_eswc(cls, roots: List[str], extra_cols: List[str] = [], **kwargs) -> Self:
+    def from_eswc(
+        cls, roots: List[str], extra_cols: Optional[List[str]] = None, **kwargs
+    ) -> Self:
+        extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, **kwargs)

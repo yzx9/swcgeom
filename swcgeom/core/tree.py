@@ -10,6 +10,7 @@ from typing import (
     Iterator,
     List,
     Literal,
+    Optional,
     Tuple,
     TypeVar,
     Union,
@@ -344,7 +345,9 @@ class Tree(SWCLike):
         return cls.from_data_frame(df, source)
 
     @classmethod
-    def from_eswc(cls, swc_file: str, extra_cols: List[str] = [], **kwargs) -> Self:
+    def from_eswc(
+        cls, swc_file: str, extra_cols: Optional[List[str]] = None, **kwargs
+    ) -> Self:
         """Read neuron tree from eswc file.
 
         See Also
@@ -352,6 +355,6 @@ class Tree(SWCLike):
         ~swcgeom.Tree.from_swc
         ~swcgeom.read_swc
         """
-
+        extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(swc_file, extra_cols=extra_cols, **kwargs)
