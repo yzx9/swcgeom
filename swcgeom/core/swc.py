@@ -1,7 +1,19 @@
 """SWC format."""
 
 import warnings
-from typing import Any, Dict, Iterable, List, Literal, Tuple, TypeVar, cast, overload
+from abc import ABC, abstractmethod
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    cast,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -37,8 +49,8 @@ eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
 ]
 
 
-class SWCLike:
-    """Abstract class that including swc infomation."""
+class SWCLike(ABC):
+    """ABC of SWC."""
 
     source: str = ""
 
@@ -81,9 +93,11 @@ class SWCLike:
         """Get the coordinates and radius array of shape(n_sample, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=1)
 
+    @abstractmethod
     def keys(self) -> Iterable[str]:
         raise NotImplementedError()
 
+    @abstractmethod
     def get_ndata(self, key: str) -> npt.NDArray[Any]:
         raise NotImplementedError()
 
@@ -109,9 +123,9 @@ class SWCLike:
     # fmt: on
     def to_swc(
         self,
-        fname: str | None = None,
+        fname: Optional[str] = None,
         *,
-        extra_cols: List[str] | None = None,
+        extra_cols: Optional[List[str]] = None,
         source: bool = True,
         id_offset: int = 1,
     ) -> str | None:
@@ -151,15 +165,27 @@ class SWCLike:
 
     # fmt: off
     @overload
-    def to_eswc(self, swc_path: str, **kwargs) -> None: ...
+    def to_eswc(self, fname: str, **kwargs) -> None: ...
     @overload
     def to_eswc(self, **kwargs) -> str: ...
     # fmt: on
-    def to_eswc(self, swc_path: str | None = None, **kwargs) -> str | None:
-        kwargs.setdefault("swc_path", swc_path)
-        kwargs.setdefault("extra_cols", [])
-        kwargs["extra_cols"].extend(k for k, t in eswc_cols)
-        return self.to_swc(**kwargs)
+    def to_eswc(
+        self,
+        fname: Optional[str] = None,
+        swc_path: Optional[str] = None,
+        extra_cols: Optional[List[str]] = None,
+        **kwargs,
+    ) -> str | None:
+        if swc_path is None:
+            warnings.warn(
+                "`swc_path` has been renamed to `fname` since v0.5.1, ",
+                DeprecationWarning,
+            )
+            fname = swc_path
+
+        extra_cols = extra_cols or []
+        extra_cols.extend(k for k, t in eswc_cols)
+        return self.to_swc(fname, extra_cols=extra_cols, **kwargs)  # type: ignore
 
 
 class DictSWC(SWCLike):
