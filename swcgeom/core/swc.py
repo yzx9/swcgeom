@@ -21,7 +21,7 @@ import pandas as pd
 import scipy.sparse as sp
 
 from .swc_utils import (
-    check_single_root,
+    is_single_root,
     link_roots_to_nearest_,
     mark_roots_as_somas_,
     reset_index_,
@@ -260,7 +260,7 @@ def read_swc(
         reset_index_(df)
 
     # check swc
-    if not check_single_root(df):
+    if not is_single_root(df):
         warnings.warn(f"core: not signle root, swc: {swc_file}")
 
     if (df["pid"] == -1).argmax() != 0:
