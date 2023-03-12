@@ -29,6 +29,7 @@ from .node import Node
 from .path import Path
 from .segment import Segment, Segments
 from .swc import SWCLike, eswc_cols, read_swc, swc_cols
+from .swc_utils import traverse
 
 __all__ = ["Tree"]
 
@@ -262,58 +263,31 @@ class Tree(SWCLike):
     ) -> K: ...
     # fmt: on
 
-    def traverse(self, *, mode="dfs", **kwargs):
+    def traverse(self, *, enter=None, leave=None, **kwargs):
         """Traverse nodes.
 
         Parameters
         ----------
-        enter : Callable[[Node, list[T]], T], optional
-            The callback when entering each node, it accepts two
-            parameters, the first parameter is the current node, the
-            second parameter is the parent's information T, and the
-            root node receives an None.
-        leave : Callable[[Node, T | None], T], optional
-            The callback when leaving each node. When leaving a node,
-            subtree has already been traversed. Callback accepts two
-            parameters, the first parameter is the current node, the
-            second parameter is the children's information T, and the
-            leaf node receives an empty list.
-        root : int, default to `0`
-            Start from the root node of the subtree
+        enter : (n: Node, parent: T | None) => T, optional
+        leave : (n: Node, children: List[T]) => T, optional
+
+        See Also
+        --------
+        ~swc_utils.traverse
         """
 
-        match mode:
-            case "dfs":
-                return self._traverse_dfs(**kwargs)
-            case _:
-                raise ValueError(f"unsupported mode: `{mode}`")
+        def wrap(fn) -> Callable | None:
+            if fn is None:
+                return None
 
-    def _traverse_dfs(self, *, enter=None, leave=None, root=0):
-        """Traverse each nodes by dfs."""
-        children_map = dict[int, list[int]]()
-        for idx, pid in enumerate(self.pid()):
-            children_map.setdefault(pid, [])
-            children_map[pid].append(idx)
+            def fn_wrapped(idx, *args, **kwargs):
+                return fn(self[idx], *args, **kwargs)
 
-        # manual stack to avoid stack overflow in long projection
-        stack: List[Tuple[int, bool]] = [(root, True)]  # (idx, is_first)
-        params = {root: None}
-        vals = {}
+            return fn_wrapped
 
-        while len(stack) != 0:
-            idx, is_first = stack.pop()
-            if is_first:
-                pre = params.pop(idx)
-                cur = enter(self[idx], pre) if enter is not None else None
-                stack.append((idx, False))
-                for child in children_map.get(idx, []):
-                    stack.append((child, True))
-                    params[child] = cur
-            else:
-                children = [vals.pop(i) for i in children_map.get(idx, [])]
-                vals[idx] = leave(self[idx], children) if leave is not None else None
-
-        return vals[root]
+        topology = (self.id(), self.pid())
+        enter, leave = wrap(enter), wrap(leave)
+        return traverse(topology, enter=enter, leave=leave, **kwargs)  # type: ignore
 
     def copy(self) -> "Tree":
         """Make a copy."""
