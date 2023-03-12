@@ -123,6 +123,8 @@ class SWCLike:
         with open(fname, "w", encoding="utf-8") as f:
             f.writelines(it)
 
+        return None
+
     def _to_swc(
         self, extra_cols: List[str] | None, source: bool, id_offset: int
     ) -> Iterable[str]:
@@ -161,6 +163,8 @@ class SWCLike:
 
 
 class DictSWC(SWCLike):
+    """SWC implementation on dict."""
+
     ndata: Dict[str, npt.NDArray]
 
     def __init__(self, **kwargs: npt.NDArray):

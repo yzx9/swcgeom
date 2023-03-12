@@ -100,6 +100,8 @@ class Features:
 
 
 class FeatureExtractor:
+    """Extract features from tree."""
+
     # fmt:off
     @overload
     def get(self, feature: Feature, **kwargs) -> npt.NDArray[np.float32]: ...
@@ -152,6 +154,7 @@ class FeatureExtractor:
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
+    # pylint: disable=redefined-builtin
     def _plot(
         self, feature: FeatureWithKwargs, bins="auto", range=None, **kwargs
     ) -> Axes:
@@ -223,7 +226,7 @@ class TreeFeatureExtractor(FeatureExtractor):
 
 
 class PopulationFeatureExtractor(FeatureExtractor):
-    """Extract feature from population."""
+    """Extract features from population."""
 
     _population: Population
     _features: List[Features]
@@ -290,9 +293,9 @@ class PopulationsFeatureExtractor(FeatureExtractor):
     def _plot_histogram(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        histogram = lambda v: np.histogram(
-            v, bins=bin_edges, weights=(v != 0).astype(np.int32)
-        )
+        def histogram(v):
+            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))
+
         hists = [[histogram(t)[0] for t in p] for p in vals]
         hist = np.concatenate(hists).flatten()
 
@@ -333,5 +336,5 @@ def extract_feature(obj: Tree | Population) -> FeatureExtractor:
 def _get_feature_and_kwargs(feature: FeatureWithKwargs, **kwargs):
     if isinstance(feature, tuple):
         return feature[0], {**feature[1], **kwargs}
-    else:
-        return feature, kwargs
+
+    return feature, kwargs

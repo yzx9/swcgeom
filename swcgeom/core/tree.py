@@ -199,6 +199,7 @@ class Tree(SWCLike):
         return [self.node(i) for i in tip_ids]
 
     def get_segments(self) -> Segments[Segment]:
+        # pylint: disable=not-an-iterable
         return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
 
     def get_branches(self) -> List[Branch]:

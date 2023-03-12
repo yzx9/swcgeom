@@ -28,6 +28,7 @@ class Segment(Path, Generic[SWCTypeVar]):
 
     def detach(self) -> "Segment":
         """Detach from current attached object."""
+        # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()})
         return Segment(attact, self.idx[0], self.idx[1])
 

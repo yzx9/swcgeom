@@ -76,6 +76,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
 
     def detach(self) -> "Path":
         """Detach from current attached object."""
+        # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()})
         return Path(attact, self.idx.copy())
 

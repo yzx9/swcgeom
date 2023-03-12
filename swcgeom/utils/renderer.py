@@ -1,6 +1,6 @@
-"""Painter utils."""
+"""Rendering related utils."""
 
-from typing import Dict, Literal, NamedTuple, Optional, Tuple
+from typing import Dict, NamedTuple, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -33,7 +33,10 @@ Vec3f = Tuple[float, float, float]
 Camera = NamedTuple("Camera", position=Vec3f, look_at=Vec3f, up=Vec3f)
 
 
+# pylint: disable=too-few-public-methods
 class Palette:
+    """The palette provides default and vaa3d color matching."""
+
     default: Dict[int, str]
     vaa3d: Dict[int, str]
 

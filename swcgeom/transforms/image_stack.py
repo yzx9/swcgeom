@@ -18,6 +18,7 @@ from .base import Transform
 __all__ = ["ToImageStack"]
 
 
+# TODO: migrate to github.com/yzx9/swc2skeleton
 class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     r"""Transform tree to image stack."""
 
@@ -69,6 +70,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     def transfrom(
         self, x: Tree, verbose: bool = True
     ) -> Iterable[npt.NDArray[np.uint8]]:
+        # pylint: disable=too-many-locals
         if verbose:
             print("To image stack: " + x.source)
             time_start = time.time()

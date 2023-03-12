@@ -109,6 +109,8 @@ class Population:
 
 
 class Populations:
+    """A set of population."""
+
     len: int
     populations: List[Population]
     labels: List[str]

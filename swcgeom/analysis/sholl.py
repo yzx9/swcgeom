@@ -1,6 +1,5 @@
 """Sholl analysis."""
 
-import math
 import warnings
 from typing import Literal, Tuple
 

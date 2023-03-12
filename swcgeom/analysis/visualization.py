@@ -87,7 +87,7 @@ def draw(
     fig : ~matplotlib.axes.Figure
     ax : ~matplotlib.axes.Axes
     """
-
+    # pylint: disable=too-many-locals
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc
 
     fig, ax = get_fig_ax(fig, ax)
@@ -151,13 +151,13 @@ def set_ax_legend(ax: Axes, *args, **kwargs) -> Legend | None:
     handles = ax_weak_memo[ax].get("handles", [])
 
     # filter `label = False`
-    handles = [a for i, a in enumerate(handles) if labels[i] != False]
-    labels = [a for i, a in enumerate(labels) if labels[i] != False]
+    handles = [a for i, a in enumerate(handles) if labels[i] is not False]
+    labels = [a for a in labels if a is not False]
 
-    if len(labels) > 0:
-        return ax.legend(handles, labels, *args, **kwargs)
-    else:
+    if len(labels) == 0:
         return None
+
+    return ax.legend(handles, labels, *args, **kwargs)
 
 
 def _set_ax_memo(

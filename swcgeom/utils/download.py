@@ -54,25 +54,25 @@ def clone_index_page(
     """
 
     files = get_urls_in_index_page(index_url)
-    logging.info("downloader: search `{}`, found {} files.", index_url, len(files))
+    logging.info("downloader: search `%s`, found %s files.", index_url, len(files))
 
     def download(url: str) -> None:
         filepath = url.removeprefix(index_url)
         dist = os.path.join(dist_dir, filepath)
         if os.path.exists(filepath):
             if not override:
-                logging.info("downloader: file `{}` exits, skiped.", dist)
+                logging.info("downloader: file `%s` exits, skiped.", dist)
                 return
 
-            logging.info("downloader: file `{}` exits, deleted.", dist)
+            logging.info("downloader: file `%s` exits, deleted.", dist)
             os.remove(filepath)
 
         try:
-            logging.info("downloader: downloading `{}` to `{}`", url, dist)
+            logging.info("downloader: downloading `%s` to `%s`", url, dist)
             download_file(filepath, url)
-            logging.info("downloader: download `{}` to `{}`", url, dist)
+            logging.info("downloader: download `%s` to `%s`", url, dist)
         except urllib3.exceptions.HTTPError as ex:
-            logging.info("downloader: fails to download `{}`, except `{}`", url, ex)
+            logging.info("downloader: fails to download `%s`, except `%s`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
         p.map(download, files)

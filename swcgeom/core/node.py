@@ -108,5 +108,6 @@ class Node(Generic[SWCTypeVar]):
 
     def detach(self) -> "Node":
         """Detach from current attached object."""
+        # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()})
         return Node(attact, self.idx)

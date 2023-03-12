@@ -131,6 +131,7 @@ class SDFRoundCone(SDF):
         )
 
     def distance(self, p: npt.ArrayLike) -> npt.NDArray[np.float32]:
+        # pylint: disable=too-many-locals
         p = np.array(p, dtype=np.float32)
         assert p.ndim == 2 and p.shape[1] == 3, "p should be array of shape (N, 3)"
 

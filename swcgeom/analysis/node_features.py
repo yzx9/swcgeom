@@ -12,7 +12,7 @@ __all__ = ["NodeFeatures", "BifurcationFeatures", "TipFeatures"]
 
 
 class NodeFeatures:
-    """Calc node feature of tree."""
+    """Evaluate node feature of tree."""
 
     _tree: Tree
 
@@ -79,12 +79,16 @@ class _SubsetNodesFeatures:
 
 
 class BifurcationFeatures(_SubsetNodesFeatures):
+    """Evaluate bifurcation node feature of tree."""
+
     @cached_property
     def nodes(self) -> npt.NDArray[np.bool_]:
         return np.array([n.is_bifurcation() for n in self._features._tree])
 
 
 class TipFeatures(_SubsetNodesFeatures):
+    """Evaluate tip node feature of tree."""
+
     @cached_property
     def nodes(self) -> npt.NDArray[np.bool_]:
         return np.array([n.is_tip() for n in self._features._tree])

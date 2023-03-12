@@ -1,7 +1,7 @@
 """SWC format utils."""
 
 from copy import copy
-from typing import Any, List, Literal, Tuple
+from typing import Callable, List, Literal, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -240,7 +240,7 @@ def _get_dsu(df: pd.DataFrame) -> npt.NDArray[np.int32]:
     return dsu
 
 
-def _copy_and_apply(fn_: Any, df: pd.DataFrame, *args, **kwargs):
+def _copy_and_apply(fn: Callable, df: pd.DataFrame, *args, **kwargs):
     df = df.copy()
-    fn_(df, *args, **kwargs)
+    fn(df, *args, **kwargs)
     return df

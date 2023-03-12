@@ -38,10 +38,12 @@ class Branch(Path, Generic[SWCTypeVar]):
         return self.attach.get_ndata(key)[self.idx]
 
     def get_segments(self) -> Segments[Segment]:
+        # pylint: disable=not-an-iterable
         return Segments([self.Segment(self, n.pid, n.id) for n in self[1:]])
 
     def detach(self) -> "Branch":
         """Detach from current attached object."""
+        # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()})
         return Branch(attact, self.idx.copy())
 

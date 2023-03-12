@@ -15,6 +15,7 @@ __all__ = [
 ]
 
 
+# pylint: disable=too-few-public-methods
 class ToBranchTree(Transform[Tree, BranchTree]):
     """Transform tree to branch tree."""
 
@@ -22,6 +23,7 @@ class ToBranchTree(Transform[Tree, BranchTree]):
         return BranchTree.from_tree(x)
 
 
+# pylint: disable=too-few-public-methods
 class TreeNormalizer(Transform[Tree, Tree]):
     """Noramlize coordinates and radius to 0-1."""
 
@@ -61,6 +63,13 @@ class CutByBifurcationOrder(Transform[Tree, Tree]):
 
 
 class CutShortTipBranch(Transform[Tree, Tree]):
+    """Cut off too short terminal branches.
+
+    This method is usually applied in the post-processing of manual
+    reconstruction. When the user draw lines, a line head is often left
+    at the junction of two lines.
+    """
+
     thre: float
     callback: Callable[[Tree.Branch], None] | None
 
