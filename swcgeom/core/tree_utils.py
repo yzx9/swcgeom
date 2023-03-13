@@ -1,7 +1,7 @@
 """SWC util wrapper for tree."""
 
 import warnings
-from typing import Callable, Iterable, List, OrderedDict, Tuple, TypeVar, overload
+from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, overload
 
 import numpy as np
 
@@ -28,11 +28,10 @@ def sort_tree(tree: Tree) -> Tree:
     --------
     ~swc_utils.sort_nodes
     """
-    indices, new_ids, new_pids = sort_nodes_impl(tree.id(), tree.pid())
+    (new_ids, new_pids), id_map = sort_nodes_impl((tree.id(), tree.pid()))
     new_tree = tree.copy()
-    new_tree.ndata = {k: tree.ndata[k][indices] for k in tree.ndata}
-    new_tree.ndata["id"] = new_ids
-    new_tree.ndata["pid"] = new_pids
+    new_tree.ndata = {k: tree.ndata[k][id_map] for k in tree.ndata}
+    new_tree.ndata.update(id=new_ids, pid=new_pids)
     return new_tree
 
 
@@ -40,9 +39,7 @@ def sort_tree(tree: Tree) -> Tree:
 @overload
 def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool]]) -> Tree: ...
 @overload
-def cut_tree(tree: Tree, *,
-    enter: Callable[[Tree.Node, T | None], T] | None = ...,
-    leave: Callable[[Tree.Node, List[K]], Tuple[K, bool]]) -> Tree: ...
+def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, List[K]], Tuple[K, bool]]) -> Tree: ...
 # fmt:on
 
 
@@ -86,7 +83,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     return to_subtree(tree, removals)
 
 
-def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, OrderedDict[int, int]]:
+def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]:
     """Create subtree from origin tree.
 
     .. deprecated:: 0.6.0
@@ -108,15 +105,18 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, OrderedDict[int
     )
 
     sub = propagate_removal(sub)
-    (new_id, new_pid), id_map = to_sub_topology(sub)
-    sub_id = list(id_map.keys())
+    (new_id, new_pid), id_map_arr = to_sub_topology(sub)
 
     n_nodes = new_id.shape[0]
-    ndata = {k: swc_like.get_ndata(k)[sub_id].copy() for k in swc_like.keys()}
+    ndata = {k: swc_like.get_ndata(k)[id_map_arr].copy() for k in swc_like.keys()}
     ndata.update(id=new_id, pid=new_pid)
 
     subtree = Tree(n_nodes, **ndata)
     subtree.source = swc_like.source
+
+    id_map = {}
+    for i, idx in enumerate(id_map_arr):
+        id_map[idx] = i
     return subtree, id_map
 
 
@@ -157,10 +157,9 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
 
 def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
     (new_id, new_pid), id_map = to_sub_topology(sub)
-    sub_id = list(id_map.keys())
 
     n_nodes = new_id.shape[0]
-    ndata = {k: swc_like.get_ndata(k)[sub_id].copy() for k in swc_like.keys()}
+    ndata = {k: swc_like.get_ndata(k)[id_map].copy() for k in swc_like.keys()}
     ndata.update(id=new_id, pid=new_pid)
 
     subtree = Tree(n_nodes, **ndata)

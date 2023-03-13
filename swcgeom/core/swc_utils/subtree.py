@@ -6,7 +6,6 @@ but in more cases, you can use the high-level methods provided in
 high-level API.
 """
 
-from collections import OrderedDict
 from typing import Tuple, cast
 
 import numpy as np
@@ -19,7 +18,7 @@ __all__ = ["REMOVAL", "to_sub_topology", "propagate_removal"]
 REMOVAL = -2  # A marker in utils, place in the ids to mark it removal
 
 
-def to_sub_topology(sub: Topology) -> Tuple[Topology, OrderedDict[int, int]]:
+def to_sub_topology(sub: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
     """Create sub tree from origin tree.
 
     Mark the node to be removed, then use this method to get a child
@@ -28,8 +27,8 @@ def to_sub_topology(sub: Topology) -> Tuple[Topology, OrderedDict[int, int]]:
     Returns
     -------
     sub_topology : Topology
-    id_map : Dict[int, int]
-        Map from original id to new id.
+    id_map : List of int
+        Map from new id to original id.
 
     See Also
     --------
@@ -45,14 +44,11 @@ def to_sub_topology(sub: Topology) -> Tuple[Topology, OrderedDict[int, int]]:
     keeped_id = cast(npt.NDArray[np.bool_], sub_id != REMOVAL)
     sub_id, sub_pid = sub_id[keeped_id], sub_pid[keeped_id]
 
-    id_map = OrderedDict()
-    for i, idx in enumerate(sub_id):
-        id_map[idx] = i
-
+    old2new = {idx: i for i, idx in enumerate(sub_id)}  # old idx to new id
     new_id = np.arange(0, sub_id.shape[0], dtype=np.int32)
-    new_pid = np.array([id_map[i] if i != -1 else -1 for i in sub_pid], dtype=np.int32)
+    new_pid = np.array([old2new[i] if i != -1 else -1 for i in sub_pid], dtype=np.int32)
 
-    return (new_id, new_pid), id_map
+    return (new_id, new_pid), sub_id
 
 
 def propagate_removal(topology: Topology) -> Topology:

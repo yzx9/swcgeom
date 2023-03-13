@@ -1,4 +1,7 @@
-"""SWC format utils."""
+"""SWC format utils.
+
+Methods ending with a underline imply an in-place transformation.
+"""
 
 from typing import Callable, List, Literal, Tuple
 
@@ -6,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .base import get_dsu
+from .base import Topology, get_dsu
 
 __all__ = [
     "mark_roots_as_somas",
@@ -78,17 +81,23 @@ def sort_nodes_(df: pd.DataFrame) -> None:
     The index for parent are always less than children.
     """
     ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
-    indices, new_ids, new_pids = sort_nodes_impl(ids, pids)
+    indices, (new_ids, new_pids) = sort_nodes_impl((ids, pids))
     for col in df.columns:
         df[col] = df[col][indices].to_numpy()
 
     df["id"], df["pid"] = new_ids, new_pids
 
 
-def sort_nodes_impl(
-    old_ids: npt.NDArray[np.int32], old_pids: npt.NDArray[np.int32]
-) -> Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32], npt.NDArray[np.int32]]:
-    """Sort the indices of neuron tree."""
+def sort_nodes_impl(topology: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
+    """Sort the indices of neuron tree.
+
+    Returns
+    -------
+    new_topology : Topology
+    id_map : List of int
+        Map from new id to original id.
+    """
+    old_ids, old_pids = topology
     assert np.count_nonzero(old_pids == -1) == 1, "should be single root"
 
     id_map = np.full_like(old_ids, fill_value=-3)  # new_id to old_id
@@ -106,7 +115,7 @@ def sort_nodes_impl(
     id2idx = dict(zip(old_ids, range(len(old_ids))))  # old_id to old_idx
     indices = np.array([id2idx[i] for i in id_map], dtype=np.int32)  # new_id to old_idx
     new_ids = np.arange(len(new_pids))
-    return indices, new_ids, new_pids
+    return (new_ids, new_pids), indices
 
 
 def reset_index(df: pd.DataFrame) -> pd.DataFrame:
