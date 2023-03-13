@@ -155,6 +155,7 @@ class Populations:
         swcs = list(chain.from_iterable(p.swcs for p in self.populations))
         return Population(swcs)
 
+    # pylint: disable=too-many-arguments
     @classmethod
     def from_swc(
         cls,
@@ -170,7 +171,7 @@ class Populations:
         Parameters
         ----------
         roots : list of str
-        intersect : bool, default `False`
+        intersect : bool, default `True`
             Take the intersection of these populations.
         check_same : bool, default `True`
             Check if the directories contains the same swc.
