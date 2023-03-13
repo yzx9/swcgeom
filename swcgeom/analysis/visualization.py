@@ -47,6 +47,7 @@ def draw(
     *,
     fig: Optional[Figure] = None,
     ax: Optional[Axes] = None,
+    show: bool | None = None,
     camera: CameraOptions | CameraPreset = "xy",
     color: Optional[Dict[int, str] | str] = None,
     label: str | bool = True,
@@ -62,6 +63,10 @@ def draw(
         If it is str, then it is treated as the path of swc file.
     fig : ~matplotlib.axes.Figure, optional
     ax : ~matplotlib.axes.Axes, optional
+    show : bool | None, default `None`
+        Wheather to call `plt.show()`. If not specified, it will depend
+        on if ax is passed in, it will not be called, otherwise it will
+        be called by default.
     camera : CameraOptions | CameraPreset, default "xy"
         Camera options (position, look-at, up). One, two, or three
         vectors are supported, if only one vector, then threat it as
@@ -90,7 +95,9 @@ def draw(
     # pylint: disable=too-many-locals
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc
 
+    show = show is True or (show is None and ax is None)
     fig, ax = get_fig_ax(fig, ax)
+
     my_camera = _get_camera(camera)
     my_color = get_ax_color(ax, swc, color)
 
@@ -116,6 +123,9 @@ def draw(
             ax.text(0.05, 0.95, unit, transform=ax.transAxes)
     else:
         set_ax_legend(ax, loc="upper right")  # enable legend
+
+    if show:
+        fig.show()
 
     return fig, ax
 
