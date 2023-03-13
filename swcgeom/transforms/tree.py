@@ -4,7 +4,8 @@ from typing import Callable, List, Tuple
 
 import numpy as np
 
-from ..core import REMOVE, BranchTree, Tree, cut_tree, propagate_remove, to_sub_tree
+from ..core import BranchTree, Tree, cut_tree, to_sub_tree
+from ..core.swc_utils import REMOVAL, propagate_removal
 from .base import Transform
 
 __all__ = [
@@ -31,15 +32,14 @@ class TreeNormalizer(Transform[Tree, Tree]):
         """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
         new_tree = x.copy()
         for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
-            v_max = np.max(new_tree.ndata[key])
-            v_min = np.min(new_tree.ndata[key])
-            new_tree.ndata[key] = (new_tree.ndata[key] - v_min) / v_max
+            vs = new_tree.ndata[key]
+            new_tree.ndata[key] = (vs - np.min(vs)) / np.max(vs)
 
         return new_tree
 
 
 class CutByBifurcationOrder(Transform[Tree, Tree]):
-    """Cut tree by bifurcation order"""
+    """Cut tree by bifurcation order."""
 
     max_bifurcation_order: int
 
@@ -105,7 +105,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
 
                 dis, child = c
                 if dis + n.distance(child) <= self.thre:
-                    new_id[child.id] = REMOVE  # TODO: change this to a callback
+                    new_id[child.id] = REMOVAL  # TODO: change this to a callback
 
                     if self.callback is not None:
                         path = [n.id]  # n does not delete, but will include in callback
@@ -117,6 +117,6 @@ class CutShortTipBranch(Transform[Tree, Tree]):
             return None
 
         x.traverse(leave=collect_short_branch)
-        propagate_remove(x, new_id)
-        new_tree, _ = to_sub_tree(x, new_id, x.pid().copy())
+        sub = propagate_removal((new_id, x.pid()))
+        new_tree, _ = to_sub_tree(x, sub)
         return new_tree

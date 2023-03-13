@@ -3,6 +3,7 @@
 import itertools
 from typing import Dict, List
 
+import numpy as np
 import pandas as pd
 
 from .branch import Branch
@@ -34,13 +35,10 @@ class BranchTree(Tree):
 
         branches = tree.get_branches()
 
-        sub_id = [br[-1].id for br in branches]
-        sub_pid = [br[0].id for br in branches]
-        # insert root
-        sub_id.insert(0, 0)
-        sub_pid.insert(0, -1)
+        sub_id = np.array([0] + [br[-1].id for br in branches], dtype=np.int32)
+        sub_pid = np.array([-1] + [br[0].id for br in branches], dtype=np.int32)
 
-        sub_tree, id_map = to_sub_tree(tree, sub_id, sub_pid)
+        sub_tree, id_map = to_sub_tree(tree, (sub_id, sub_pid))
         branch_tree = BranchTree(len(sub_tree), **sub_tree.ndata)
         branch_tree.source = tree.source  # TODO
 

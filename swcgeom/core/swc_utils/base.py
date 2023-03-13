@@ -6,7 +6,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-__all__ = ["get_dsu", "traverse"]
+__all__ = ["Topology", "get_dsu", "traverse"]
 
 T, K = TypeVar("T"), TypeVar("K")
 

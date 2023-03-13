@@ -11,3 +11,4 @@ from .assembler import *
 from .base import *
 from .checker import *
 from .normalizer import *
+from .subtree import *
