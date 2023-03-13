@@ -4,10 +4,8 @@ from typing import List, cast
 
 import dgl
 
-from ...core import Tree
-from .. import Transform
-
-__all__ = ["ToDGLGraph"]
+from swcgeom import Tree
+from swcgeom.transforms import Transform
 
 
 class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):

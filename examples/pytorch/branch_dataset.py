@@ -6,13 +6,11 @@ from typing import Generic, Iterable, TypeVar, cast
 
 import torch
 import torch.utils.data
+from tree_folder_dataset import TreeFolderDataset
 
-from ...core import Branch
-from ...transforms import Identity, Transform
-from ...utils import numpy_err
-from .tree_folder_dataset import TreeFolderDataset
-
-__all__ = ["BranchDataset"]
+from swcgeom import Branch
+from swcgeom.transforms import Identity, Transform
+from swcgeom.utils import numpy_err
 
 T = TypeVar("T")
 identity = Identity[Branch]()

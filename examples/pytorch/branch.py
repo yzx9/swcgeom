@@ -6,10 +6,8 @@ import numpy as np
 import numpy.typing as npt
 import torch
 
-from ...core import Branch
-from ...transforms import Transform
-
-__all__ = ["BranchToTensor"]
+from swcgeom.core import Branch
+from swcgeom.transforms import Transform
 
 
 class BranchToTensor(Transform[Branch, torch.Tensor]):
