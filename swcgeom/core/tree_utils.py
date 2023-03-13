@@ -3,6 +3,8 @@
 import warnings
 from typing import Callable, Iterable, List, OrderedDict, Tuple, TypeVar, overload
 
+import numpy as np
+
 from .swc import SWCLike
 from .swc_utils import (
     REMOVAL,
@@ -10,10 +12,11 @@ from .swc_utils import (
     propagate_removal,
     sort_nodes_impl,
     to_sub_topology,
+    traverse,
 )
 from .tree import Tree
 
-__all__ = ["sort_tree", "to_sub_tree", "to_subtree", "cut_tree"]
+__all__ = ["sort_tree", "cut_tree", "to_sub_tree", "to_subtree", "get_subtree"]
 
 T, K = TypeVar("T"), TypeVar("K")
 
@@ -80,8 +83,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     else:
         return tree.copy()
 
-    new_tree, _ = to_subtree(tree, removals)
-    return new_tree
+    return to_subtree(tree, removals)
 
 
 def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, OrderedDict[int, int]]:
@@ -132,6 +134,28 @@ def to_subtree(swc_like: SWCLike, removals: Iterable[int]) -> Tree:
         new_ids[i] = REMOVAL
 
     sub = propagate_removal((new_ids, swc_like.pid()))
+    return _to_subtree(swc_like, sub)
+
+
+def get_subtree(swc_like: SWCLike, n: int) -> Tree:
+    """Get subtree rooted at n.
+
+    Parameters
+    ----------
+    swc_like : SWCLike
+    n : int
+        Id of the root of the subtree.
+    """
+    ids = []
+    topo = (swc_like.id(), swc_like.pid())
+    traverse(topo, enter=lambda n, _: ids.append(n), root=n)
+
+    sub_ids = np.array(ids, dtype=np.int32)
+    sub = (sub_ids, swc_like.pid()[sub_ids])
+    return _to_subtree(swc_like, sub)
+
+
+def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
     (new_id, new_pid), id_map = to_sub_topology(sub)
     sub_id = list(id_map.keys())
 
