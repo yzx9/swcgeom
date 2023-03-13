@@ -4,8 +4,7 @@ from typing import Callable, List, Tuple
 
 import numpy as np
 
-from ..core import BranchTree, Tree, cut_tree, to_sub_tree
-from ..core.swc_utils import REMOVAL, propagate_removal
+from ..core import BranchTree, Tree, cut_tree, to_subtree
 from .base import Transform
 
 __all__ = [
@@ -52,7 +51,7 @@ class CutByBifurcationOrder(Transform[Tree, Tree]):
     def __repr__(self) -> str:
         return f"CutByBifurcationOrder-{self.max_bifurcation_order}"
 
-    def _enter(self, n: Tree.Node, parent_level: int | None) -> tuple[int, bool]:
+    def _enter(self, n: Tree.Node, parent_level: int | None) -> Tuple[int, bool]:
         if parent_level is None:
             level = 0
         elif n.is_bifurcation():
@@ -83,7 +82,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         return f"CutShortTipBranch-{self.thre}"
 
     def __call__(self, x: Tree) -> Tree:
-        new_id = x.id().copy()
+        removals: List[int] = []
 
         def collect_short_branch(
             n: Tree.Node, children: List[Tuple[float, Tree.Node] | None]
@@ -105,11 +104,11 @@ class CutShortTipBranch(Transform[Tree, Tree]):
 
                 dis, child = c
                 if dis + n.distance(child) <= self.thre:
-                    new_id[child.id] = REMOVAL  # TODO: change this to a callback
+                    removals.append(child.id)  # TODO: change this to a callback
 
                     if self.callback is not None:
                         path = [n.id]  # n does not delete, but will include in callback
-                        while child is not None:
+                        while child is not None:  # TODO: perf
                             path.append(child.id)
                             child = cc[0] if len((cc := child.children())) > 0 else None
                         self.callback(Tree.Branch(n.attach, path))
@@ -117,6 +116,4 @@ class CutShortTipBranch(Transform[Tree, Tree]):
             return None
 
         x.traverse(leave=collect_short_branch)
-        sub = propagate_removal((new_id, x.pid()))
-        new_tree, _ = to_sub_tree(x, sub)
-        return new_tree
+        return to_subtree(x, removals)

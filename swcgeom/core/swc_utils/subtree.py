@@ -27,8 +27,9 @@ def to_sub_topology(sub: Topology) -> Tuple[Topology, OrderedDict[int, int]]:
 
     Returns
     -------
-    new_topology : Topology
+    sub_topology : Topology
     id_map : Dict[int, int]
+        Map from original id to new id.
 
     See Also
     --------

@@ -7,8 +7,8 @@ import numpy as np
 import pandas as pd
 
 from .branch import Branch
+from .swc_utils import to_sub_topology
 from .tree import Tree
-from .tree_utils import to_sub_tree
 
 __all__ = ["BranchTree"]
 
@@ -38,8 +38,14 @@ class BranchTree(Tree):
         sub_id = np.array([0] + [br[-1].id for br in branches], dtype=np.int32)
         sub_pid = np.array([-1] + [br[0].id for br in branches], dtype=np.int32)
 
-        sub_tree, id_map = to_sub_tree(tree, (sub_id, sub_pid))
-        branch_tree = BranchTree(len(sub_tree), **sub_tree.ndata)
+        (new_id, new_pid), id_map = to_sub_topology((sub_id, sub_pid))
+        sub_id = list(id_map.keys())
+
+        n_nodes = new_id.shape[0]
+        ndata = {k: tree.get_ndata(k)[sub_id].copy() for k in tree.keys()}
+        ndata.update(id=new_id, pid=new_pid)
+
+        branch_tree = BranchTree(n_nodes, **ndata)
         branch_tree.source = tree.source  # TODO
 
         branch_tree.branches = {}
