@@ -1,5 +1,6 @@
 """Depth distribution of tree."""
 
+from abc import ABC, abstractmethod
 from functools import cached_property
 
 import numpy as np
@@ -14,14 +15,14 @@ __all__ = ["NodeFeatures", "BifurcationFeatures", "TipFeatures"]
 class NodeFeatures:
     """Evaluate node feature of tree."""
 
-    _tree: Tree
+    tree: Tree
 
     @cached_property
     def _branch_tree(self) -> BranchTree:
-        return BranchTree.from_tree(self._tree)
+        return BranchTree.from_tree(self.tree)
 
     def __init__(self, tree: Tree) -> None:
-        self._tree = tree
+        self.tree = tree
 
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
         """Get the end-to-end straight-line distance to soma.
@@ -31,7 +32,7 @@ class NodeFeatures:
         radial_distance : npt.NDArray[np.float32]
             Array of shape (N,).
         """
-        xyz = self._tree.xyz() - self._tree.soma().xyz()
+        xyz = self.tree.xyz() - self.tree.soma().xyz()
         radial_distance = np.linalg.norm(xyz, axis=1)
         return radial_distance
 
@@ -54,13 +55,15 @@ class NodeFeatures:
             return cur_order
 
         self._branch_tree.traverse(enter=assign_depth)
-        return order
+        nodes = [n.id for n in self._branch_tree if not n.is_tip()]  # filter tips
+        return order[nodes]
 
 
-class _SubsetNodesFeatures:
+class _SubsetNodesFeatures(ABC):
     _features: NodeFeatures
 
-    @cached_property
+    @property
+    @abstractmethod
     def nodes(self) -> npt.NDArray[np.bool_]:
         raise NotImplementedError()
 
@@ -69,9 +72,6 @@ class _SubsetNodesFeatures:
 
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
         return self._features.get_radial_distance()[self.nodes]
-
-    def get_branch_order(self) -> npt.NDArray[np.int32]:
-        return self._features.get_branch_order()[self.nodes]
 
     @classmethod
     def from_tree(cls, tree: Tree) -> Self:
@@ -83,7 +83,7 @@ class BifurcationFeatures(_SubsetNodesFeatures):
 
     @cached_property
     def nodes(self) -> npt.NDArray[np.bool_]:
-        return np.array([n.is_bifurcation() for n in self._features._tree])
+        return np.array([n.is_bifurcation() for n in self._features.tree])
 
 
 class TipFeatures(_SubsetNodesFeatures):
@@ -91,4 +91,4 @@ class TipFeatures(_SubsetNodesFeatures):
 
     @cached_property
     def nodes(self) -> npt.NDArray[np.bool_]:
-        return np.array([n.is_tip() for n in self._features._tree])
+        return np.array([n.is_tip() for n in self._features.tree])
