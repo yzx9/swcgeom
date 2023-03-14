@@ -32,7 +32,7 @@ CameraPresets: Dict[CameraPreset, Camera] = {
 }
 CameraOptions = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
 Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
-positions = {
+locations = {
     "lt": (0.10, 0.90),
     "lb": (0.10, 0.10),
     "rt": (0.90, 0.90),
@@ -70,7 +70,7 @@ def draw(
     camera : CameraOptions | CameraPreset, default "xy"
         Camera options (position, look-at, up). One, two, or three
         vectors are supported, if only one vector, then threat it as
-        look-at, so camera is ((0, 0, 0), look-at, (0, 1, 0));if two
+        look-at, so camera is ((0, 0, 0), look-at, (0, 1, 0)); if two
         vector, then then threat it as (look-at, up), so camera is
         ((0, 0, 0), look-at, up). An easy way is to use the presets
         "xy", "yz" and "zx".
@@ -82,7 +82,7 @@ def draw(
     direction_indicator : str or (float, float), default 'rb'
         Draw a xyz direction indicator, can be place on 'lt', 'lb',
         'rt', 'rb', or custom position.
-    unit : optional[str]
+    unit : str, optional
         Add unit text, e.g.: r"$\mu m$".
     **kwargs : dict[str, Unknown]
         Forwarded to `~matplotlib.collections.LineCollection`.
@@ -104,21 +104,21 @@ def draw(
     xyz = swc.xyz()
     starts, ends = swc.id()[1:], swc.pid()[1:]
     lines = np.stack([xyz[starts], xyz[ends]], axis=1)
-    collection = draw_lines(lines, ax=ax, camera=my_camera, color=my_color, **kwargs)
+    collection = draw_lines(ax, lines, camera=my_camera, color=my_color, **kwargs)
 
     ax.autoscale()
-    _set_ax_memo(ax, swc, label=label, handle=collection)  # legend
+    _set_ax_memo(ax, swc, label=label, handle=collection)
 
     if len(get_ax_swc(ax)) == 1:
         ax.set_aspect(1)
         ax.spines[["top", "right"]].set_visible(False)
         if direction_indicator is not False:
-            p = (
-                positions[direction_indicator]
+            loc = (
+                locations[direction_indicator]
                 if isinstance(direction_indicator, str)
                 else direction_indicator
             )
-            draw_direction_indicator(ax=ax, camera=my_camera, position=p)
+            draw_direction_indicator(ax, camera=my_camera, loc=loc)
         if unit is not None:
             ax.text(0.05, 0.95, unit, transform=ax.transAxes)
     else:

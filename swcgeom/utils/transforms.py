@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 __all__ = [
+    "Vec3f",
     "angle",
     "scale3d",
     "translate3d",
@@ -18,7 +19,7 @@ __all__ = [
     "orthographic_projection_simple",
 ]
 
-Vector3D = Tuple[float, float, float]
+Vec3f = Tuple[float, float, float]
 
 
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
@@ -230,7 +231,7 @@ def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
 
 
 def model_view_trasformation(
-    position: Vector3D, look_at: Vector3D, up: Vector3D
+    position: Vec3f, look_at: Vec3f, up: Vec3f
 ) -> npt.NDArray[np.float32]:
     r"""Play model/view transformation.
 

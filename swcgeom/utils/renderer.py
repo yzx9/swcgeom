@@ -7,12 +7,13 @@ import numpy as np
 import numpy.typing as npt
 from matplotlib import cm
 from matplotlib.axes import Axes
-from matplotlib.collections import LineCollection
+from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 
 from .transforms import (
+    Vec3f,
     model_view_trasformation,
     orthographic_projection_simple,
     to_homogeneous,
@@ -20,7 +21,6 @@ from .transforms import (
 )
 
 __all__ = [
-    "Vec3f",
     "Camera",
     "palette",
     "draw_lines",
@@ -29,7 +29,6 @@ __all__ = [
     "get_fig_ax",
 ]
 
-Vec3f = Tuple[float, float, float]
 Camera = NamedTuple("Camera", position=Vec3f, look_at=Vec3f, up=Vec3f)
 
 
@@ -86,16 +85,16 @@ palette = Palette()
 
 
 def draw_lines(
-    lines: npt.NDArray[np.floating], ax: Axes, camera: Camera, **kwargs
+    ax: Axes, lines: npt.NDArray[np.floating], camera: Camera, **kwargs
 ) -> LineCollection:
     """Draw lines.
 
     Parameters
     ----------
+    ax : ~matplotlib.axes.Axes
     lines : A collection of coords of lines
         Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
         and the axis-3 holds the coordinates (x, y, z).
-    ax : ~matplotlib.axes.Axes
     camera : Camera
         Camera position.
     **kwargs : dict[str, Unknown]
@@ -120,9 +119,9 @@ def draw_lines(
 
 
 def draw_direction_indicator(
-    ax: Axes, camera: Camera, position: Tuple[float, float]
+    ax: Axes, camera: Camera, loc: Tuple[float, float]
 ) -> None:
-    x, y = position
+    x, y = loc
     direction = np.array(
         [
             [1, 0, 0, 1],
@@ -162,15 +161,14 @@ def draw_direction_indicator(
 
 
 def draw_circles(
-    fig: Figure,
     ax: Axes,
     x: npt.NDArray,
     y: npt.NDArray,
-    /,
+    *,
     y_min: Optional[float] = None,
     y_max: Optional[float] = None,
     cmap: str = "viridis",
-) -> None:
+) -> PatchCollection:
     """Draw a sequential of circles."""
     y_min = y.min() if y_min is None else y_min
     y_max = y.max() if y_max is None else y_max
@@ -179,16 +177,17 @@ def draw_circles(
     color_map = cm.get_cmap(name=cmap)
     colors = color_map(norm(y))
 
-    for xi, color in reversed(list(zip(x, colors))):
-        circle = Circle((0, 0), xi, color=color)
-        ax.add_patch(circle)
-
-    sm = cm.ScalarMappable(cmap=color_map, norm=norm)
-    sm.set_array([])
-    fig.colorbar(sm)
+    circles = [
+        Circle((0, 0), xi, color=color) for xi, color in reversed(list(zip(x, colors)))
+    ]
+    patches = PatchCollection(circles, match_original=True)
+    patches.set_cmap(color_map)
+    patches.set_norm(norm)
+    patches: PatchCollection = ax.add_collection(patches)  # type: ignore
 
     ax.set_aspect(1)
     ax.autoscale()
+    return patches
 
 
 def get_fig_ax(

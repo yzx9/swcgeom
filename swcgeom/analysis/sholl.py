@@ -97,7 +97,8 @@ class Sholl:
                 ax.plot(x, y, **kwargs)
             case "circles":
                 kwargs.setdefault("y_min", 0)
-                draw_circles(fig, ax, x, y, **kwargs)
+                patches = draw_circles(ax, x, y, **kwargs)
+                fig.colorbar(patches, ax=ax)
             case _:
                 raise ValueError(f"unsupported plot kind: {kind}")
 
