@@ -89,17 +89,18 @@ def try_assemble_lines(
     while True:
         for i, line in enumerate(lines):
             for p in [0, -1] if undirected else [0]:
-                dis = np.linalg.norm(
-                    tree[["x", "y", "z"]] - line.iloc[p][["x", "y", "z"]], axis=1
-                )
+                vs = tree[["x", "y", "z"]] - line.iloc[p][["x", "y", "z"]]
+                dis = np.linalg.norm(vs, axis=1)
                 ind = np.argmin(dis)
-                if dis[ind] < thre:
-                    line["id"] = id_offset + len(tree) + np.arange(len(line))
-                    line["pid"] = line["id"] + (-1 if p == 0 else 1)
-                    line.at[(p + len(line)) % len(line), "pid"] = tree.iloc[ind]["id"]
-                    tree = pd.concat([tree, line])
-                    del lines[i]
-                    break
+                if dis[ind] > thre:
+                    continue
+
+                line["id"] = id_offset + len(tree) + np.arange(len(line))
+                line["pid"] = line["id"] + (-1 if p == 0 else 1)
+                line.at[(p + len(line)) % len(line), "pid"] = tree.iloc[ind]["id"]
+                tree = pd.concat([tree, line])
+                del lines[i]
+                break
             else:
                 continue
 

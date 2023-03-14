@@ -81,7 +81,7 @@ def sort_nodes_(df: pd.DataFrame) -> None:
     The index for parent are always less than children.
     """
     ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
-    indices, (new_ids, new_pids) = sort_nodes_impl((ids, pids))
+    (new_ids, new_pids), indices = sort_nodes_impl((ids, pids))
     for col in df.columns:
         df[col] = df[col][indices].to_numpy()
 
