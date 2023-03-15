@@ -2,6 +2,7 @@
 
 import warnings
 from abc import ABC, abstractmethod
+from copy import deepcopy
 from typing import (
     Any,
     Dict,
@@ -19,6 +20,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import scipy.sparse as sp
+from typing_extensions import Self
 
 from .swc_utils import (
     is_single_root,
@@ -28,7 +30,7 @@ from .swc_utils import (
     sort_nodes_,
 )
 
-__all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "SWCTypeVar"]
+__all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "DictSWC", "SWCTypeVar"]
 
 swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("id", np.int32),
@@ -178,7 +180,8 @@ class SWCLike(ABC):
     ) -> str | None:
         if swc_path is None:
             warnings.warn(
-                "`swc_path` has been renamed to `fname` since v0.5.1, ",
+                "`swc_path` has been renamed to `fname` since v0.5.1, "
+                "and will be removed in next version",
                 DeprecationWarning,
             )
             fname = swc_path
@@ -194,6 +197,7 @@ class DictSWC(SWCLike):
     ndata: Dict[str, npt.NDArray]
 
     def __init__(self, **kwargs: npt.NDArray):
+        super().__init__()
         self.ndata = kwargs
 
     def keys(self) -> Iterable[str]:
@@ -201,6 +205,10 @@ class DictSWC(SWCLike):
 
     def get_ndata(self, key: str) -> npt.NDArray[Any]:
         return self.ndata[key]
+
+    def copy(self) -> Self:
+        """Make a copy."""
+        return deepcopy(self)
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)

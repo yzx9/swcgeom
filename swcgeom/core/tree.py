@@ -28,7 +28,7 @@ from .branch import Branch
 from .node import Node
 from .path import Path
 from .segment import Segment, Segments
-from .swc import SWCLike, eswc_cols, read_swc, swc_cols
+from .swc import DictSWC, eswc_cols, read_swc, swc_cols
 from .swc_utils import traverse
 
 __all__ = ["Tree"]
@@ -36,7 +36,7 @@ __all__ = ["Tree"]
 T, K = TypeVar("T"), TypeVar("K")
 
 
-class Tree(SWCLike):
+class Tree(DictSWC):
     """A neuron tree, which should be a binary tree in most cases."""
 
     class Node(Node["Tree"]):
@@ -107,8 +107,6 @@ class Tree(SWCLike):
         # TODO: should returns `Tree.Node`
         """Neural branch."""
 
-    ndata: dict[str, npt.NDArray]
-
     def __init__(
         self,
         n_nodes: int,
@@ -134,8 +132,7 @@ class Tree(SWCLike):
             "r": padding1d(n_nodes, r, padding_value=1),
             "pid": padding1d(n_nodes, pid, dtype=np.int32),
         }
-        kwargs.update(ndata)
-        self.ndata = kwargs
+        super().__init__(**ndata, **kwargs)
 
     def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
@@ -283,12 +280,6 @@ class Tree(SWCLike):
         topology = (self.id(), self.pid())
         enter, leave = wrap(enter), wrap(leave)
         return traverse(topology, enter=enter, leave=leave, **kwargs)  # type: ignore
-
-    def copy(self) -> "Tree":
-        """Make a copy."""
-        new_tree = Tree(len(self), **{k: v.copy() for k, v in self.ndata.items()})
-        new_tree.source = self.source
-        return new_tree
 
     def length(self) -> float:
         """Get length of tree."""

@@ -101,7 +101,8 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     """
     warnings.warn(
         "`to_sub_tree` will be removed in v0.6.0, it is replaced by "
-        "`to_subtree` beacuse it is easy to use."
+        "`to_subtree` beacuse it is easy to use.",
+        DeprecationWarning,
     )
 
     sub = propagate_removal(sub)
