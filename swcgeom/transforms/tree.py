@@ -1,11 +1,11 @@
 """Transformation in tree."""
 
-from typing import Callable, List, Tuple
-
-import numpy as np
+import warnings
+from typing import Callable, List, Optional, Tuple
 
 from ..core import BranchTree, Tree, cut_tree, to_subtree
 from .base import Transform
+from .geometry import Normalizer
 
 __all__ = [
     "ToBranchTree",
@@ -23,18 +23,16 @@ class ToBranchTree(Transform[Tree, BranchTree]):
         return BranchTree.from_tree(x)
 
 
-# pylint: disable=too-few-public-methods
-class TreeNormalizer(Transform[Tree, Tree]):
+class TreeNormalizer(Normalizer[Tree]):
     """Noramlize coordinates and radius to 0-1."""
 
-    def __call__(self, x: Tree) -> "Tree":
-        """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
-        new_tree = x.copy()
-        for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
-            vs = new_tree.ndata[key]
-            new_tree.ndata[key] = (vs - np.min(vs)) / np.max(vs)
-
-        return new_tree
+    def __init__(self, *args, **kwargs) -> None:
+        warnings.warn(
+            "`TreeNormalizer` has been deprecate, it is replaced by "
+            "`Normalizer` beacuse it applies more widely.",
+            DeprecationWarning,
+        )
+        super().__init__(*args, **kwargs)
 
 
 class CutByBifurcationOrder(Transform[Tree, Tree]):
@@ -70,50 +68,53 @@ class CutShortTipBranch(Transform[Tree, Tree]):
     """
 
     thre: float
-    callback: Callable[[Tree.Branch], None] | None
+    callbacks: List[Callable[[Tree.Branch], None]]
 
     def __init__(
-        self, thre: float = 5, callback: Callable[[Tree.Branch], None] | None = None
+        self, thre: float = 5, callback: Optional[Callable[[Tree.Branch], None]] = None
     ) -> None:
         self.thre = thre
-        self.callback = callback
+        self.callbacks = []
+
+        if callback is not None:
+            self.callbacks.append(callback)
 
     def __repr__(self) -> str:
         return f"CutShortTipBranch-{self.thre}"
 
     def __call__(self, x: Tree) -> Tree:
         removals: List[int] = []
-
-        def collect_short_branch(
-            n: Tree.Node, children: List[Tuple[float, Tree.Node] | None]
-        ) -> Tuple[float, Tree.Node] | None:
-            if len(children) == 0:  # tip
-                return 0, n
-
-            if len(children) == 1:
-                if children[0] is None:
-                    return None
-
-                dis, child = children[0]
-                dis += n.distance(child)
-                return dis, n
-
-            for c in children:
-                if c is None:
-                    continue
-
-                dis, child = c
-                if dis + n.distance(child) <= self.thre:
-                    removals.append(child.id)  # TODO: change this to a callback
-
-                    if self.callback is not None:
-                        path = [n.id]  # n does not delete, but will include in callback
-                        while child is not None:  # TODO: perf
-                            path.append(child.id)
-                            child = cc[0] if len((cc := child.children())) > 0 else None
-                        self.callback(Tree.Branch(n.attach, path))
-
-            return None
-
-        x.traverse(leave=collect_short_branch)
+        self.callbacks.append(lambda br: removals.append(br[1].id))
+        x.traverse(leave=self._leave)
+        self.callbacks.pop()
         return to_subtree(x, removals)
+
+    def _leave(
+        self, n: Tree.Node, children: List[Tuple[float, Tree.Node] | None]
+    ) -> Tuple[float, Tree.Node] | None:
+        if len(children) == 0:  # tip
+            return 0, n
+
+        if len(children) == 1 and children[0] is not None:  # elongation
+            dis, child = children[0]
+            dis += n.distance(child)
+            return dis, n
+
+        for c in children:
+            if c is None:
+                continue
+
+            dis, child = c
+            if dis + n.distance(child) > self.thre:
+                continue
+
+            path = [n.id]  # n does not delete, but will include in callback
+            while child is not None:  # TODO: perf
+                path.append(child.id)
+                child = cc[0] if len((cc := child.children())) > 0 else None
+
+            br = Tree.Branch(n.attach, path)
+            for cb in self.callbacks:
+                cb(br)
+
+        return None

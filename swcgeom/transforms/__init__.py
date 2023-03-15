@@ -2,5 +2,6 @@
 
 from .base import *
 from .branch import *
+from .geometry import *
 from .image_stack import *
 from .tree import *

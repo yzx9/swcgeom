@@ -91,6 +91,11 @@ class SWCLike(ABC):
         """Get the coordinates of shape(n_sample, 3)."""
         return np.stack([self.x(), self.y(), self.z()], axis=1)
 
+    def xyzw(self) -> npt.NDArray[np.float32]:
+        """Get the homogeneous coordinates of shape(n_sample, 4)."""
+        w = np.zeros_like(self.x())
+        return np.stack([self.x(), self.y(), self.z(), w], axis=1)
+
     def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the coordinates and radius array of shape(n_sample, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=1)
