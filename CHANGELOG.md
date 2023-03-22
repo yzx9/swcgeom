@@ -1,3 +1,30 @@
+## **0.6.0**&emsp;<sub><sup>2023-03-22 ([97cb9b2...d40ccf6](https://github.com/yzx9/swcgeom/compare/97cb9b2aed70237de2a935a48764b0c384cdcbb4...d40ccf65568085f6c802c3558d1e0815d2e280cf?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- improve node_branch_order plotting ([97cb9b2](https://github.com/yzx9/swcgeom/commit/97cb9b2aed70237de2a935a48764b0c384cdcbb4))
+- add tip and bifurcation node feature ([c1594d9](https://github.com/yzx9/swcgeom/commit/c1594d907f21b47f06d86c5bdd8e4e3cdbb7fd79))
+- show fig by default ([1587488](https://github.com/yzx9/swcgeom/commit/158748890e6c354b07fb3e4f24da2a5bf1e7a416))
+- filter tips node ([c3dd567](https://github.com/yzx9/swcgeom/commit/c3dd567a5387dd44f6e035d527aa4883957dec1c))
+- rebuild sholl ([a43bc01](https://github.com/yzx9/swcgeom/commit/a43bc01419cf74f87e698b839dc651ae54d68d69))
+
+##### `core`
+
+- traverse from node ([9f64d31](https://github.com/yzx9/swcgeom/commit/9f64d315fbeb01f80624734429404ac7a681d67f))
+- support index by np\.integer ([1b1699f](https://github.com/yzx9/swcgeom/commit/1b1699fcf612395b68da9a436beddc593f041628))
+- get subtree rooted at n ([b57fb62](https://github.com/yzx9/swcgeom/commit/b57fb6280395064ef0b2a81c38d559e09ed650e6))
+- add high\-level subtree api ([eb91d7f](https://github.com/yzx9/swcgeom/commit/eb91d7f9b0ebb5d0f5af99416c5a3818fcfc011d))
+
+##### `images`
+
+- add io of image stack ([f7b27be](https://github.com/yzx9/swcgeom/commit/f7b27bee74b70470f974ecc2197fbf5331abfdd7))
+
+##### `transforms`
+
+- add geometry transforms ([6fd1166](https://github.com/yzx9/swcgeom/commit/6fd1166fc81f774630d9cf431defb995eb07a6df))
+
 ## **0.5.0**&emsp;<sub><sup>2023-03-09 ([711ebb1...80acd75](https://github.com/yzx9/swcgeom/compare/711ebb1308d2a70eddcf6295a40883a7815e887e...80acd75f7a9c232008f5ce4c9ec1f43488efd21c?diff=split))</sup></sub>
 
 ### Features
