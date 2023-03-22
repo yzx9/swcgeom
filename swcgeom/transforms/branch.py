@@ -1,5 +1,6 @@
 """Transformation in branch."""
 
+from abc import abstractmethod
 from typing import cast
 
 import numpy as np
@@ -28,6 +29,7 @@ class _BranchResampler(Transform[Branch, Branch]):
         new_xyzr = self.resample(xyzr)
         return Branch.from_xyzr(new_xyzr)
 
+    @abstractmethod
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 

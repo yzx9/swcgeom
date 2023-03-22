@@ -1,5 +1,6 @@
 """Transformation in tree."""
 
+from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar, cast, overload
 
 __all__ = ["Transform", "Transforms", "Identity"]
@@ -10,7 +11,7 @@ T1, T2, T3 = TypeVar("T1"), TypeVar("T2"), TypeVar("T3")  # pylint: disable=inva
 T4, T5, T6 = TypeVar("T4"), TypeVar("T5"), TypeVar("T6")  # pylint: disable=invalid-name
 
 
-class Transform(Generic[T, K]):
+class Transform(ABC, Generic[T, K]):
     r"""An abstract class representing a :class:`Transform`.
 
     All transforms that represent a map from `T` to `K`.
@@ -27,6 +28,7 @@ class Transform(Generic[T, K]):
         value.
     """
 
+    @abstractmethod
     def __call__(self, x: T) -> K:
         """Apply transform."""
         raise NotImplementedError()

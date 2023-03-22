@@ -6,6 +6,7 @@ For development, see method `Features.get_evaluator` to confirm the
 naming specification.
 """
 
+from abc import ABC, abstractmethod
 from functools import cached_property
 from itertools import chain
 from os.path import basename
@@ -99,7 +100,7 @@ class Features:
         return Sholl(self.tree).get(**kwargs).astype(np.float32)
 
 
-class FeatureExtractor:
+class FeatureExtractor(ABC):
     """Extract features from tree."""
 
     # fmt:off
@@ -160,6 +161,7 @@ class FeatureExtractor:
 
         return get(feature, **kwargs)
 
+    @abstractmethod
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
@@ -171,10 +173,11 @@ class FeatureExtractor:
         bin_edges = np.histogram_bin_edges(vals, bins, range)
         return self._plot_histogram(vals, bin_edges, **kwargs)
 
+    @abstractmethod
     def _plot_histogram(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        raise NotImplementedError
+        raise NotImplementedError()
 
     # custom features
 

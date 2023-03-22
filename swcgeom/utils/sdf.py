@@ -4,6 +4,7 @@ Refs: https://iquilezles.org/articles/distfunctions/
 """
 
 import warnings
+from abc import ABC, abstractmethod
 from typing import Iterable, List, Tuple
 
 import numpy as np
@@ -15,7 +16,7 @@ __all__ = ["SDF", "SDFCompose", "SDFRoundCone"]
 AABB = Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
 
 
-class SDF:
+class SDF(ABC):
     """Signed distance functions."""
 
     bounding_box: AABB | None = None
@@ -23,6 +24,7 @@ class SDF:
     def __call__(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         return self.distance(p)
 
+    @abstractmethod
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Calc signed distance.
 
