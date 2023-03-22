@@ -96,7 +96,7 @@ class Features:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
 
     def get_sholl(self, **kwargs) -> npt.NDArray[np.float32]:
-        return Sholl(self.tree, **kwargs).get().astype(np.float32)
+        return Sholl(self.tree).get(**kwargs).astype(np.float32)
 
 
 class FeatureExtractor:
@@ -120,12 +120,12 @@ class FeatureExtractor:
         returns array of shape (N, L).
         """
         if isinstance(feature, dict):
-            return {k: self._get(k, **v) for k, v in feature.items()}
+            return {k: self._custom_get(k, **v) for k, v in feature.items()}
 
         if isinstance(feature, list):
-            return [self._get(k) for k in feature]
+            return [self._custom_get(k) for k in feature]
 
-        return self._get(feature, **kwargs)
+        return self._custom_get(feature, **kwargs)
 
     def plot(
         self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
@@ -150,6 +150,15 @@ class FeatureExtractor:
             ax.set_title(feat.replace("_", " ").title())
 
         return ax
+
+    def _custom_get(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
+        feat, _ = _get_feature_and_kwargs(feature)
+        if not callable(get := getattr(self, f"_get_{feat}", None)):
+            get = self._get  # default
+
+        return get(feature, **kwargs)
 
     def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
@@ -242,6 +251,9 @@ class PopulationFeatureExtractor(FeatureExtractor):
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
+    def _get_sholl(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+        raise NotImplementedError()
+
     def _plot_histogram(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
@@ -264,6 +276,9 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Length")
         ax.set_xticks([])
         return ax
+
+    def _plot_sholl(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+        raise NotImplementedError()
 
 
 class PopulationsFeatureExtractor(FeatureExtractor):
