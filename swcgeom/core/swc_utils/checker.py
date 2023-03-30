@@ -7,7 +7,7 @@ import pandas as pd
 
 from .base import get_dsu
 
-__all__ = ["check_single_root", "is_single_root"]
+__all__ = ["check_single_root", "is_single_root", "is_binary_tree"]
 
 
 def check_single_root(*args, **kwargs) -> bool:
@@ -22,3 +22,20 @@ def check_single_root(*args, **kwargs) -> bool:
 def is_single_root(df: pd.DataFrame) -> bool:
     """Check is it only one root."""
     return len(np.unique(get_dsu(df))) == 1
+
+
+def is_binary_tree(df: pd.DataFrame, exclude_root: bool = True) -> bool:
+    """Check is it a binary tree."""
+
+    children = {}
+    for idx, pid in zip(df["id"], df["pid"]):
+        s = children.get(pid, [])
+        s.append(idx)
+        children[pid] = s
+
+    root = children.get(-1, [])
+    for k, v in children.items():
+        if len(v) > 1 and (not exclude_root or k in root):
+            return False
+
+    return True
