@@ -16,7 +16,14 @@ from .swc_utils import (
 )
 from .tree import Tree
 
-__all__ = ["sort_tree", "cut_tree", "to_sub_tree", "to_subtree", "get_subtree"]
+__all__ = [
+    "sort_tree",
+    "cut_tree",
+    "to_sub_tree",
+    "to_subtree",
+    "get_subtree",
+    "redirect_tree",
+]
 
 T, K = TypeVar("T"), TypeVar("K")
 
@@ -28,11 +35,7 @@ def sort_tree(tree: Tree) -> Tree:
     --------
     ~swc_utils.sort_nodes
     """
-    (new_ids, new_pids), id_map = sort_nodes_impl((tree.id(), tree.pid()))
-    new_tree = tree.copy()
-    new_tree.ndata = {k: tree.ndata[k][id_map] for k in tree.ndata}
-    new_tree.ndata.update(id=new_ids, pid=new_pids)
-    return new_tree
+    return _sort_tree(tree.copy())
 
 
 # fmt:off
@@ -41,8 +44,6 @@ def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool
 @overload
 def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, List[K]], Tuple[K, bool]]) -> Tree: ...
 # fmt:on
-
-
 def cut_tree(tree: Tree, *, enter=None, leave=None):
     """Traverse and cut the tree.
 
@@ -154,6 +155,40 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
     sub_ids = np.array(ids, dtype=np.int32)
     sub = (sub_ids, swc_like.pid()[sub_ids])
     return _to_subtree(swc_like, sub)
+
+
+def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
+    """Set root to new point and redirect tree graph.
+
+    Parameter
+    ---------
+    tree : Tree
+        The tree.
+    new_root : int
+        The id of new root.
+    sort : bool, default True
+        Sort indices of nodes after redirect.
+    """
+    tree = tree.copy()
+    path = [tree.node(new_root)]
+    while (p := path[-1]).parent() is not None:
+        path.append(p)
+
+    for n, p in zip(path[1:], path[:-1]):
+        n.pid = p.id
+
+    if sort:
+        _sort_tree(tree)
+
+    return tree
+
+
+def _sort_tree(tree: Tree) -> Tree:
+    """Sort the indices of neuron tree inplace."""
+    (new_ids, new_pids), id_map = sort_nodes_impl((tree.id(), tree.pid()))
+    tree.ndata = {k: tree.ndata[k][id_map] for k in tree.ndata}
+    tree.ndata.update(id=new_ids, pid=new_pids)
+    return tree
 
 
 def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
