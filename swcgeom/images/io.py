@@ -3,15 +3,16 @@
 
 import os
 import re
+import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Tuple, overload
+from typing import Any, Iterable, List, Optional, Tuple, overload
 
 import nrrd
 import numpy as np
 import numpy.typing as npt
 import tifffile
 
-__all__ = ["read_images", "save_tiff"]
+__all__ = ["read_imgs", "save_tiff", "read_images"]
 
 Vec3i = Tuple[int, int, int]
 RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
@@ -31,16 +32,35 @@ class ImageStack(ABC):
     # fmt: off
     @overload
     @abstractmethod
-    def __getitem__(self, key: Vec3i) -> np.float32: ...
+    def __getitem__(self, key: int) -> npt.NDArray[np.float32]: ...                     # array of shape (Y, Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> np.float32: ...
+    def __getitem__(self, key: Tuple[int, int]) -> npt.NDArray[np.float32]: ...         # array of shape (Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
+    def __getitem__(self, key: Tuple[int, int, int]) -> npt.NDArray[np.float32]: ...    # array of shape (C,)
+    @overload
     @abstractmethod
-    def __getitem__(self, key): raise NotImplementedError()
+    def __getitem__(self, key: Tuple[int, int, int, int]) -> np.float32: ...            # value
+    @overload
+    @abstractmethod
+    def __getitem__(
+        self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice] |  Tuple[slice, slice, slice, slice],
+    ) -> npt.NDArray[np.float32]: ... # array of shape (X, Y, Z, C)
+    @overload
+    @abstractmethod
+    def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> npt.NDArray[np.float32]: ...
     # fmt: on
+    @abstractmethod
+    def __getitem__(self, key):
+        """Get pixel/patch of image stack.
+
+        Returns
+        -------
+        value : ndarray of f32
+            NDArray which shape depends on key. If key is tuple of ints,
+        """
+        raise NotImplementedError()
 
     def get_full(self) -> npt.NDArray[np.float32]:
         """Get full image stack.
@@ -49,52 +69,85 @@ class ImageStack(ABC):
         -----
         this will load the full image stack into memory.
         """
-        return self[:, :, :]
+        return self[:, :, :, :]
 
     @property
-    def shape(self) -> Vec3i:
+    def shape(self) -> Tuple[int, int, int, int]:
         raise NotImplementedError()
 
 
-def read_images(fname: str, **kwargs) -> ImageStack:
+def read_imgs(fname: str, **kwargs) -> ImageStack:
     """Read image stack."""
-    if (ext := os.path.splitext(fname)[-1]) in [".tif", ".tiff"]:
+    ext = os.path.splitext(fname)[-1]
+    if ext in [".tif", ".tiff"]:
         return TiffImageStack(fname, **kwargs)
-    if ext == ".nrrd":
+    if ext in [".nrrd"]:
         return NrrdImageStack(fname, **kwargs)
+    if ext in [".npy", ".npz"]:
+        return NDArrayImageStack(np.load(fname), **kwargs)
     if TeraflyImageStack.is_root(fname):
         return TeraflyImageStack(fname, **kwargs)
-    raise NotImplementedError()
+    raise ValueError("unsupported image stack")
 
 
 def save_tiff(
-    imgs: npt.NDArray,
+    data: npt.NDArray | ImageStack,
     fname: str,
+    dtype: Optional[np.unsignedinteger | np.floating] = None,
+    c_first: bool = False,
     swap_xy: bool = False,
-    dtype: np.unsignedinteger | None = None,
     **kwargs,
 ) -> None:
-    """Save image stack as tiff."""
-    if swap_xy:
-        imgs = imgs.swapaxes(0, 1)  # (x, y, _) -> (y, x, _)
+    """Save image stack as tiff.
 
-    frames = np.rollaxis(imgs, -1)  # (_, _, z) -> (z, _, _)
+    Parameters
+    ----------
+    data : array
+        The image stack.
+    fname : str
+    dtype : np.dtype, optional
+        Casting data to specified dtype. If integer and float
+        conversions occur, they will be scaled (assuming floats are
+        between 0 and 1).
+    c_first : bool, default False
+        If true, data should be an array of shape (C, X, Y, Z), or
+        (X, Y, Z, C) or (X, Y, Z) otherwise.
+    swap_xy : bool, default False
+        Swap axes `x` and `y`.
+    """
+    if isinstance(data, ImageStack):
+        data = data.get_full()  # TODO: avoid load full imgs to memory
+
+    if c_first:
+        data = data.swapaxes(0, 1)  # (C, _, _, _) -> (_, _, _, C)
+    elif data.ndim == 3:
+        data = np.expand_dims(data, -1)  # (_, _, _)  -> (_, _, _, C), C === 1
+
+    if swap_xy:
+        data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
+
+    assert data.ndim == 4, "should be an array of shape (X, Y, Z, C)"
+    assert data.shape[-1] in [1, 3], "support 'miniblack' or 'rgb'"
 
     if dtype is not None:
-        if np.issubdtype(frames.dtype, np.floating):
-            frames *= UINT_MAX[np.dtype(dtype)]
+        if np.issubdtype(data.dtype, np.floating) and np.issubdtype(
+            dtype, np.unsignedinteger
+        ):
+            scaler_factor = UINT_MAX[np.dtype(dtype)]  # type: ignore
+        elif np.issubdtype(data.dtype, np.unsignedinteger) and np.issubdtype(
+            dtype, np.floating
+        ):
+            scaler_factor = 1 / UINT_MAX[np.dtype(data.dtype)]  # type: ignore
+        else:
+            scaler_factor = 1
 
-        frames = frames.astype(dtype)
+        data = (data * scaler_factor).astype(dtype)
 
     tifffile.imwrite(
         fname,
-        frames,
-        photometric="minisblack",
-        resolution=(1, 1),
-        metadata={
-            "unit": "um",
-            "axes": "ZXY" if not swap_xy else "ZYX",
-        },
+        np.moveaxis(data, 2, 0),  # (_, _, Z, _) -> (Z, _, _, _)
+        photometric="rgb" if data.shape[-1] == 3 else "minisblack",
+        metadata={"axes": "ZXYC" if not swap_xy else "ZYXC"},
         compression="zlib",
         compressionargs={"level": 6},
         **kwargs,
@@ -102,22 +155,26 @@ def save_tiff(
 
 
 class NDArrayImageStack(ImageStack):
-    """NDArray image stack warpper."""
+    """NDArray image stack."""
 
     def __init__(
         self, imgs: npt.NDArray[Any], swap_xy: bool = False, filp_xy: bool = False
     ) -> None:
         super().__init__()
 
+        if imgs.ndim == 3:  # (_, _, _) -> (_, _, _, C)
+            imgs = np.expand_dims(imgs, -1)
+        assert imgs.ndim == 4, "Should be shape of (X, Y, Z, C)"
+
         sclar_factor = 1.0
         if np.issubdtype((dtype := imgs.dtype), np.unsignedinteger):
             sclar_factor /= UINT_MAX[dtype]
 
         if swap_xy:
-            imgs = imgs.swapaxes(0, 1)  # (y, x, _) -> (x, y, _)
+            imgs = imgs.swapaxes(1, 2)  # (_, Y, X, _) -> (_, X, Y, _)
 
         if filp_xy:
-            imgs = np.flip(imgs, (0, 1))
+            imgs = np.flip(imgs, (1, 2))  # (_, X, Y, _)
 
         self.imgs = imgs.astype(np.float32) * sclar_factor
 
@@ -128,23 +185,23 @@ class NDArrayImageStack(ImageStack):
         return self.imgs
 
     @property
-    def shape(self) -> Vec3i:
+    def shape(self) -> Tuple[int, int, int, int]:
         return self.imgs.shape
 
 
 class TiffImageStack(NDArrayImageStack):
-    """Tiff image stack warpper."""
+    """Tiff image stack."""
 
     def __init__(
         self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
     ) -> None:
-        frames = tifffile.imread(fname, **kwargs)
-        imgs = np.moveaxis(frames, 0, -1)  # (z, _, _) -> (_, _, z)
+        frames = tifffile.imread(fname, **kwargs)  # (Z, _, _) or (Z, _, _, _)
+        imgs = np.moveaxis(frames, 0, 2)  # (Z, _, _, ...) -> (_, _, Z, ...)
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
 
 
 class NrrdImageStack(NDArrayImageStack):
-    """Nrrd image stack warpper."""
+    """Nrrd image stack."""
 
     def __init__(
         self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
@@ -155,50 +212,65 @@ class NrrdImageStack(NDArrayImageStack):
 
 
 class TeraflyImageStack(ImageStack):
-    """TeraFly image stack warpper.
-
-    Bria, A., Iannello, G., Onofri, L. et al. TeraFly: real-time three-
-    dimensional visualization and annotation of terabytes of
-    multidimensional volumetric images. Nat Methods 13, 192–194 (2016).
-    https://doi.org/10.1038/nmeth.3767
+    """TeraFly image stack as described in the paper `TeraFly: real-
+    time three-dimensional visualization and annotation of terabytes of
+    multidimensional volumetric images <https://doi.org/10.1038/nmeth.3767>`.
     """
 
-    def __init__(self, src: str) -> None:
+    def __init__(self, root: str) -> None:
+        """
+        Parameters
+        ----------
+        root : str
+            The root of terafly which contains directories named as
+            `RES(YxXxZ)`.
+        """
         super().__init__()
-        self.root = src
-        self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(src)
+        self.root = root
+        self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(root)
 
     def __getitem__(self, key):
-        """Get images in max resolution
+        """Get images in max resolution.
 
         Examples
         --------
         ```python
-        imgs[0, 0, 0]               # get value
-        imgs[0:100, 0:100, 0:100]   # get range
+        imgs[0, 0, 0, 0]            # get value
+        imgs[0:64, 0:64, 0:64, :]   # get patch
         ```
         """
+        if not isinstance(key, tuple):
+            raise IndexError(
+                "Potential memory issue, you are loading large images "
+                "into memory, if sure, load it explicitly with `get_full`"
+            )
 
-        if isinstance(key[0], slice):
-            slices = [k.indices(self.res[-1][i]) for i, k in enumerate(key)]
-            starts, ends, strides = np.array(slices).transpose()
-            return self.get_range(starts, ends, strides)
+        if not isinstance(key[0], slice):
+            offset = [key[i] for i in range(3)]
+            return self.get_patch(offset, np.add(offset, 1)).item()
 
-        offset = [key[i] for i in range(3)]
-        return self.get_range(offset, np.add(offset, 1)).item()
+        slices = [k.indices(self.res[-1][i]) for i, k in enumerate(key)]
+        starts, ends, strides = np.array(slices).transpose()
+        return self.get_patch(starts, ends, strides)
 
-    def get_range(
+    def get_patch(
         self, starts, ends, strides: int | Vec3i = 1, res_level=-1
     ) -> npt.NDArray[np.float32]:
+        """Get patch of image stack.
+
+        Returns
+        -------
+        patch : array of shape (X, Y, Z, C)
+        """
         if isinstance(strides, int):
             strides = (strides, strides, strides)
 
-        assert np.equal(strides, [1, 1, 1]).all()  #  TODO: support stride
-
         starts, ends = np.array(starts), np.array(ends)
         self._check_params(res_level, starts, np.subtract(ends, 1))
+        assert np.equal(strides, [1, 1, 1]).all()  #  TODO: support stride
 
-        out = np.zeros(ends - starts, dtype=np.float32)
+        shape_out = np.concatenate([ends - starts, [1]])
+        out = np.zeros(shape_out, dtype=np.float32)
         self._get_range(starts, ends, res_level, out=out)
         return out
 
@@ -207,7 +279,7 @@ class TeraflyImageStack(ImageStack):
 
         Returns
         -------
-        patch : array
+        patch : array of shape (X, Y, Z, C)
         patch_offset : (int, int, int)
         """
         p = np.array(p)
@@ -218,7 +290,7 @@ class TeraflyImageStack(ImageStack):
         raise NotImplementedError()  # TODO
 
     @property
-    def shape(self) -> Vec3i:
+    def shape(self) -> Tuple[int, int, int, int]:
         return tuple(self.res[-1])
 
     @classmethod
@@ -241,7 +313,7 @@ class TeraflyImageStack(ImageStack):
         res = [RE_TERAFLY_ROOT.search(d) for d in roots]
         res = [[int(a) for a in d.groups()] for d in res if d is not None]
         res = np.array(res)
-        res[:, [0, 1]] = res[:, [1, 0]]  # (y, x, _) -> (x, y, _)
+        res[:, [0, 1]] = res[:, [1, 0]]  # (Y, X, _) -> (X, Y, _)
 
         def listdir(d: str):
             return filter(RE_TERAFLY_NAME.match, os.listdir(d))
@@ -250,7 +322,7 @@ class TeraflyImageStack(ImageStack):
             y0 = next(listdir(src))
             x0 = next(listdir(os.path.join(src, y0)))
             z0 = next(listdir(os.path.join(src, y0, x0)))
-            patch = read_images(os.path.join(src, y0, x0, z0))
+            patch = read_imgs(os.path.join(src, y0, x0, z0))
             return patch.shape
 
         patch_sizes = [get_patch_size(os.path.join(root, d)) for d in roots]
@@ -264,7 +336,9 @@ class TeraflyImageStack(ImageStack):
 
     @staticmethod
     def is_root(root: str) -> bool:
-        return any(RE_TERAFLY_ROOT.match(d) for d in os.listdir(root))
+        return os.path.isdir(root) and any(
+            RE_TERAFLY_ROOT.match(d) for d in os.listdir(root)
+        )
 
     @staticmethod
     def get_resolution_dirs(root: str) -> Iterable[str]:
@@ -340,11 +414,68 @@ class TeraflyImageStack(ImageStack):
             idx = np.argmax(diff)
             cur = os.path.join(cur, dirs[idx])
 
-        patch = read_images(cur, swap_xy=True).get_full()
+        patch = read_imgs(cur, swap_xy=True).get_full()
         name = os.path.splitext(os.path.basename(cur))[0]
         offset = [int(int(i) / 10) for i in name.split("_")]
-        offset[0], offset[1] = offset[1], offset[0]  # (y, x, _) -> (x, y, _)
+        offset[0], offset[1] = offset[1], offset[0]  # (Y, X, _) -> (X, Y, _)
         if np.less_equal(np.add(offset, patch.shape), p).any():
             return None, None
 
         return patch, offset
+
+
+# Legacy
+
+
+class GrayImageStack:
+    """Gray Image stack."""
+
+    imgs: ImageStack
+
+    def __init__(self, imgs: ImageStack) -> None:
+        self.imgs = imgs
+
+    # fmt: off
+    @overload
+    def __getitem__(self, key: Vec3i) -> np.float32: ...
+    @overload
+    def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> np.float32: ...
+    @overload
+    def __getitem__(self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
+    # fmt: on
+    def __getitem__(self, key):
+        """Get pixel/patch of image stack."""
+        v = self[key]
+        if not isinstance(v, np.ndarray):
+            return v
+        if v.ndim == 4:
+            return v[:, :, :, 0]
+        if v.ndim == 3:
+            return v[:, :, 0]
+        if v.ndim == 2:
+            return v[:, 0]
+        if v.ndim == 1:
+            return v[0]
+        raise ValueError("unsupport key")
+
+    def get_full(self) -> npt.NDArray[np.float32]:
+        """Get full image stack.
+
+        Notes
+        -----
+        this will load the full image stack into memory.
+        """
+        return self.imgs.get_full()[:, :, :, 0]
+
+    @property
+    def shape(self) -> Tuple[int, int, int]:
+        return self.imgs.shape[:-1]
+
+
+def read_images(*args, **kwargs) -> GrayImageStack:
+    warnings.warn(
+        "`read_images` has been replaced by `read_imgs` because it"
+        "provide rgb support, and will be removed in next version.",
+        DeprecationWarning,
+    )
+    return GrayImageStack(read_imgs(*args, **kwargs))
