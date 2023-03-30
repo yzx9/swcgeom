@@ -8,6 +8,10 @@ import pandas as pd
 
 from .normalizer import link_roots_to_nearest_, sort_nodes_
 
+__all__ = ["assemble_lines", "try_assemble_lines"]
+
+EPS = 1e-5
+
 
 def assemble_lines(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
     """Assemble lines to a tree.
@@ -94,6 +98,9 @@ def try_assemble_lines(
                 ind = np.argmin(dis)
                 if dis[ind] > thre:
                     continue
+
+                if dis[ind] < EPS:
+                    line = line.drop((p + len(line)) % len(line)).reset_index(drop=True)
 
                 line["id"] = id_offset + len(tree) + np.arange(len(line))
                 line["pid"] = line["id"] + (-1 if p == 0 else 1)
