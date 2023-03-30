@@ -3,44 +3,17 @@
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
-import pandas as pd
 import scipy.sparse as sp
 from typing_extensions import Self
 
-from .swc_utils import (
-    is_single_root,
-    link_roots_to_nearest_,
-    mark_roots_as_somas_,
-    reset_index_,
-    sort_nodes_,
-)
+from .swc_utils import read_swc, swc_cols, to_swc
 
 __all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "DictSWC", "SWCTypeVar"]
 
-swc_cols: List[Tuple[str, npt.DTypeLike]] = [
-    ("id", np.int32),
-    ("type", np.int32),
-    ("x", np.float32),
-    ("y", np.float32),
-    ("z", np.float32),
-    ("r", np.float32),
-    ("pid", np.int32),
-]
 
 eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("level", np.int32),
@@ -124,16 +97,16 @@ class SWCLike(ABC):
 
     # fmt: off
     @overload
-    def to_swc(self, fname: str, *, extra_cols: List[str] | None = ..., source: bool = ..., id_offset: int = ...) -> None: ...
+    def to_swc(self, fname: str, *, extra_cols: List[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> None: ...
     @overload
-    def to_swc(self, *, extra_cols: List[str] | None = ..., source: bool = ..., id_offset: int = ...) -> str: ...
+    def to_swc(self, *, extra_cols: List[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> str: ...
     # fmt: on
     def to_swc(
         self,
         fname: Optional[str] = None,
         *,
         extra_cols: Optional[List[str]] = None,
-        source: bool = True,
+        source: bool | str = True,
         id_offset: int = 1,
     ) -> str | None:
         """Write swc file."""
@@ -146,29 +119,13 @@ class SWCLike(ABC):
 
         return None
 
-    def _to_swc(
-        self, extra_cols: List[str] | None, source: bool, id_offset: int
-    ) -> Iterable[str]:
-        def get_v(name: str, idx: int) -> str:
-            vs = self.get_ndata(name)
-            v = vs[idx]
-            if np.issubdtype(vs.dtype, np.floating):
-                return f"{v:.4f}"
+    def _to_swc(self, source: bool | str, **kwargs) -> Iterable[str]:
+        if source is not False:
+            if not isinstance(source, str):
+                source = self.source if self.source else "Unknown"
+            yield f"# source: {source}\n"
 
-            if name == "id" or (name == "pid" and v != -1):
-                v += id_offset
-
-            return str(v)
-
-        names = [name for name, _ in swc_cols]
-        if extra_cols is not None:
-            names.extend(extra_cols)
-
-        if source:
-            yield f"# source: {self.source if self.source else 'Unknown'}\n"
-        yield f"# {' '.join(names)}\n"
-        for idx in self.id():
-            yield " ".join(get_v(name, idx) for name in names) + "\n"
+        yield from to_swc(self.get_ndata, **kwargs)
 
     # fmt: off
     @overload
@@ -217,66 +174,3 @@ class DictSWC(SWCLike):
 
 
 SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
-
-
-def read_swc(
-    swc_file: str,
-    extra_cols: List[str] | None = None,
-    fix_roots: Literal["somas", "nearest", False] = False,
-    sort_nodes: bool = False,
-    reset_index: bool = True,
-) -> pd.DataFrame:
-    """Read swc file.
-
-    Parameters
-    ----------
-    swc_file : str
-        Path of swc file, the id should be consecutively incremented.
-    extra_cols : List[str], optional
-        Read more cols in swc file.
-    fix_roots : `somas`|`nearest`|False, default `False`
-        Fix multiple roots.
-    sort_nodes : bool, default `False`
-        Sort the indices of neuron tree, the index for parent are
-        always less than children.
-    reset_index : bool, default `True`
-        Reset node index to start with zero, DO NOT set to false if
-        you are not sure what will happend.
-    """
-
-    names = [k for k, v in swc_cols]
-    if extra_cols:
-        names.extend(extra_cols)
-
-    df = pd.read_csv(
-        swc_file,
-        sep=" ",
-        comment="#",
-        names=names,
-        dtype=cast(Any, dict(swc_cols)),
-        index_col=False,
-    )
-
-    # fix swc
-    if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
-        match fix_roots:
-            case "somas":
-                mark_roots_as_somas_(df)
-            case "nearest":
-                link_roots_to_nearest_(df)
-            case _:
-                raise ValueError(f"unknown fix type: {fix_roots}")
-
-    if sort_nodes:
-        sort_nodes_(df)
-    elif reset_index:
-        reset_index_(df)
-
-    # check swc
-    if not is_single_root(df):
-        warnings.warn(f"core: not signle root, swc: {swc_file}")
-
-    if (df["pid"] == -1).argmax() != 0:
-        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
-
-    return df
