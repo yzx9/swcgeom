@@ -23,9 +23,11 @@ __all__ = [
     "to_subtree",
     "get_subtree",
     "redirect_tree",
+    "cat_tree",
 ]
 
 T, K = TypeVar("T"), TypeVar("K")
+EPS = 1e-5
 
 
 def sort_tree(tree: Tree) -> Tree:
@@ -166,8 +168,8 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
         The tree.
     new_root : int
         The id of new root.
-    sort : bool, default True
-        Sort indices of nodes after redirect.
+    sort : bool, default `True`
+        If true, sort indices of nodes after redirect.
     """
     tree = tree.copy()
     path = [tree.node(new_root)]
@@ -181,6 +183,54 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
         _sort_tree(tree)
 
     return tree
+
+
+def cat_tree(  # pylint: disable=too-many-arguments
+    tree1: Tree,
+    tree2: Tree,
+    node1: int,
+    node2: int = 0,
+    no_move: bool = False,
+) -> Tree:
+    """Concatenates the second tree onto the first one.
+
+    Paramters
+    ---------
+    tree1 : Tree
+    tree2 : Tree
+    node1 : int
+        The node id of the tree to be connected.
+    node2 : int, default `0`
+        The node id of the connection point.
+    no_move : bool, default `False`
+        If true, link connection point without move.
+    """
+
+    tree, tree2 = tree1.copy(), tree2.copy()
+    if not tree2.node(node2).is_soma():
+        tree2 = redirect_tree(tree2, node2, sort=False)
+
+    c = tree.node(node1)
+    if not no_move:
+        tree2.ndata["x"] -= tree2.node(node2).x - c.x
+        tree2.ndata["y"] -= tree2.node(node2).y - c.y
+        tree2.ndata["z"] -= tree2.node(node2).z - c.z
+
+    tree2.ndata["id"] += tree.number_of_nodes()
+    tree2.ndata["pid"] += tree.number_of_nodes()
+    if np.linalg.norm(tree2.node(node2).xyz() - c.xyz()) < EPS:
+        for n in tree2.node(node2).children():
+            n.pid = node1
+    else:
+        tree2.node(node2).pid = node1
+
+    for k, v in tree.ndata.items():  # only keep keys in tree1
+        if k in tree2.ndata:
+            tree.ndata[k] = np.concatenate([v, tree2.ndata[k]])
+        else:
+            tree.ndata[k] = np.pad(v, (0, tree2.number_of_nodes()))
+
+    return _sort_tree(tree)
 
 
 def _sort_tree(tree: Tree) -> Tree:
