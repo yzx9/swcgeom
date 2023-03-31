@@ -7,6 +7,7 @@ import numpy.typing as npt
 
 from .path import Path
 from .swc import DictSWC, SWCTypeVar
+from .swc_utils import SWCNames, get_names
 
 __all__ = ["Segment", "Segments"]
 
@@ -29,7 +30,7 @@ class Segment(Path, Generic[SWCTypeVar]):
     def detach(self) -> "Segment":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
-        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
         return Segment(attact, self.idx[0], self.idx[1])
 
 
@@ -39,42 +40,45 @@ SegmentT = TypeVar("SegmentT", bound=Segment)
 class Segments(List[SegmentT]):
     r"""Segments contains a set of segments."""
 
+    names: SWCNames
+
     def __init__(self, segments: Iterable[SegmentT]) -> None:
         super().__init__(segments)
+        self.names = self[0].names if len(self) > 0 else get_names()
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample, 2)."""
-        return self.get_ndata("id")
+        return self.get_ndata(self.names.id)
 
     def type(self) -> npt.NDArray[np.int32]:
         """Get the types of shape (n_sample, 2)."""
-        return self.get_ndata("type")
+        return self.get_ndata(self.names.type)
 
     def x(self) -> npt.NDArray[np.float32]:
         """Get the x coordinates of shape (n_sample, 2)."""
-        return self.get_ndata("x")
+        return self.get_ndata(self.names.x)
 
     def y(self) -> npt.NDArray[np.float32]:
         """Get the y coordinates of shape (n_sample, 2)."""
-        return self.get_ndata("y")
+        return self.get_ndata(self.names.y)
 
     def z(self) -> npt.NDArray[np.float32]:
         """Get the z coordinates of shape (n_sample, 2)."""
-        return self.get_ndata("z")
+        return self.get_ndata(self.names.z)
 
     def r(self) -> npt.NDArray[np.float32]:
         """Get the radius of shape (n_sample, 2)."""
-        return self.get_ndata("r")
+        return self.get_ndata(self.names.r)
 
     def pid(self) -> npt.NDArray[np.int32]:
         """Get the ids of parent of shape (n_sample, 2)."""
-        return self.get_ndata("pid")
+        return self.get_ndata(self.names.pid)
 
-    def xyz(self):
+    def xyz(self) -> npt.NDArray[np.float32]:
         """Get the coordinates of shape (n_sample, 2, 3)."""
         return np.stack([self.x(), self.y(), self.z()], axis=2)
 
-    def xyzr(self):
+    def xyzr(self) -> npt.NDArray[np.float32]:
         """Get the xyzr array of shape (n_sample, 2, 4)."""
         return np.stack([self.x(), self.y(), self.z(), self.r()], axis=2)
 

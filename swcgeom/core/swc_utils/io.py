@@ -1,12 +1,14 @@
 """Read and write swc format."""
 
 import warnings
-from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, cast
+from collections import OrderedDict
+from typing import Any, Callable, Iterable, List, Literal, Optional, cast
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from .base import SWCNames, get_names
 from .checker import is_single_root
 from .normalizer import (
     link_roots_to_nearest_,
@@ -15,17 +17,7 @@ from .normalizer import (
     sort_nodes_,
 )
 
-__all__ = ["swc_cols", "read_swc", "to_swc"]
-
-swc_cols: List[Tuple[str, npt.DTypeLike]] = [
-    ("id", np.int32),
-    ("type", np.int32),
-    ("x", np.float32),
-    ("y", np.float32),
-    ("z", np.float32),
-    ("r", np.float32),
-    ("pid", np.int32),
-]
+__all__ = ["read_swc", "to_swc"]
 
 
 def read_swc(
@@ -34,6 +26,8 @@ def read_swc(
     fix_roots: Literal["somas", "nearest", False] = False,
     sort_nodes: bool = False,
     reset_index: bool = True,
+    *,
+    names: Optional[SWCNames] = None,
 ) -> pd.DataFrame:
     """Read swc file.
 
@@ -51,23 +45,22 @@ def read_swc(
     reset_index : bool, default `True`
         Reset node index to start with zero, DO NOT set to false if
         you are not sure what will happend.
+    names : SWCNames, optional
     """
 
-    names = [k for k, v in swc_cols]
-    if extra_cols:
-        names.extend(extra_cols)
+    names = get_names(names)
 
     df = pd.read_csv(
         swc_file,
         sep=" ",
         comment="#",
-        names=names,
-        dtype=cast(Any, dict(swc_cols)),
+        names=names.cols() + (extra_cols if extra_cols else []),
+        dtype=cast(Any, dict(_get_dtypes(names))),
         index_col=False,
     )
 
     # fix swc
-    if fix_roots is not False and np.count_nonzero(df["pid"] == -1) > 1:
+    if fix_roots is not False and np.count_nonzero(df[names.pid] == -1) > 1:
         match fix_roots:
             case "somas":
                 mark_roots_as_somas_(df)
@@ -85,7 +78,7 @@ def read_swc(
     if not is_single_root(df):
         warnings.warn(f"core: not signle root, swc: {swc_file}")
 
-    if (df["pid"] == -1).argmax() != 0:
+    if (df[names.pid] == -1).argmax() != 0:
         warnings.warn(f"core: root is not the first node, swc: {swc_file}")
 
     return df
@@ -93,24 +86,37 @@ def read_swc(
 
 def to_swc(
     get_ndata: Callable[[str], npt.NDArray],
+    *,
     extra_cols: Optional[List[str]] = None,
     id_offset: int = 1,
+    names: Optional[SWCNames] = None,
 ) -> Iterable[str]:
-    def get_v(name: str, idx: int) -> str:
-        vs = get_ndata(name)
+    names = get_names(names)
+
+    def get_v(k: str, idx: int) -> str:
+        vs = get_ndata(k)
         v = vs[idx]
         if np.issubdtype(vs.dtype, np.floating):
             return f"{v:.4f}"
 
-        if name == "id" or (name == "pid" and v != -1):
+        if k == names.id or (k == names.pid and v != -1):
             v += id_offset
 
         return str(v)
 
-    names = [name for name, _ in swc_cols]
-    if extra_cols is not None:
-        names.extend(extra_cols)
+    cols = names.cols() + (extra_cols if extra_cols is not None else [])
+    yield f"# {' '.join(cols)}\n"
+    for idx in get_ndata(names.id):
+        yield " ".join(get_v(k, idx) for k in cols) + "\n"
 
-    yield f"# {' '.join(names)}\n"
-    for idx in get_ndata("id"):
-        yield " ".join(get_v(name, idx) for name in names) + "\n"
+
+def _get_dtypes(names: SWCNames) -> OrderedDict[str, np.dtype]:
+    d = OrderedDict()
+    d[names.id] = np.int32
+    d[names.type] = np.int32
+    d[names.x] = np.float32
+    d[names.y] = np.float32
+    d[names.z] = np.float32
+    d[names.r] = np.float32
+    d[names.pid] = np.int32
+    return d

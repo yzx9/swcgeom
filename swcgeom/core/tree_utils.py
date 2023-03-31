@@ -1,14 +1,16 @@
 """SWC util wrapper for tree."""
 
 import warnings
-from typing import Callable, Dict, Iterable, List, Tuple, TypeVar, overload
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 
 from .swc import SWCLike
 from .swc_utils import (
     REMOVAL,
+    SWCNames,
     Topology,
+    get_names,
     propagate_removal,
     sort_nodes_impl,
     to_sub_topology,
@@ -190,7 +192,9 @@ def cat_tree(  # pylint: disable=too-many-arguments
     tree2: Tree,
     node1: int,
     node2: int = 0,
+    *,
     no_move: bool = False,
+    names: Optional[SWCNames] = None,
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 
@@ -205,19 +209,19 @@ def cat_tree(  # pylint: disable=too-many-arguments
     no_move : bool, default `False`
         If true, link connection point without move.
     """
-
+    names = get_names(names)
     tree, tree2 = tree1.copy(), tree2.copy()
     if not tree2.node(node2).is_soma():
         tree2 = redirect_tree(tree2, node2, sort=False)
 
     c = tree.node(node1)
     if not no_move:
-        tree2.ndata["x"] -= tree2.node(node2).x - c.x
-        tree2.ndata["y"] -= tree2.node(node2).y - c.y
-        tree2.ndata["z"] -= tree2.node(node2).z - c.z
+        tree2.ndata[names.x] -= tree2.node(node2).x - c.x
+        tree2.ndata[names.y] -= tree2.node(node2).y - c.y
+        tree2.ndata[names.z] -= tree2.node(node2).z - c.z
 
-    tree2.ndata["id"] += tree.number_of_nodes()
-    tree2.ndata["pid"] += tree.number_of_nodes()
+    tree2.ndata[names.id] += tree.number_of_nodes()
+    tree2.ndata[names.pid] += tree.number_of_nodes()
     if np.linalg.norm(tree2.node(node2).xyz() - c.xyz()) < EPS:
         for n in tree2.node(node2).children():
             n.pid = node1

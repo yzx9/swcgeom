@@ -1,11 +1,12 @@
 """Assemble lines to swc."""
 
 from copy import copy
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
+from .base import SWCNames, get_names
 from .normalizer import link_roots_to_nearest_, sort_nodes_
 
 __all__ = ["assemble_lines", "try_assemble_lines"]
@@ -49,12 +50,14 @@ def assemble_lines(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
     return tree
 
 
-def try_assemble_lines(
+def try_assemble_lines(  # pylint: disable=too-many-arguments
     lines: List[pd.DataFrame],
     undirected: bool = True,
     thre: float = 0.2,
     id_offset: int = 0,
     sort_nodes: bool = True,
+    *,
+    names: Optional[SWCNames] = None,
 ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
     """Trying assemble lines to a tree.
 
@@ -77,23 +80,27 @@ def try_assemble_lines(
         The offset of the line node id.
     sort_nodes : bool, default `True`
         sort nodes of subtree
+    names : SWCNames, optional
 
     Returns
     -------
     tree : ~pd.DataFrame
     remaining_lines : List of ~pd.DataFrame
     """
+    names = get_names(names)
     lines = copy(lines)
+
     tree = lines[0]
-    tree["id"] = id_offset + np.arange(len(tree))
-    tree["pid"] = tree["id"] - 1
-    tree.at[0, "pid"] = -1
+    tree[names.id] = id_offset + np.arange(len(tree))
+    tree[names.pid] = tree[names.id] - 1
+    tree.at[0, names.pid] = -1
     del lines[0]
 
     while True:
         for i, line in enumerate(lines):
             for p in [0, -1] if undirected else [0]:
-                vs = tree[["x", "y", "z"]] - line.iloc[p][["x", "y", "z"]]
+                xyz = [names.x, names.y, names.z]
+                vs = tree[xyz] - line.iloc[p][xyz]
                 dis = np.linalg.norm(vs, axis=1)
                 ind = np.argmin(dis)
                 if dis[ind] > thre:
@@ -102,9 +109,11 @@ def try_assemble_lines(
                 if dis[ind] < EPS:
                     line = line.drop((p + len(line)) % len(line)).reset_index(drop=True)
 
-                line["id"] = id_offset + len(tree) + np.arange(len(line))
-                line["pid"] = line["id"] + (-1 if p == 0 else 1)
-                line.at[(p + len(line)) % len(line), "pid"] = tree.iloc[ind]["id"]
+                line[names.id] = id_offset + len(tree) + np.arange(len(line))
+                line[names.pid] = line[names.id] + (-1 if p == 0 else 1)
+                line.at[(p + len(line)) % len(line), names.pid] = tree.iloc[ind][
+                    names.id
+                ]
                 tree = pd.concat([tree, line])
                 del lines[i]
                 break

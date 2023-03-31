@@ -1,11 +1,12 @@
 """SWC geometry operations."""
 
-from typing import Generic, Literal, TypeVar
+from typing import Generic, Literal, Optional, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
 from ..core import DictSWC
+from ..core.swc_utils import SWCNames, get_names
 from ..utils import rotate3d, rotate3d_x, rotate3d_y, rotate3d_z, scale3d, translate3d
 from .base import Transform
 
@@ -27,10 +28,17 @@ Center = Literal["root", "soma", "origin"]
 class Normalizer(Generic[T], Transform[T, T]):
     """Noramlize coordinates and radius to 0-1."""
 
+    names: SWCNames
+
+    def __init__(self, *, names: Optional[SWCNames] = None) -> None:
+        super().__init__()
+        self.names = get_names(names)
+
     def __call__(self, x: T) -> T:
         """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
         new_tree = x.copy()
-        for key in ["x", "y", "z", "r"]:  # TODO: does r is the same?
+        xyzr = [self.names.x, self.names.y, self.names.z, self.names.r]
+        for key in xyzr:  # TODO: does r is the same?
             vs = new_tree.ndata[key]
             new_tree.ndata[key] = (vs - np.min(vs)) / np.max(vs)
 
@@ -43,14 +51,20 @@ class _Transform(Generic[T], Transform[T, T]):
     fmt: str
 
     def __init__(
-        self, tm: npt.NDArray[np.float32], center: Center = "origin", fmt: str = ""
+        self,
+        tm: npt.NDArray[np.float32],
+        center: Center = "origin",
+        fmt: str = "",
+        *,
+        names: Optional[SWCNames] = None,
     ) -> None:
         self.tm, self.center, self.fmt = tm, center, fmt
+        self.names = get_names(names)
 
     def __call__(self, x: T) -> T:
         match self.center:
             case "root" | "soma":
-                idx = np.nonzero(x.ndata["pid"] == -1)[0].item()
+                idx = np.nonzero(x.ndata[self.names.pid] == -1)[0].item()
                 xyz = x.xyz()[idx]
                 tm = (
                     translate3d(-xyz[0], -xyz[1], -xyz[2])
@@ -62,7 +76,9 @@ class _Transform(Generic[T], Transform[T, T]):
 
         xyzw = x.xyzw().dot(tm)
         y = x.copy()
-        y.ndata["x"], y.ndata["y"], y.ndata["x"] = xyzw[0], xyzw[1], xyzw[2]
+        y.ndata[self.names.x] = xyzw[0]
+        y.ndata[self.names.y] = xyzw[1]
+        y.ndata[self.names.x] = xyzw[2]
         return y
 
     def __repr__(self) -> str:
@@ -90,9 +106,8 @@ class Scale(_Transform[T]):
         fmt = f"Scale-{sx}-{sy}-{sz}"
         super().__init__(scale3d(sx, sy, sz), center=center, fmt=fmt)
 
-    # pylint: disable=too-many-arguments
     @classmethod
-    def transform(
+    def transform(  # pylint: disable=too-many-arguments
         cls, x: T, sx: float, sy: float, sz: float, center: Center = "root"
     ) -> T:
         return cls(sx, sy, sz, center=center)(x)

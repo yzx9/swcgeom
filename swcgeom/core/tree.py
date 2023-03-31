@@ -13,8 +13,6 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
-    Union,
-    cast,
     overload,
 )
 
@@ -28,8 +26,8 @@ from .branch import Branch
 from .node import Node
 from .path import Path
 from .segment import Segment, Segments
-from .swc import DictSWC, eswc_cols, read_swc, swc_cols
-from .swc_utils import traverse
+from .swc import DictSWC, eswc_cols
+from .swc_utils import SWCNames, get_names, read_swc, traverse
 
 __all__ = ["Tree"]
 
@@ -42,7 +40,7 @@ class Tree(DictSWC):
     class Node(Node["Tree"]):
         """Neural node."""
 
-        def parent(self) -> Union["Tree.Node", None]:
+        def parent(self) -> "Tree.Node" | None:
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
 
         def children(self) -> List["Tree.Node"]:
@@ -59,15 +57,15 @@ class Tree(DictSWC):
             return self.branch()
 
         def branch(self) -> "Tree.Branch":
-            nodes: List["Tree.Node"] = [self]
-            while not (nodes[-1].is_soma() or nodes[-1].is_bifurcation()):
-                nodes.append(cast(Tree.Node, nodes[-1].parent()))
+            ns: List["Tree.Node"] = [self]
+            while not ns[-1].is_bifurcation() and (p := ns[-1].parent()) is not None:
+                ns.append(p)
 
-            nodes.reverse()
-            while not (nodes[-1].is_bifurcation() or nodes[-1].is_tip()):
-                nodes.append(nodes[-1].children()[0])
+            ns.reverse()
+            while not (ns[-1].is_bifurcation() or ns[-1].is_tip()):
+                ns.append(ns[-1].children()[0])
 
-            return Tree.Branch(self.attach, [n.id for n in nodes])
+            return Tree.Branch(self.attach, [n.id for n in ns])
 
         def is_soma(self) -> bool:
             return self.id == 0
@@ -111,28 +109,32 @@ class Tree(DictSWC):
         self,
         n_nodes: int,
         *,
-        id: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
-        type: npt.NDArray[np.int32] | None = None,  # pylint: disable=redefined-builtin
-        x: npt.NDArray[np.float32] | None = None,
-        y: npt.NDArray[np.float32] | None = None,
-        z: npt.NDArray[np.float32] | None = None,
-        r: npt.NDArray[np.float32] | None = None,
-        pid: npt.NDArray[np.int32] | None = None,
+        # pylint: disable-next=redefined-builtin
+        id: Optional[npt.NDArray[np.int32]] = None,
+        # pylint: disable-next=redefined-builtin
+        type: Optional[npt.NDArray[np.int32]] = None,
+        x: Optional[npt.NDArray[np.float32]] = None,
+        y: Optional[npt.NDArray[np.float32]] = None,
+        z: Optional[npt.NDArray[np.float32]] = None,
+        r: Optional[npt.NDArray[np.float32]] = None,
+        pid: Optional[npt.NDArray[np.int32]] = None,
+        names: Optional[SWCNames] = None,
         **kwargs: npt.NDArray,
     ) -> None:
+        names = get_names(names)
         id = np.arange(0, n_nodes, step=1, dtype=np.int32) if id is None else id
         pid = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32) if pid is None else pid
 
         ndata = {
-            "id": padding1d(n_nodes, id, dtype=np.int32),
-            "type": padding1d(n_nodes, type, dtype=np.int32),
-            "x": padding1d(n_nodes, x),
-            "y": padding1d(n_nodes, y),
-            "z": padding1d(n_nodes, z),
-            "r": padding1d(n_nodes, r, padding_value=1),
-            "pid": padding1d(n_nodes, pid, dtype=np.int32),
+            names.id: padding1d(n_nodes, id, dtype=np.int32),
+            names.type: padding1d(n_nodes, type, dtype=np.int32),
+            names.x: padding1d(n_nodes, x),
+            names.y: padding1d(n_nodes, y),
+            names.z: padding1d(n_nodes, z),
+            names.r: padding1d(n_nodes, r, padding_value=1),
+            names.pid: padding1d(n_nodes, pid, dtype=np.int32),
         }
-        super().__init__(**ndata, **kwargs)
+        super().__init__(**ndata, **kwargs, names=names)
 
     def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
@@ -197,7 +199,6 @@ class Tree(DictSWC):
         return [self.node(i) for i in tip_ids]
 
     def get_segments(self) -> Segments[Segment]:
-        # pylint: disable=not-an-iterable
         return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
 
     def get_branches(self) -> List[Branch]:
@@ -220,7 +221,6 @@ class Tree(DictSWC):
 
             return branches, [node.id]
 
-        # pylint: disable-next=unpacking-non-sequence
         branches, _ = self.traverse(leave=collect_branches)
         return branches
 
@@ -242,13 +242,11 @@ class Tree(DictSWC):
             return list(itertools.chain(*children))
 
         paths = self.traverse(enter=assign_path, leave=collect_path)
-        # pylint: disable-next=not-an-iterable
         return [self.Path(self, idx) for idx in paths]
 
     # fmt: off
     @overload
-    def traverse(self, *, enter: Callable[[Node, T | None], T], root: int | np.integer = ..., mode: Literal["dfs"] = ...
-    ) -> None: ...
+    def traverse(self, *, enter: Callable[[Node, T | None], T], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> None: ...
     @overload
     def traverse(
         self, *, enter: Callable[[Node, T | None], T] | None = ..., leave: Callable[[Node, List[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...
@@ -286,9 +284,14 @@ class Tree(DictSWC):
         return sum(s.length() for s in self.get_segments())
 
     @classmethod
-    def from_data_frame(cls, df: pd.DataFrame, source: str = "") -> "Tree":
+    def from_data_frame(
+        cls, df: pd.DataFrame, source: str = "", *, names: Optional[SWCNames] = None
+    ) -> "Tree":
         """Read neuron tree from data frame."""
-        tree = Tree(df.shape[0], **{k: df[k].to_numpy() for k, v in swc_cols})
+        names = get_names(names)
+        tree = Tree(
+            df.shape[0], **{k: df[k].to_numpy() for k in names.cols()}, names=names
+        )
         tree.source = source
         return tree
 
@@ -298,7 +301,7 @@ class Tree(DictSWC):
 
         See Also
         --------
-        ~swcgeom.read_swc
+        ~swcgeom.core.swc_utils.read_swc
         """
 
         df = read_swc(swc_file, **kwargs)
@@ -314,7 +317,6 @@ class Tree(DictSWC):
         See Also
         --------
         ~swcgeom.Tree.from_swc
-        ~swcgeom.read_swc
         """
         extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)

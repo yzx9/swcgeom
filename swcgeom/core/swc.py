@@ -10,10 +10,21 @@ import numpy.typing as npt
 import scipy.sparse as sp
 from typing_extensions import Self
 
-from .swc_utils import read_swc, swc_cols, to_swc
+from .swc_utils import SWCNames, get_names, read_swc, to_swc
 
 __all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "DictSWC", "SWCTypeVar"]
 
+
+swc_names_default = get_names()
+swc_cols: List[Tuple[str, npt.DTypeLike]] = [
+    (swc_names_default.id, np.int32),
+    (swc_names_default.type, np.int32),
+    (swc_names_default.x, np.float32),
+    (swc_names_default.y, np.float32),
+    (swc_names_default.z, np.float32),
+    (swc_names_default.r, np.float32),
+    (swc_names_default.pid, np.int32),
+]
 
 eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
     ("level", np.int32),
@@ -28,37 +39,38 @@ class SWCLike(ABC):
     """ABC of SWC."""
 
     source: str = ""
+    names: SWCNames
 
     def __len__(self) -> int:
         return self.number_of_nodes()
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,)."""
-        return self.get_ndata("id")
+        return self.get_ndata(self.names.id)
 
     def type(self) -> npt.NDArray[np.int32]:
         """Get the types of shape (n_sample,)."""
-        return self.get_ndata("type")
+        return self.get_ndata(self.names.type)
 
     def x(self) -> npt.NDArray[np.float32]:
         """Get the x coordinates of shape (n_sample,)."""
-        return self.get_ndata("x")
+        return self.get_ndata(self.names.x)
 
     def y(self) -> npt.NDArray[np.float32]:
         """Get the y coordinates of shape (n_sample,)."""
-        return self.get_ndata("y")
+        return self.get_ndata(self.names.y)
 
     def z(self) -> npt.NDArray[np.float32]:
         """Get the z coordinates of shape (n_sample,)."""
-        return self.get_ndata("z")
+        return self.get_ndata(self.names.z)
 
     def r(self) -> npt.NDArray[np.float32]:
         """Get the radius of shape (n_sample,)."""
-        return self.get_ndata("r")
+        return self.get_ndata(self.names.r)
 
     def pid(self) -> npt.NDArray[np.int32]:
         """Get the ids of parent of shape (n_sample,)."""
-        return self.get_ndata("pid")
+        return self.get_ndata(self.names.pid)
 
     def xyz(self) -> npt.NDArray[np.float32]:
         """Get the coordinates of shape(n_sample, 3)."""
@@ -158,8 +170,9 @@ class DictSWC(SWCLike):
 
     ndata: Dict[str, npt.NDArray]
 
-    def __init__(self, **kwargs: npt.NDArray):
+    def __init__(self, *, names: Optional[SWCNames] = None, **kwargs: npt.NDArray):
         super().__init__()
+        self.names = get_names(names)
         self.ndata = kwargs
 
     def keys(self) -> Iterable[str]:

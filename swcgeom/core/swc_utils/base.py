@@ -1,23 +1,51 @@
 """Base SWC format utils."""
 
-from typing import Callable, List, Literal, Tuple, TypeVar, overload
+from dataclasses import dataclass
+from typing import Callable, List, Literal, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-__all__ = ["Topology", "get_dsu", "traverse"]
+__all__ = ["Topology", "SWCNames", "swc_names", "get_names", "get_dsu", "traverse"]
 
 T, K = TypeVar("T"), TypeVar("K")
-
 Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
 
 
-def get_dsu(df: pd.DataFrame) -> npt.NDArray[np.int32]:
-    """Get disjoint set union."""
-    dsu = np.where(df["pid"] == -1, df["id"], df["pid"])  # Disjoint Set Union
+@dataclass
+class SWCNames:
+    """SWC format column names."""
 
-    id2idx = dict(zip(df["id"], range(len(df))))
+    id: str = "id"
+    type: str = "type"
+    x: str = "x"
+    y: str = "y"
+    z: str = "z"
+    r: str = "r"
+    pid: str = "pid"
+
+    def cols(self) -> List[str]:
+        return [self.id, self.type, self.x, self.y, self.z, self.r, self.pid]
+
+
+swc_names = SWCNames()
+
+
+def get_names(names: Optional[SWCNames] = None) -> SWCNames:
+    return names or swc_names
+
+
+def get_dsu(
+    df: pd.DataFrame, *, names: Optional[SWCNames] = None
+) -> npt.NDArray[np.int32]:
+    """Get disjoint set union."""
+    names = get_names(names)
+    dsu = np.where(
+        df[names.pid] == -1, df[names.id], df[names.id]
+    )  # Disjoint Set Union
+
+    id2idx = dict(zip(df[names.id], range(len(df))))
     dsu = np.array([id2idx[i] for i in dsu], dtype=np.int32)
 
     while True:

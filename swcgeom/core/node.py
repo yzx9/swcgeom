@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from .swc import DictSWC, SWCTypeVar
+from .swc_utils import SWCNames
 
 __all__ = ["Node"]
 
@@ -16,48 +17,50 @@ class Node(Generic[SWCTypeVar]):
 
     attach: SWCTypeVar
     idx: int | np.integer
+    names: SWCNames
 
     # fmt: off
     @property
-    def id(self) -> int: return self["id"]
+    def id(self) -> int: return self[self.names.id]
     @id.setter
-    def id(self, v: int): self["id"] = v
+    def id(self, v: int): self[self.names.id] = v
 
     @property
-    def type(self) -> int: return self["type"]
+    def type(self) -> int: return self[self.names.type]
     @type.setter
-    def type(self, v: int): self["type"] = v
+    def type(self, v: int): self[self.names.type] = v
 
     @property
-    def x(self) -> float: return self["x"]
+    def x(self) -> float: return self[self.names.x]
     @x.setter
-    def x(self, v: float): self["x"] = v
+    def x(self, v: float): self[self.names.x] = v
 
     @property
-    def y(self) -> float: return self["y"]
+    def y(self) -> float: return self[self.names.y]
     @y.setter
-    def y(self, v: float): self["y"] = v
+    def y(self, v: float): self[self.names.y] = v
 
     @property
-    def z(self) -> float: return self["z"]
+    def z(self) -> float: return self[self.names.z]
     @z.setter
-    def z(self, v: float): self["z"] = v
+    def z(self, v: float): self[self.names.z] = v
 
     @property
-    def r(self) -> float: return self["r"]
+    def r(self) -> float: return self[self.names.r]
     @r.setter
-    def r(self, v: float): self["r"] = v
+    def r(self, v: float): self[self.names.r] = v
 
     @property
-    def pid(self) -> int: return self["pid"]
+    def pid(self) -> int: return self[self.names.pid]
     @pid.setter
-    def pid(self, v: int): self["pid"] = v
+    def pid(self, v: int): self[self.names.pid] = v
     # fmt: on
 
     def __init__(self, attach: SWCTypeVar, idx: int | np.integer) -> None:
         super().__init__()
         self.attach = attach
         self.idx = idx
+        self.names = attach.names
 
     def __getitem__(self, key: str) -> Any:
         return self.attach.get_ndata(key)[self.idx]
@@ -109,5 +112,5 @@ class Node(Generic[SWCTypeVar]):
     def detach(self) -> "Node":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
-        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
         return Node(attact, self.idx)

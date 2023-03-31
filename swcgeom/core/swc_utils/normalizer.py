@@ -3,13 +3,13 @@
 Methods ending with a underline imply an in-place transformation.
 """
 
-from typing import Callable, List, Literal, Tuple
+from typing import Callable, List, Literal, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .base import Topology, get_dsu
+from .base import SWCNames, Topology, get_dsu, get_names
 
 __all__ = [
     "mark_roots_as_somas",
@@ -25,67 +25,82 @@ __all__ = [
 
 
 def mark_roots_as_somas(
-    df: pd.DataFrame, update_type: int | Literal[False] = 1
+    df: pd.DataFrame,
+    update_type: int | Literal[False] = 1,
+    *,
+    names: Optional[SWCNames] = None,
 ) -> pd.DataFrame:
-    return _copy_and_apply(mark_roots_as_somas_, df, update_type=update_type)
+    return _copy_and_apply(
+        mark_roots_as_somas_, df, update_type=update_type, names=names
+    )
 
 
 def mark_roots_as_somas_(
-    df: pd.DataFrame, update_type: int | Literal[False] = 1
+    df: pd.DataFrame,
+    update_type: int | Literal[False] = 1,
+    *,
+    names: Optional[SWCNames] = None,
 ) -> None:
     """Merge multiple roots in swc.
 
     The first root are reserved and others are linked to it.
     """
-    roots = df["pid"] == -1
+    names = get_names(names)
+    roots = df[names.pid] == -1
     root_loc = roots.argmax()
-    root_id = df.loc[root_loc, "id"]
-    df["pid"] = np.where(df["pid"] != -1, df["pid"], root_id)
+    root_id = df.loc[root_loc, names.id]
+    df[names.pid] = np.where(df[names.pid] != -1, df[names.pid], root_id)
     if update_type is not False:
-        df["type"] = np.where(df["pid"] != -1, df["type"], update_type)
-    df.loc[root_loc, "pid"] = -1
+        df[names.type] = np.where(df[names.pid] != -1, df[names.type], update_type)
+    df.loc[root_loc, names.pid] = -1
 
 
-def link_roots_to_nearest(df: pd.DataFrame) -> pd.DataFrame:
-    return _copy_and_apply(link_roots_to_nearest_, df)
+def link_roots_to_nearest(
+    df: pd.DataFrame, *, names: Optional[SWCNames] = None
+) -> pd.DataFrame:
+    return _copy_and_apply(link_roots_to_nearest_, df, names=names)
 
 
-def link_roots_to_nearest_(df: pd.DataFrame) -> None:
+def link_roots_to_nearest_(
+    df: pd.DataFrame, *, names: Optional[SWCNames] = None
+) -> None:
     """Merge multiple roots in swc.
 
     The first root are reserved, and the others was.
     """
+    names = get_names(names)
     dsu = get_dsu(df)
-    roots = df[df["pid"] == -1].iterrows()
+    roots = df[df[names.pid] == -1].iterrows()
     next(roots)  # type: ignore # skip the first one
     for i, row in roots:
-        vs = df[["x", "y", "z"]] - row[["x", "y", "z"]]
+        vs = df[[names.x, names.y, names.z]] - row[[names.x, names.y, names.z]]
         dis = np.linalg.norm(vs.to_numpy(), axis=1)
         subtree = dsu == dsu[i]  # type: ignore
         dis = np.where(subtree, np.Infinity, dis)  # avoid link to same tree
         dsu = np.where(subtree, dsu[dis.argmin()], dsu)  # merge set
-        df.loc[i, "pid"] = df["id"].iloc[dis.argmin()]  # type: ignore
+        df.loc[i, names.pid] = df[names.id].iloc[dis.argmin()]  # type: ignore
 
 
-def sort_nodes(df: pd.DataFrame) -> pd.DataFrame:
+def sort_nodes(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.DataFrame:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
     """
-    return _copy_and_apply(sort_nodes_, df)
+    return _copy_and_apply(sort_nodes_, df, names=names)
 
 
-def sort_nodes_(df: pd.DataFrame) -> None:
+def sort_nodes_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
     """
-    ids, pids = df["id"].to_numpy(), df["pid"].to_numpy()
+    names = get_names(names)
+    ids, pids = df[names.id].to_numpy(), df[names.pid].to_numpy()
     (new_ids, new_pids), indices = sort_nodes_impl((ids, pids))
     for col in df.columns:
         df[col] = df[col][indices].to_numpy()
 
-    df["id"], df["pid"] = new_ids, new_pids
+    df[names.id], df[names.pid] = new_ids, new_pids
 
 
 def sort_nodes_impl(topology: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
@@ -118,19 +133,20 @@ def sort_nodes_impl(topology: Topology) -> Tuple[Topology, npt.NDArray[np.int32]
     return (new_ids, new_pids), indices
 
 
-def reset_index(df: pd.DataFrame) -> pd.DataFrame:
+def reset_index(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.DataFrame:
     """Reset node index to start with zero."""
-    return _copy_and_apply(reset_index_, df)
+    return _copy_and_apply(reset_index_, df, names=names)
 
 
-def reset_index_(df: pd.DataFrame) -> None:
+def reset_index_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
     """Reset node index to start with zero."""
-    roots = df["pid"] == -1
+    names = get_names(names)
+    roots = df[names.pid] == -1
     root_loc = roots.argmax()
-    root_id = df.loc[root_loc, "id"]
-    df["id"] = df["id"] - root_id
-    df["pid"] = df["pid"] - root_id
-    df.loc[root_loc, "pid"] = -1
+    root_id = df.loc[root_loc, names.id]
+    df[names.id] = df[names.id] - root_id
+    df[names.pid] = df[names.pid] - root_id
+    df.loc[root_loc, names.pid] = -1
 
 
 def _copy_and_apply(fn: Callable, df: pd.DataFrame, *args, **kwargs):

@@ -26,6 +26,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def __init__(self, attach: SWCTypeVar, idx: npt.ArrayLike) -> None:
         super().__init__()
         self.attach = attach
+        self.names = attach.names
         self.idx = np.array(idx, dtype=np.int32)
 
     def __iter__(self) -> Iterator[Node]:
@@ -77,7 +78,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def detach(self) -> "Path":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
-        attact = DictSWC(**{k: self[k] for k in self.keys()})
+        attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
         return Path(attact, self.idx.copy())
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
@@ -104,11 +105,11 @@ class Path(SWCLike, Generic[SWCTypeVar]):
 
     def origin_id(self) -> npt.NDArray[np.int32]:
         """Get the original id."""
-        return self.get_ndata("id")
+        return self.get_ndata(self.names.id)
 
     def origin_pid(self) -> npt.NDArray[np.int32]:
         """Get the original pid."""
-        return self.get_ndata("pid")
+        return self.get_ndata(self.names.pid)
 
     def length(self) -> float:
         """Sum of length of stems."""

@@ -155,9 +155,8 @@ class Populations:
         swcs = list(chain.from_iterable(p.swcs for p in self.populations))
         return Population(swcs)
 
-    # pylint: disable=too-many-arguments
     @classmethod
-    def from_swc(
+    def from_swc(  # pylint: disable=too-many-arguments
         cls,
         roots: List[str],
         ext: str = ".swc",
