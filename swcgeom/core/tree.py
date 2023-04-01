@@ -13,6 +13,7 @@ from typing import (
     Optional,
     Tuple,
     TypeVar,
+    Union,
     overload,
 )
 
@@ -40,7 +41,7 @@ class Tree(DictSWC):
     class Node(Node["Tree"]):
         """Neural node."""
 
-        def parent(self) -> "Tree.Node" | None:
+        def parent(self) -> Union["Tree.Node", None]:
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
 
         def children(self) -> List["Tree.Node"]:
