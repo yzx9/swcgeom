@@ -6,7 +6,7 @@ from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["padding1d", "numpy_printoptions", "numpy_err"]
+__all__ = ["padding1d", "numpy_err"]
 
 
 def padding1d(
@@ -41,17 +41,6 @@ def padding1d(
 
     padding = np.full(n - v.shape[0], padding_value, dtype=dtype)
     return np.concatenate([v, padding])
-
-
-@contextmanager
-def numpy_printoptions(*args, **kwargs):
-    original_options = np.get_printoptions()
-    np.set_printoptions(*args, **kwargs)
-
-    try:
-        yield
-    finally:
-        np.set_printoptions(**original_options)
 
 
 @contextmanager
