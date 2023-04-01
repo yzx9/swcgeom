@@ -67,7 +67,7 @@ def read_swc(
             case "nearest":
                 link_roots_to_nearest_(df)
             case _:
-                raise ValueError(f"unknown fix type: {fix_roots}")
+                raise ValueError(f"unknown fix type `{fix_roots}`")
 
     if sort_nodes:
         sort_nodes_(df)
@@ -75,11 +75,11 @@ def read_swc(
         reset_index_(df)
 
     # check swc
-    if not is_single_root(df):
-        warnings.warn(f"core: not signle root, swc: {swc_file}")
+    if not is_single_root(df, names=names):
+        warnings.warn(f"not a simple tree in `{swc_file}`")
 
     if (df[names.pid] == -1).argmax() != 0:
-        warnings.warn(f"core: root is not the first node, swc: {swc_file}")
+        warnings.warn(f"root is not the first node in `{swc_file}`")
 
     return df
 
