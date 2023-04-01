@@ -42,7 +42,7 @@ def get_dsu(
     """Get disjoint set union."""
     names = get_names(names)
     dsu = np.where(
-        df[names.pid] == -1, df[names.id], df[names.id]
+        df[names.pid] == -1, df[names.id], df[names.pid]
     )  # Disjoint Set Union
 
     id2idx = dict(zip(df[names.id], range(len(df))))
