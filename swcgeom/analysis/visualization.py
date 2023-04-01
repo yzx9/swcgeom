@@ -95,7 +95,7 @@ def draw(
     # pylint: disable=too-many-locals
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc
 
-    show = show is True or (show is None and ax is None)
+    show = (show is True) or (show is None and ax is None)
     fig, ax = get_fig_ax(fig, ax)
 
     my_camera = _get_camera(camera)
@@ -125,7 +125,7 @@ def draw(
         set_ax_legend(ax, loc="upper right")  # enable legend
 
     if show:
-        fig.show()
+        fig.show(warn=False)
 
     return fig, ax
 
