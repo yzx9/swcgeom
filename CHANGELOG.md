@@ -1,3 +1,29 @@
+## **0.7.0**&emsp;<sub><sup>2023-04-02 ([e45b520...df0b693](https://github.com/yzx9/swcgeom/compare/e45b520fc841d4d8ec8d2f49f2505aa099cba730...df0b693facd584fb0c928126256d067fbf896ea3?diff=split))</sup></sub>
+
+### Features
+
+##### `core`
+
+- update root orf tree ([13395d4](https://github.com/yzx9/swcgeom/commit/13395d471bec3bb076471923b532f82efee61475))
+- concat tree ([93abf8c](https://github.com/yzx9/swcgeom/commit/93abf8c33b97b3fffa42a46fd8c2d921d89d750b))
+- check is it an binary tree ([ba1b5b9](https://github.com/yzx9/swcgeom/commit/ba1b5b924f61bcc5121071e8e2a7d5f43dbb8c13))
+- remove duplicate nodes ([95596de](https://github.com/yzx9/swcgeom/commit/95596de41bebd301b371bff4f37e07fb3a6a384d))
+- update waning message ([f745626](https://github.com/yzx9/swcgeom/commit/f745626eba5a96927622821c9a5d9b8b20943966))
+
+##### `images`
+
+- support rgb ([e45b520](https://github.com/yzx9/swcgeom/commit/e45b520fc841d4d8ec8d2f49f2505aa099cba730))
+
+##### `transforms`
+
+- add mst tree ([529a530](https://github.com/yzx9/swcgeom/commit/529a530f9f2901bf0ade8054b8e8b75392559306))
+
+### BREAKING CHANGES
+
+- `utils` \`utils\.numpy_printoptions\` has been remove, use \`np\.printoptions\`instead of ([df0b693](https://github.com/yzx9/swcgeom/commit/df0b693facd584fb0c928126256d067fbf896ea3))
+
+<br>
+
 ## **0.6.0**&emsp;<sub><sup>2023-03-22 ([97cb9b2...d40ccf6](https://github.com/yzx9/swcgeom/compare/97cb9b2aed70237de2a935a48764b0c384cdcbb4...d40ccf65568085f6c802c3558d1e0815d2e280cf?diff=split))</sup></sub>
 
 ### Features
@@ -24,6 +50,8 @@
 ##### `transforms`
 
 - add geometry transforms ([6fd1166](https://github.com/yzx9/swcgeom/commit/6fd1166fc81f774630d9cf431defb995eb07a6df))
+
+<br>
 
 ## **0.5.0**&emsp;<sub><sup>2023-03-09 ([711ebb1...80acd75](https://github.com/yzx9/swcgeom/compare/711ebb1308d2a70eddcf6295a40883a7815e887e...80acd75f7a9c232008f5ce4c9ec1f43488efd21c?diff=split))</sup></sub>
 
@@ -62,6 +90,8 @@
 - `core` \`Population.from_swc\` and \`Population\.from_eswc\` argument \`suffix\` has been renamed to \`ext\` ([7003c1d](https://github.com/yzx9/swcgeom/commit/7003c1dc017a0ca432265c003434e871ea9c1fc6))
 - `core` add pure\-func style utils ([7f9cba1](https://github.com/yzx9/swcgeom/commit/7f9cba14dd4bc0e018fe03bccd1cf845d4a3a421))
 
+<br>
+
 ## **0.4.1** <sub><sup>2023-03-01 ([4efbcef...4efbcef](https://github.com/yzx9/swcgeom/compare/4efbcef...4efbcef?diff=split))</sup></sub>
 
 ### Bug Fixes
@@ -69,6 +99,8 @@
 ##### `core`
 
 - should count nonzero nodes ([4efbcef](https://github.com/yzx9/swcgeom/commit/4efbcef))
+
+<br>
 
 ## **0.4.0** <sub><sup>2023-02-27 ([af51d11...1d9aeb5](https://github.com/yzx9/swcgeom/compare/af51d11...1d9aeb5?diff=split))</sup></sub>
 
@@ -100,9 +132,13 @@
 
 - `analysis` forward kwarg to plot method ([1d9aeb5](https://github.com/yzx9/swcgeom/commit/1d9aeb5))
 
+<br>
+
 ## **0.3.1** <sub><sup>2023-02-13 ([557693b...fc9335f](https://github.com/yzx9/swcgeom/compare/557693b...fc9335f?diff=split))</sup></sub>
 
 _no relevant changes_
+
+<br>
 
 ## **0.3.0** <sub><sup>2023-02-12 ([40ff824...cedf52f](https://github.com/yzx9/swcgeom/compare/40ff824...cedf52f?diff=split))</sup></sub>
 
@@ -209,6 +245,8 @@ _no relevant changes_
 - `analysis` \`get_distribution\` returns both \`x\` and \`y\`, before ([460f7d1](https://github.com/yzx9/swcgeom/commit/460f7d1))<br>only \`y\`\.
 - `anlysis/node_feature` change default options ([c6891b0](https://github.com/yzx9/swcgeom/commit/c6891b0))
 
+<br>
+
 ## **0.2.0** <sub><sup>2022-09-28</sup></sub>
 
 ### BREAKING CHANGE
@@ -250,6 +288,8 @@ _no relevant changes_
 
 - delay log formatting
 
+<br>
+
 ## **0.1.6** <sub><sup>2022-08-25</sup></sub>
 
 ### Features
@@ -270,6 +310,8 @@ _no relevant changes_
 - rename `Branch.from_numpy` to `Branch.from_numpy_batch`, and drop the support
   for squeezed input
 
+<br>
+
 ## **0.1.5** <sub><sup>2022-08-24</sup></sub>
 
 ### BREAKING CHANGE
@@ -284,17 +326,27 @@ _no relevant changes_
 
 - add datasets
 
+<br>
+
 ## **0.1.4** <sub><sup>2022-08-22</sup></sub>
 
 ### Bug Fixes
 
 - import version correctly
 
+<br>
+
 ## **0.1.3** <sub><sup>2022-08-21</sup></sub>
+
+<br>
 
 ## **0.1.2** <sub><sup>2022-08-21</sup></sub>
 
+<br>
+
 ## **0.1.1** <sub><sup>2022-08-21</sup></sub>
+
+<br>
 
 ## **0.1.0** <sub><sup>2022-08-21</sup></sub>
 
