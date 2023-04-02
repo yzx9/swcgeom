@@ -18,8 +18,10 @@ __all__ = ["Sholl"]
 class Sholl:
     """Sholl analysis.
 
-    .. [1] Dendritic organization in the neurons of the visual and motor
-       cortices of the cat J. Anat., 87 (1953), pp. 387-406
+    References
+    ----------
+    [1] Dendritic organization in the neurons of the visual and motor
+    cortices of the cat J. Anat., 87 (1953), pp. 387-406
     """
 
     rs: npt.NDArray[np.float32]
@@ -35,8 +37,9 @@ class Sholl:
         if step is not None:
             warnings.warn(
                 "`Sholl(x, step=...)` has been replaced by "
-                "`Sholl(x).get(steps=...)` because it has been change to"
-                "dynamic calculate, and will be removed in next version.",
+                "`Sholl(x).get(steps=...)` since v0.6.0 because it has "
+                "been change to dynamic calculate, and will be removed "
+                "in next version",
                 DeprecationWarning,
             )
             self.step = step
@@ -49,8 +52,7 @@ class Sholl:
     def intersect(self, r: float) -> int:
         return np.count_nonzero(np.logical_and(self.rs[:, 0] <= r, self.rs[:, 1] > r))
 
-    # pylint: disable=too-many-arguments
-    def plot(
+    def plot(  # pylint: disable=too-many-arguments
         self,
         steps: List[float] | int = 20,
         plot_type: str | None = None,
@@ -108,24 +110,27 @@ class Sholl:
 
     def avg(self) -> float:
         warnings.warn(
-            "`Sholl.avg` has been deprecate and will be removed in"
-            "next version, use `Shool(x).get().mean()` instead.",
+            "`Sholl.avg` has been deprecated since v0.6.0 and will be "
+            "removed in next version, use `Shool(x).get().mean()` "
+            "instead",
             DeprecationWarning,
         )
         return self.get().mean()
 
     def std(self) -> float:
         warnings.warn(
-            "`Sholl.std` has been deprecate and will be removed in "
-            "next version, use `Shool(x).get().std()` instead.",
+            "`Sholl.std` has been deprecate since v0.6.0 and will be "
+            "removed in next version, use `Shool(x).get().std()` "
+            "instead",
             DeprecationWarning,
         )
         return self.get().std()
 
     def sum(self) -> int:
         warnings.warn(
-            "`Sholl.sum` has been deprecate and will be removed in "
-            "next version, use `Shool(x).get().sum()` instead.",
+            "`Sholl.sum` has been deprecate since v0.6.0 and will be "
+            "removed in next version, use `Shool(x).get().sum()` "
+            "instead",
             DeprecationWarning,
         )
         return self.get().sum()

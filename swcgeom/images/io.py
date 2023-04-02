@@ -212,9 +212,14 @@ class NrrdImageStack(NDArrayImageStack):
 
 
 class TeraflyImageStack(ImageStack):
-    """TeraFly image stack as described in the paper `TeraFly: real-
-    time three-dimensional visualization and annotation of terabytes of
-    multidimensional volumetric images <https://doi.org/10.1038/nmeth.3767>`.
+    """TeraFly image stack.
+
+    References
+    ----------
+    [1] Bria, Alessandro, Giulio Iannello, Leonardo Onofri, and
+    Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional Visualization
+    and Annotation of Terabytes of Multidimensional Volumetric Images.”
+    Nature Methods 13, no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
     """
 
     def __init__(self, root: str) -> None:
@@ -242,7 +247,8 @@ class TeraflyImageStack(ImageStack):
         if not isinstance(key, tuple):
             raise IndexError(
                 "Potential memory issue, you are loading large images "
-                "into memory, if sure, load it explicitly with `get_full`"
+                "into memory, if sure, load it explicitly with "
+                "`get_full`"
             )
 
         if not isinstance(key[0], slice):
@@ -475,7 +481,7 @@ class GrayImageStack:
 def read_images(*args, **kwargs) -> GrayImageStack:
     warnings.warn(
         "`read_images` has been replaced by `read_imgs` because it"
-        "provide rgb support, and will be removed in next version.",
+        "provide rgb support, and this will be removed in next version",
         DeprecationWarning,
     )
     return GrayImageStack(read_imgs(*args, **kwargs))

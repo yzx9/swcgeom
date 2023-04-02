@@ -91,10 +91,6 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
 def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]:
     """Create subtree from origin tree.
 
-    .. deprecated:: 0.6.0
-        `to_sub_tree` will be removed in v0.6.0, it is replaced by
-        `to_subtree` beacuse it is easy to use.
-
     You can directly mark the node for removal, and we will remove it,
     but if the node you remove is not a leaf node, you need to use
     `propagate_remove` to remove all children.
@@ -106,7 +102,8 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     """
     warnings.warn(
         "`to_sub_tree` will be removed in v0.6.0, it is replaced by "
-        "`to_subtree` beacuse it is easy to use.",
+        "`to_subtree` beacuse it is easy to use, and this will be "
+        "removed in next version",
         DeprecationWarning,
     )
 

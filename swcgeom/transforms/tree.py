@@ -28,8 +28,9 @@ class TreeNormalizer(Normalizer[Tree]):
 
     def __init__(self, *args, **kwargs) -> None:
         warnings.warn(
-            "`TreeNormalizer` has been deprecate, it is replaced by "
-            "`Normalizer` beacuse it applies more widely.",
+            "`TreeNormalizer` has been replaced by `Normalizer` since "
+            "v0.6.0 beacuse it applies more widely, and this will be "
+            "removed in next version",
             DeprecationWarning,
         )
         super().__init__(*args, **kwargs)

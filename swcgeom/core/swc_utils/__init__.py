@@ -2,8 +2,10 @@
 
 Notes
 -----
-Methods in this module always receive `~pandas.DataFrame`, and assert
-columns following naming defines in `~.core.swc`.
+This module provides a bunch of methods to manipulating swc files, they
+are always trivial and unstabled, so we are NOT export it by default.
+If you use the method here, please review the code more frequently, we
+will try to flag all breaking changes but NO promises.
 """
 
 
