@@ -180,9 +180,6 @@ class Tree(DictSWC):
     def soma(self) -> Node:
         return self.node(0)
 
-    def get_ndata(self, key: str) -> npt.NDArray:
-        return self.ndata[key]
-
     def get_bifurcations(self) -> List[Node]:
         """Get all node of bifurcations."""
         bifurcations: List[int] = []

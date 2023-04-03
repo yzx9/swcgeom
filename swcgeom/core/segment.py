@@ -27,7 +27,7 @@ class Segment(Path, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    def detach(self) -> "Segment":
+    def detach(self) -> "Segment[DictSWC]":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)

@@ -109,7 +109,7 @@ class Node(Generic[SWCTypeVar]):
     def is_tip(self) -> bool:
         return self.id not in self.attach.pid()
 
-    def detach(self) -> "Node":
+    def detach(self) -> "Node[DictSWC]":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)

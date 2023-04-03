@@ -1,10 +1,9 @@
 """Branch is a set of node points."""
 
-from typing import Generic, Iterable
+from typing import Generic, Iterable, List
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Self  # TODO: move to typing in python 3.11
 
 from .path import Path
 from .segment import Segment, Segments
@@ -40,14 +39,14 @@ class Branch(Path, Generic[SWCTypeVar]):
     def get_segments(self) -> Segments[Segment]:
         return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
 
-    def detach(self) -> "Branch":
+    def detach(self) -> "Branch[DictSWC]":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
-        return Branch(attact, self.idx.copy())
+        return Branch(attact, np.arange(self.number_of_nodes()))
 
     @classmethod
-    def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> Self:
+    def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> "Branch[DictSWC]":
         r"""Create a branch from ~numpy.ndarray.
 
         Parameters
@@ -77,10 +76,12 @@ class Branch(Path, Generic[SWCTypeVar]):
             r=xyzr[:, 3],
             pid=np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
         )
-        return cls(attact, idx)
+        return Branch(attact, idx)
 
     @classmethod
-    def from_xyzr_batch(cls, xyzr_batch: npt.NDArray[np.float32]) -> list[Self]:
+    def from_xyzr_batch(
+        cls, xyzr_batch: npt.NDArray[np.float32]
+    ) -> List["Branch[DictSWC]"]:
         r"""Create list of branch form ~numpy.ndarray.
 
         Parameters
@@ -100,7 +101,7 @@ class Branch(Path, Generic[SWCTypeVar]):
             )
             xyzr_batch = np.concatenate([xyzr_batch, ones], axis=2)
 
-        branches = list[Branch]()
+        branches: List[Branch[DictSWC]] = []
         for xyzr in xyzr_batch:
             n_nodes = xyzr.shape[0]
             idx = np.arange(0, n_nodes, step=1, dtype=np.int32)
@@ -113,6 +114,6 @@ class Branch(Path, Generic[SWCTypeVar]):
                 r=xyzr[:, 3],
                 pid=np.arange(-1, n_nodes - 1, step=1, dtype=np.int32),
             )
-            branches.append(cls(attact, idx))
+            branches.append(Branch(attact, idx))
 
         return branches

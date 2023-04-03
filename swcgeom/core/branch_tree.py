@@ -5,6 +5,7 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Self
 
 from .branch import Branch
 from .swc_utils import to_sub_topology
@@ -21,7 +22,7 @@ class BranchTree(Tree):
 
     branches: Dict[int, List[Branch]]
 
-    def get_origin_branches(self) -> list[Branch]:
+    def get_origin_branches(self) -> List[Branch]:
         """Get branches of original tree."""
         return list(itertools.chain(*self.branches.values()))
 
@@ -29,8 +30,8 @@ class BranchTree(Tree):
         """Get branches of node of original tree."""
         return self.branches[idx]
 
-    @staticmethod
-    def from_tree(tree: Tree) -> "BranchTree":
+    @classmethod
+    def from_tree(cls, tree: Tree) -> Self:
         """Generating a branch tree from tree."""
 
         branches = tree.get_branches()
@@ -44,18 +45,18 @@ class BranchTree(Tree):
         ndata = {k: tree.get_ndata(k)[id_map].copy() for k in tree.keys()}
         ndata.update(id=new_id, pid=new_pid)
 
-        branch_tree = BranchTree(n_nodes, **ndata, names=tree.names)
+        branch_tree = cls(n_nodes, **ndata, names=tree.names)
         branch_tree.source = tree.source  # TODO
 
         branch_tree.branches = {}
-        for branch_raw in branches:
-            idx = np.nonzero(id_map == branch_raw[0].id)[0].item()
+        for br in branches:
+            idx = np.nonzero(id_map == br[0].id)[0].item()
             branch_tree.branches.setdefault(idx, [])
-            branch_tree.branches[idx].append(branch_raw.detach())
+            branch_tree.branches[idx].append(br.detach())
 
         return branch_tree
 
     @classmethod
-    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> "BranchTree":
+    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> Self:
         tree = super().from_data_frame(df, *args, **kwargs)
-        return BranchTree.from_tree(tree)
+        return cls.from_tree(tree)
