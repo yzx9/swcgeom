@@ -87,7 +87,6 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
             Window size.
         """
         super().__init__()
-        assert n_nodes > 0 and n_nodes % 2 == 1
         self.n_nodes = n_nodes
         self.kernal = np.ones(n_nodes)
 
@@ -95,7 +94,7 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
         x = x.detach()
         c = signal.convolve(np.ones(x.number_of_nodes()), self.kernal, mode="same")
         for k in ["x", "y", "z"]:
-            v = x.attach.ndata[k]
+            v = x.get_ndata(k)
             s = signal.convolve(v, self.kernal, mode="same")
             x.attach.ndata[k][1:-1] = (s / c)[1:-1]
 
@@ -108,8 +107,8 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
 class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
     r"""Standarize branch.
 
-    Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
-    and scale max radius to 1.
+    Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at
+    y, and scale max radius to 1.
     """
 
     def __call__(self, x: Branch) -> Branch:
@@ -126,7 +125,8 @@ class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
     def get_matrix(xyz: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         r"""Get standarize transformation matrix.
 
-        Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y.
+        Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up
+        at y.
 
         Parameters
         ----------

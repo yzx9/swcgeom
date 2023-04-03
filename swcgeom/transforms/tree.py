@@ -5,10 +5,12 @@ from typing import Callable, List, Optional, Tuple
 
 from ..core import BranchTree, Tree, cut_tree, to_subtree
 from .base import Transform
+from .branch import BranchConvSmoother
 from .geometry import Normalizer
 
 __all__ = [
     "ToBranchTree",
+    "TreeSmoother",
     "TreeNormalizer",
     "CutByBifurcationOrder",
     "CutShortTipBranch",
@@ -21,6 +23,27 @@ class ToBranchTree(Transform[Tree, BranchTree]):
 
     def __call__(self, x: Tree) -> BranchTree:
         return BranchTree.from_tree(x)
+
+
+class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docstring
+    def __init__(self, n_nodes: int = 5) -> None:
+        super().__init__()
+        self.n_nodes = n_nodes
+        self.trans = BranchConvSmoother(n_nodes=n_nodes)
+
+    def __call__(self, x: Tree) -> Tree:
+        x = x.copy()
+        for br in x.get_branches():
+            # TODO: works but is weird
+            smoothed = self.trans(br)
+            x.ndata["x"][br.origin_id()] = smoothed.x()
+            x.ndata["y"][br.origin_id()] = smoothed.y()
+            x.ndata["z"][br.origin_id()] = smoothed.z()
+
+        return x
+
+    def __repr__(self) -> str:
+        return f"TreeSmoother-{self.n_nodes}"
 
 
 class TreeNormalizer(Normalizer[Tree]):
