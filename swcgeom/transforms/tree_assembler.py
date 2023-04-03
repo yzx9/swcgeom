@@ -27,8 +27,11 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
         self.thre = thre
         self.undirected = undirected
 
-    def __call__(self, *args, **kwargs):
-        return self.assemble(*args, **kwargs)
+    def __call__(self, lines: List[pd.DataFrame], *, names: Optional[SWCNames] = None):
+        return self.assemble(lines, names=names)
+
+    def __repr__(self) -> str:
+        return f"LinesToTree-thre-{self.thre}-{'undirected' if self.undirected else 'directed'}"
 
     def assemble(
         self, lines: List[pd.DataFrame], *, names: Optional[SWCNames] = None
@@ -52,7 +55,7 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
 
         See Also
         --------
-        ~swcgeom.core.swc_utils.try_assemble_lines
+        self.try_assemble_lines
         """
         return assemble_lines_impl(
             lines, thre=self.thre, undirected=self.undirected, names=names
