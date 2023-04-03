@@ -1,12 +1,13 @@
 """Transformation in branch."""
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from typing import cast
 
 import numpy as np
 import numpy.typing as npt
+from scipy import signal
 
-from ..core import Branch
+from ..core import Branch, DictSWC
 from ..utils import (
     angle,
     rotate3d_x,
@@ -18,16 +19,15 @@ from ..utils import (
 )
 from .base import Transform
 
-__all__ = ["BranchLinearResampler", "BranchStandardizer"]
+__all__ = ["BranchLinearResampler", "BranchConvSmoother", "BranchStandardizer"]
 
 
-class _BranchResampler(Transform[Branch, Branch]):
+class _BranchResampler(Transform[Branch, Branch], ABC):
     r"""Resample branch."""
 
     def __call__(self, x: Branch) -> Branch:
-        xyzr = x.xyzr()
-        new_xyzr = self.resample(xyzr)
-        return Branch.from_xyzr(new_xyzr)
+        xyzr = self.resample(x.xyzr())
+        return Branch.from_xyzr(xyzr)
 
     @abstractmethod
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
@@ -76,7 +76,36 @@ class BranchLinearResampler(_BranchResampler):
         return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
 
 
-class BranchStandardizer(Transform[Branch, Branch]):
+class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
+    r"""Smooth the branch by sliding window."""
+
+    def __init__(self, n_nodes: int = 5) -> None:
+        """
+        Parameters
+        ----------
+        n_nodes : int, default `5`
+            Window size.
+        """
+        super().__init__()
+        assert n_nodes > 0 and n_nodes % 2 == 1
+        self.n_nodes = n_nodes
+        self.kernal = np.ones(n_nodes)
+
+    def __call__(self, x: Branch) -> Branch[DictSWC]:
+        x = x.detach()
+        c = signal.convolve(np.ones(x.number_of_nodes()), self.kernal, mode="same")
+        for k in ["x", "y", "z"]:
+            v = x.attach.ndata[k]
+            s = signal.convolve(v, self.kernal, mode="same")
+            x.attach.ndata[k][1:-1] = (s / c)[1:-1]
+
+        return x
+
+    def __repr__(self) -> str:
+        return f"BranchConvSmoother-{self.n_nodes}"
+
+
+class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
     r"""Standarize branch.
 
     Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at y,
