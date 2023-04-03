@@ -11,6 +11,7 @@ from .swc_utils import (
     SWCNames,
     Topology,
     get_names,
+    is_bifurcate,
     propagate_removal,
     sort_nodes_impl,
     to_sub_topology,
@@ -32,12 +33,17 @@ T, K = TypeVar("T"), TypeVar("K")
 EPS = 1e-5
 
 
+def is_binary_tree(tree: Tree, exclude_soma: bool = True) -> bool:
+    """Check is it a bifurcate tree."""
+    return is_bifurcate((tree.id(), tree.pid()), exclude_root=exclude_soma)
+
+
 def sort_tree(tree: Tree) -> Tree:
     """Sort the indices of neuron tree.
 
     See Also
     --------
-    ~swc_utils.sort_nodes
+    ~.core.swc_utils.sort_nodes
     """
     return _sort_tree(tree.copy())
 
