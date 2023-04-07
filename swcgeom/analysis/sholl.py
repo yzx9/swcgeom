@@ -1,7 +1,7 @@
 """Sholl analysis."""
 
 import warnings
-from typing import List, Literal, Tuple
+from typing import List, Literal, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -25,14 +25,19 @@ class Sholl:
     """
 
     rs: npt.NDArray[np.float32]
+    rmax: float
 
     # compat
     step: float | None = None
 
-    def __init__(self, tree: Tree, step: float | None = None) -> None:
+    def __init__(
+        self,
+        tree: Tree,
+        step: Optional[float] = None,
+    ) -> None:
         xyz = tree.get_segments().xyz() - tree.soma().xyz()  # shift
         self.rs = np.linalg.norm(xyz, axis=2)
-        self.rs_max = self.rs.max()
+        self.rmax = self.rs.max()
 
         if step is not None:
             warnings.warn(
@@ -45,7 +50,7 @@ class Sholl:
             self.step = step
 
     def get(self, steps: int | npt.ArrayLike = 20) -> npt.NDArray[np.int64]:
-        xs, rs = self._get_xs(steps=steps), self.rs
+        xs, rs = self._get_rs(steps=steps), self.rs
         intersections = [np.logical_and(rs[:, 0] <= i, rs[:, 1] > i) for i in xs]
         return np.count_nonzero(intersections, axis=1)
 
@@ -80,7 +85,7 @@ class Sholl:
             )
             kind = plot_type  # type: ignore
 
-        xs = self._get_xs(steps=steps)
+        xs = self._get_rs(steps=steps)
         ys = self.get(steps=xs)
         fig, ax = get_fig_ax(fig, ax)
         match kind:
@@ -99,6 +104,21 @@ class Sholl:
 
         ax.set_xlabel("Radial Distance")
         return fig, ax
+
+    @staticmethod
+    def get_rs(rmax: float, steps: int | npt.ArrayLike) -> npt.NDArray[np.float32]:
+        """Function to calculate the list of radius used by the sholl."""
+        if isinstance(steps, int):
+            s = rmax / (steps + 1)
+            return np.arange(s, rmax, s)
+
+        return np.array(steps)
+
+    def _get_rs(self, steps: int | npt.ArrayLike) -> npt.NDArray[np.float32]:
+        if self.step is not None:  # compat
+            return np.arange(self.step, int(np.ceil(self.rmax)), self.step)
+
+        return self.get_rs(self.rmax, steps)
 
     def get_count(self) -> npt.NDArray[np.int32]:
         warnings.warn(
@@ -134,15 +154,3 @@ class Sholl:
             DeprecationWarning,
         )
         return self.get().sum()
-
-    def _get_xs(
-        self, steps: int | npt.ArrayLike | None = None
-    ) -> npt.NDArray[np.float32]:
-        if self.step is not None:  # compat
-            return np.arange(self.step, int(np.ceil(self.rs_max)), self.step)
-
-        if isinstance(steps, int):
-            s = self.rs_max / (steps + 1)
-            return np.arange(s, self.rs_max, s)
-
-        return np.array(steps)

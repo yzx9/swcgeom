@@ -58,8 +58,8 @@ class Features:
 
     tree: Tree
 
-    # Modules
     # fmt:off
+    # Modules
     @cached_property
     def _node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
     @cached_property
@@ -70,6 +70,10 @@ class Features:
     def _branch_features(self) -> BranchFeatures: return BranchFeatures(self.tree)
     @cached_property
     def _path_features(self) -> PathFeatures: return PathFeatures(self.tree)
+
+    # Caches
+    @cached_property
+    def sholl(self) -> Sholl: return Sholl(self.tree)
     # fmt:on
 
     def __init__(self, tree: Tree) -> None:
@@ -98,7 +102,7 @@ class Features:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
 
     def get_sholl(self, **kwargs) -> NDArrayf32:
-        return Sholl(self.tree).get(**kwargs).astype(np.float32)
+        return self.sholl.get(**kwargs).astype(np.float32)
 
 
 class FeatureExtractor(ABC):
@@ -246,10 +250,9 @@ class TreeFeatureExtractor(FeatureExtractor):
         name = basename(self._tree.source)
         return sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
 
-    def _plot_length(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        name = basename(self._tree.source)
-        ax: Axes = sns.barplot(x=[name], y=self._get_impl(feature).squeeze(), **kwargs)
-        ax.set_ylabel("Length")
+    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
+        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+        _, ax = self._features.sholl.plot(**kwargs)
         return ax
 
 
@@ -271,7 +274,17 @@ class PopulationFeatureExtractor(FeatureExtractor):
         return v
 
     def _get_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        raise NotImplementedError()
+        vals, _ = self._get_sholl_impl(feature, **kwargs)
+        return vals
+
+    def _get_sholl_impl(
+        self, feature: FeatAndKwargs, **kwargs
+    ) -> Tuple[NDArrayf32, NDArrayf32]:
+        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+        rmax = max(t.sholl.rmax for t in self._features)
+        rs = Sholl.get_rs(rmax=rmax, steps=20)
+        vals = self._get_impl("sholl", steps=rs)
+        return vals, rs
 
     def _plot_histogram_impl(
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
@@ -280,7 +293,7 @@ class PopulationFeatureExtractor(FeatureExtractor):
             np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
             for v in vals
         ]
-        hist = np.concatenate(hists)
+        hist = np.stack(hists)
         x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, len(self._population))
 
         ax: Axes = sns.lineplot(x=x, y=hist, **kwargs)
@@ -295,8 +308,20 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_xticks([])
         return ax
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        raise NotImplementedError()
+    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(feature)
+        xs = np.tile(rs, len(self._population))
+        ys = vals.flatten()
+        ax: Axes = sns.lineplot(x=xs, y=ys, **kwargs)
+        ax.set_ylabel("Count of Intersections")
+        return ax
+
+    def _lineplot(self, xs, ys, **kwargs) -> Axes:
+        xs = np.tile(xs, len(self._population))
+        ys = ys.flatten()
+        ax: Axes = sns.lineplot(x=xs, y=ys, **kwargs)
+        ax.set_ylabel("Count")
+        return ax
 
 
 class PopulationsFeatureExtractor(FeatureExtractor):
@@ -308,9 +333,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
     def __init__(self, populations: Populations) -> None:
         super().__init__()
         self._populations = populations
-        self._features = [
-            [Features(t) for t in p] for p in self._populations.populations
-        ]
+        self._features = [[Features(t) for t in p] for p in populations.populations]
 
     def _get_impl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
         vals = [[f.get(feature, **kwargs) for f in fs] for fs in self._features]
@@ -323,6 +346,20 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
+    def _get_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
+        vals, _ = self._get_sholl_impl(feature, **kwargs)
+        return vals
+
+    def _get_sholl_impl(
+        self, feature: FeatAndKwargs, **kwargs
+    ) -> Tuple[NDArrayf32, NDArrayf32]:
+        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+        rmaxs = chain.from_iterable((t.sholl.rmax for t in p) for p in self._features)
+        rmax = max(rmaxs)
+        rs = Sholl.get_rs(rmax=rmax, steps=20)
+        vals = self._get_impl("sholl", steps=rs, **kwargs)
+        return vals, rs
+
     def _plot_histogram_impl(
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
@@ -330,16 +367,11 @@ class PopulationsFeatureExtractor(FeatureExtractor):
             return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
 
         hists = [[histogram(t) for t in p] for p in vals]
-        hist = np.concatenate(hists).flatten()
+        hist = np.stack(hists)
 
-        repeats = np.prod(vals.shape[:2]).item()
-        x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, repeats)
+        x = (bin_edges[:-1] + bin_edges[1:]) / 2
 
-        labels = self._populations.labels
-        length = (len(bin_edges) - 1) * vals.shape[1]
-        hue = np.concatenate([np.full(length, fill_value=i) for i in labels])
-
-        ax: Axes = sns.lineplot(x=x, y=hist, hue=hue, **kwargs)
+        ax = self._lineplot(xs=x, ys=hist, **kwargs)
         ax.set_ylabel("Count")
         return ax
 
@@ -350,8 +382,24 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
         return ax
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        raise NotImplementedError()
+    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(feature)
+        ax = self._lineplot(xs=rs, ys=vals, **kwargs)
+        ax.set_ylabel("Count of Intersections")
+        return ax
+
+    def _lineplot(self, xs, ys, **kwargs) -> Axes:
+        p, t, f = ys.shape
+
+        xs = np.tile(xs, p * t)  # (F,) -> (P * T * F)
+        ys = ys.flatten()  # (P, T, F) -> (P * T * F)
+
+        labels = self._populations.labels  # (P,)
+        hue = np.concatenate([np.full(t * f, fill_value=i) for i in labels])
+
+        ax: Axes = sns.lineplot(x=xs, y=ys, hue=hue, **kwargs)
+        ax.set_ylabel("Count")
+        return ax
 
 
 def extract_feature(obj: Tree | Population) -> FeatureExtractor:
