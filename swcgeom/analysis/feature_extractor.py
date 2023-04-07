@@ -142,15 +142,13 @@ class FeatureExtractor(ABC):
         in different features, and may different between versions,
         there are NO guarantees.
         """
-        feat, _ = _get_feat_and_kwargs(feature)
+        feat, feat_kwargs = _get_feat_and_kwargs(feature)
         if callable(custom_plot := getattr(self, f"_plot_{feat}", None)):
-            plot = custom_plot
+            ax = custom_plot(feat_kwargs, **kwargs)
         elif feat in Feature1D:
-            plot = self._plot_1d
+            ax = self._plot_1d(feature, **kwargs)
         else:
-            plot = self._plot_histogram  # default plot
-
-        ax = plot(feature, **kwargs)
+            ax = self._plot_histogram(feature, **kwargs)  # default plot
 
         if isinstance(title, str):
             ax.set_title(title)
@@ -160,14 +158,14 @@ class FeatureExtractor(ABC):
         return ax
 
     def _get(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        feat, _ = _get_feat_and_kwargs(feature)
-        if not callable(get := getattr(self, f"_get_{feat}", None)):
-            get = self._get_impl  # default
+        feat, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+        if callable(get := getattr(self, f"_get_{feat}", None)):
+            return get(**kwargs)
 
-        return get(feature, **kwargs)
+        return self._get_impl(feat, **kwargs)  # default
 
     def _plot_1d(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        vals = self._get_impl(feature)
+        vals = self._get(feature)
         ax = self._plot_1d_impl(vals, **kwargs)
         ax.set_ylabel(_get_feature_name(feature))
         return ax
@@ -179,12 +177,12 @@ class FeatureExtractor(ABC):
         range=None,  # pylint: disable=redefined-builtin
         **kwargs,
     ) -> Axes:
-        vals = self._get_impl(feature)
+        vals = self._get(feature)
         bin_edges = np.histogram_bin_edges(vals, bins, range)
         return self._plot_histogram_impl(vals, bin_edges, **kwargs)
 
     @abstractmethod
-    def _get_impl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
+    def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         raise NotImplementedError()
 
     @abstractmethod
@@ -208,15 +206,8 @@ class FeatureExtractor(ABC):
     def _plot_tip_branch_order(self, *args, **kwargs) -> Axes:
         return self._plot_node_branch_order_impl(*args, **kwargs)
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        _, feat_kwargs = _get_feat_and_kwargs(feature)
-        step = feat_kwargs.get("step", 1)  # TODO: remove hard code
-        vals = self._get_impl(feature)
-        bin_edges = np.arange(step / 2, step * (vals.shape[-1] + 1), step)
-        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
-
     def _plot_node_branch_order_impl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        vals = self._get_impl(feature)
+        vals = self._get(feature)
         bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
         return self._plot_histogram_impl(vals, bin_edges, **kwargs)
 
@@ -232,7 +223,7 @@ class TreeFeatureExtractor(FeatureExtractor):
         self._tree = tree
         self._features = Features(tree)
 
-    def _get_impl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
+    def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         return self._features.get(feature, **kwargs)
 
     def _plot_histogram_impl(
@@ -250,8 +241,11 @@ class TreeFeatureExtractor(FeatureExtractor):
         name = basename(self._tree.source)
         return sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+    def _plot_sholl(
+        self,
+        feature_kwargs: Dict[str, Any],  # pylint: disable=unused-argument
+        **kwargs,
+    ) -> Axes:
         _, ax = self._features.sholl.plot(**kwargs)
         return ax
 
@@ -267,36 +261,32 @@ class PopulationFeatureExtractor(FeatureExtractor):
         self._population = population
         self._features = [Features(t) for t in self._population]
 
-    def _get_impl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
+    def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         vals = [f.get(feature, **kwargs) for f in self._features]
         len_max = max(len(v) for v in vals)
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
-    def _get_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        vals, _ = self._get_sholl_impl(feature, **kwargs)
+    def _get_sholl(self, **kwargs) -> NDArrayf32:
+        vals, _ = self._get_sholl_impl(**kwargs)
         return vals
 
-    def _get_sholl_impl(
-        self, feature: FeatAndKwargs, **kwargs
-    ) -> Tuple[NDArrayf32, NDArrayf32]:
-        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+    def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
         rmax = max(t.sholl.rmax for t in self._features)
         rs = Sholl.get_rs(rmax=rmax, steps=20)
-        vals = self._get_impl("sholl", steps=rs)
+        vals = self._get_impl("sholl", steps=rs, **kwargs)
         return vals, rs
 
     def _plot_histogram_impl(
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        hists = [
-            np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
-            for v in vals
-        ]
-        hist = np.stack(hists)
-        x = np.tile((bin_edges[:-1] + bin_edges[1:]) / 2, len(self._population))
+        def hist(v):
+            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
 
-        ax: Axes = sns.lineplot(x=x, y=hist, **kwargs)
+        xs = (bin_edges[:-1] + bin_edges[1:]) / 2
+        ys = np.stack([hist(v) for v in vals])
+
+        ax: Axes = self._lineplot(xs, ys, **kwargs)
         ax.set_ylabel("Count")
         return ax
 
@@ -308,11 +298,9 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_xticks([])
         return ax
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        vals, rs = self._get_sholl_impl(feature)
-        xs = np.tile(rs, len(self._population))
-        ys = vals.flatten()
-        ax: Axes = sns.lineplot(x=xs, y=ys, **kwargs)
+    def _plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(**feature_kwargs)
+        ax = self._lineplot(xs=rs, ys=vals.flatten(), **kwargs)
         ax.set_ylabel("Count of Intersections")
         return ax
 
@@ -320,7 +308,6 @@ class PopulationFeatureExtractor(FeatureExtractor):
         xs = np.tile(xs, len(self._population))
         ys = ys.flatten()
         ax: Axes = sns.lineplot(x=xs, y=ys, **kwargs)
-        ax.set_ylabel("Count")
         return ax
 
 
@@ -335,7 +322,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         self._populations = populations
         self._features = [[Features(t) for t in p] for p in populations.populations]
 
-    def _get_impl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
+    def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         vals = [[f.get(feature, **kwargs) for f in fs] for fs in self._features]
         len_max1 = max(len(v) for v in vals)
         len_max2 = max(*chain.from_iterable(((len(vv) for vv in v) for v in vals)))
@@ -346,14 +333,11 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
-    def _get_sholl(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
-        vals, _ = self._get_sholl_impl(feature, **kwargs)
+    def _get_sholl(self, **kwargs) -> NDArrayf32:
+        vals, _ = self._get_sholl_impl(**kwargs)
         return vals
 
-    def _get_sholl_impl(
-        self, feature: FeatAndKwargs, **kwargs
-    ) -> Tuple[NDArrayf32, NDArrayf32]:
-        _, kwargs = _get_feat_and_kwargs(feature, **kwargs)
+    def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
         rmaxs = chain.from_iterable((t.sholl.rmax for t in p) for p in self._features)
         rmax = max(rmaxs)
         rs = Sholl.get_rs(rmax=rmax, steps=20)
@@ -363,15 +347,13 @@ class PopulationsFeatureExtractor(FeatureExtractor):
     def _plot_histogram_impl(
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        def histogram(v):
+        def hist(v):
             return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
 
-        hists = [[histogram(t) for t in p] for p in vals]
-        hist = np.stack(hists)
+        xs = (bin_edges[:-1] + bin_edges[1:]) / 2
+        ys = np.stack([[hist(t) for t in p] for p in vals])
 
-        x = (bin_edges[:-1] + bin_edges[1:]) / 2
-
-        ax = self._lineplot(xs=x, ys=hist, **kwargs)
+        ax = self._lineplot(xs=xs, ys=ys, **kwargs)
         ax.set_ylabel("Count")
         return ax
 
@@ -382,15 +364,14 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
         return ax
 
-    def _plot_sholl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        vals, rs = self._get_sholl_impl(feature)
+    def _plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(**feature_kwargs)
         ax = self._lineplot(xs=rs, ys=vals, **kwargs)
         ax.set_ylabel("Count of Intersections")
         return ax
 
     def _lineplot(self, xs, ys, **kwargs) -> Axes:
         p, t, f = ys.shape
-
         xs = np.tile(xs, p * t)  # (F,) -> (P * T * F)
         ys = ys.flatten()  # (P, T, F) -> (P * T * F)
 
