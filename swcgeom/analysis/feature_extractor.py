@@ -61,15 +61,15 @@ class Features:
     # fmt:off
     # Modules
     @cached_property
-    def _node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
+    def node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
     @cached_property
-    def _bifurcation_features(self) -> BifurcationFeatures: return BifurcationFeatures(self._node_features)
+    def bifurcation_features(self) -> BifurcationFeatures: return BifurcationFeatures(self.node_features)
     @cached_property
-    def _tip_features(self) -> TipFeatures: return TipFeatures(self._node_features)
+    def tip_features(self) -> TipFeatures: return TipFeatures(self.node_features)
     @cached_property
-    def _branch_features(self) -> BranchFeatures: return BranchFeatures(self.tree)
+    def branch_features(self) -> BranchFeatures: return BranchFeatures(self.tree)
     @cached_property
-    def _path_features(self) -> PathFeatures: return PathFeatures(self.tree)
+    def path_features(self) -> PathFeatures: return PathFeatures(self.tree)
 
     # Caches
     @cached_property
@@ -89,14 +89,14 @@ class Features:
             return calc  # custom features
 
         components = feature.split("_")
-        if (module := getattr(self, f"_{components[0]}_features", None)) and callable(
+        if (module := getattr(self, f"{components[0]}_features", None)) and callable(
             calc := getattr(module, f"get_{'_'.join(components[1:])}", None)
         ):
             return calc
 
         raise ValueError(f"Invalid feature: {feature}")
 
-    # Features
+    # Custom Features
 
     def get_length(self, **kwargs) -> NDArrayf32:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
@@ -143,7 +143,7 @@ class FeatureExtractor(ABC):
         there are NO guarantees.
         """
         feat, feat_kwargs = _get_feat_and_kwargs(feature)
-        if callable(custom_plot := getattr(self, f"_plot_{feat}", None)):
+        if callable(custom_plot := getattr(self, f"plot_{feat}", None)):
             ax = custom_plot(feat_kwargs, **kwargs)
         elif feat in Feature1D:
             ax = self._plot_1d(feature, **kwargs)
@@ -157,10 +157,19 @@ class FeatureExtractor(ABC):
 
         return ax
 
+    # Custom Plots
+
+    def plot_node_branch_order(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+        vals = self._get("node_branch_order", **feature_kwargs)
+        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
+        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
+
+    # Implements
+
     def _get(self, feature: FeatAndKwargs, **kwargs) -> NDArrayf32:
         feat, kwargs = _get_feat_and_kwargs(feature, **kwargs)
-        if callable(get := getattr(self, f"_get_{feat}", None)):
-            return get(**kwargs)
+        if callable(custom_get := getattr(self, f"get_{feat}", None)):
+            return custom_get(**kwargs)
 
         return self._get_impl(feat, **kwargs)  # default
 
@@ -195,22 +204,6 @@ class FeatureExtractor(ABC):
     ) -> Axes:
         raise NotImplementedError()
 
-    # custom features
-
-    def _plot_node_branch_order(self, *args, **kwargs) -> Axes:
-        return self._plot_node_branch_order_impl(*args, **kwargs)
-
-    def _plot_bifurcation_branch_order(self, *args, **kwargs) -> Axes:
-        return self._plot_node_branch_order_impl(*args, **kwargs)
-
-    def _plot_tip_branch_order(self, *args, **kwargs) -> Axes:
-        return self._plot_node_branch_order_impl(*args, **kwargs)
-
-    def _plot_node_branch_order_impl(self, feature: FeatAndKwargs, **kwargs) -> Axes:
-        vals = self._get(feature)
-        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
-        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
-
 
 class TreeFeatureExtractor(FeatureExtractor):
     """Extract feature from tree."""
@@ -222,6 +215,23 @@ class TreeFeatureExtractor(FeatureExtractor):
         super().__init__()
         self._tree = tree
         self._features = Features(tree)
+
+    # Custom Features
+
+    def get_sholl(self, **kwargs) -> NDArrayf32:
+        return self._features.sholl.get(**kwargs).astype(np.float32)
+
+    # Custom Plots
+
+    def plot_sholl(
+        self,
+        feature_kwargs: Dict[str, Any],  # pylint: disable=unused-argument
+        **kwargs,
+    ) -> Axes:
+        _, ax = self._features.sholl.plot(**kwargs)
+        return ax
+
+    # Implements
 
     def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         return self._features.get(feature, **kwargs)
@@ -241,14 +251,6 @@ class TreeFeatureExtractor(FeatureExtractor):
         name = basename(self._tree.source)
         return sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
 
-    def _plot_sholl(
-        self,
-        feature_kwargs: Dict[str, Any],  # pylint: disable=unused-argument
-        **kwargs,
-    ) -> Axes:
-        _, ax = self._features.sholl.plot(**kwargs)
-        return ax
-
 
 class PopulationFeatureExtractor(FeatureExtractor):
     """Extract features from population."""
@@ -261,15 +263,27 @@ class PopulationFeatureExtractor(FeatureExtractor):
         self._population = population
         self._features = [Features(t) for t in self._population]
 
+    # Custom Features
+
+    def get_sholl(self, **kwargs) -> NDArrayf32:
+        vals, _ = self._get_sholl_impl(**kwargs)
+        return vals
+
+    # Custom Plots
+
+    def plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(**feature_kwargs)
+        ax = self._lineplot(xs=rs, ys=vals.flatten(), **kwargs)
+        ax.set_ylabel("Count of Intersections")
+        return ax
+
+    # Implements
+
     def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         vals = [f.get(feature, **kwargs) for f in self._features]
         len_max = max(len(v) for v in vals)
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
-
-    def _get_sholl(self, **kwargs) -> NDArrayf32:
-        vals, _ = self._get_sholl_impl(**kwargs)
-        return vals
 
     def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
         rmax = max(t.sholl.rmax for t in self._features)
@@ -298,12 +312,6 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_xticks([])
         return ax
 
-    def _plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
-        vals, rs = self._get_sholl_impl(**feature_kwargs)
-        ax = self._lineplot(xs=rs, ys=vals.flatten(), **kwargs)
-        ax.set_ylabel("Count of Intersections")
-        return ax
-
     def _lineplot(self, xs, ys, **kwargs) -> Axes:
         xs = np.tile(xs, len(self._population))
         ys = ys.flatten()
@@ -322,6 +330,22 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         self._populations = populations
         self._features = [[Features(t) for t in p] for p in populations.populations]
 
+    # Custom Features
+
+    def get_sholl(self, **kwargs) -> NDArrayf32:
+        vals, _ = self._get_sholl_impl(**kwargs)
+        return vals
+
+    # Custom Plots
+
+    def plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+        vals, rs = self._get_sholl_impl(**feature_kwargs)
+        ax = self._lineplot(xs=rs, ys=vals, **kwargs)
+        ax.set_ylabel("Count of Intersections")
+        return ax
+
+    # Implements
+
     def _get_impl(self, feature: Feature, **kwargs) -> NDArrayf32:
         vals = [[f.get(feature, **kwargs) for f in fs] for fs in self._features]
         len_max1 = max(len(v) for v in vals)
@@ -332,10 +356,6 @@ class PopulationsFeatureExtractor(FeatureExtractor):
                 out[i, j, : len(vv)] = vv
 
         return out
-
-    def _get_sholl(self, **kwargs) -> NDArrayf32:
-        vals, _ = self._get_sholl_impl(**kwargs)
-        return vals
 
     def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
         rmaxs = chain.from_iterable((t.sholl.rmax for t in p) for p in self._features)
@@ -362,12 +382,6 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
         y = vals.flatten()
         ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
-        return ax
-
-    def _plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
-        vals, rs = self._get_sholl_impl(**feature_kwargs)
-        ax = self._lineplot(xs=rs, ys=vals, **kwargs)
-        ax.set_ylabel("Count of Intersections")
         return ax
 
     def _lineplot(self, xs, ys, **kwargs) -> Axes:
