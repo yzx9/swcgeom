@@ -30,14 +30,15 @@ Feature = Literal[
     "length",
     "sholl",
     # node
+    "node_count",
     "node_radial_distance",
     "node_branch_order",
     # bifurcation nodes
+    "bifurcation_count",
     "bifurcation_radial_distance",
-    "bifurcation_branch_order",
     # tip nodes
+    "tip_count",
     "tip_radial_distance",
-    "tip_branch_order",
     # branch
     "branch_length",
     "branch_tortuosity",
@@ -50,6 +51,8 @@ Bins = int | npt.ArrayLike | str
 Range = Optional[Tuple[float, float]]
 HistAndBinEdges = Tuple[npt.NDArray, npt.NDArray]
 FeatureWithKwargs = Feature | Tuple[Feature, Dict[str, Any]]
+
+Feature1D = set(["length", "node_count", "bifurcation_count", "tip_count"])
 
 
 class Features:
@@ -121,12 +124,12 @@ class FeatureExtractor(ABC):
         returns array of shape (N, L).
         """
         if isinstance(feature, dict):
-            return {k: self._custom_get(k, **v) for k, v in feature.items()}
+            return {k: self._get(k, **v) for k, v in feature.items()}
 
         if isinstance(feature, list):
-            return [self._custom_get(k) for k in feature]
+            return [self._get(k) for k in feature]
 
-        return self._custom_get(feature, **kwargs)
+        return self._get(feature, **kwargs)
 
     def plot(
         self, feature: FeatureWithKwargs, title: str | bool = True, **kwargs
@@ -140,41 +143,58 @@ class FeatureExtractor(ABC):
         there are NO guarantees.
         """
         feat, _ = _get_feature_and_kwargs(feature)
-        if not callable(plot := getattr(self, f"_plot_{feat}", None)):
-            plot = self._plot  # default plot
+        if callable(custom_plot := getattr(self, f"_plot_{feat}", None)):
+            plot = custom_plot
+        elif feat in Feature1D:
+            plot = self._plot_1d
+        else:
+            plot = self._plot_histogram  # default plot
 
         ax = plot(feature, **kwargs)
 
         if isinstance(title, str):
             ax.set_title(title)
         elif title is True:
-            ax.set_title(feat.replace("_", " ").title())
+            ax.set_title(_get_feature_name(feat))
 
         return ax
 
-    def _custom_get(
-        self, feature: FeatureWithKwargs, **kwargs
-    ) -> npt.NDArray[np.float32]:
+    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
         feat, _ = _get_feature_and_kwargs(feature)
         if not callable(get := getattr(self, f"_get_{feat}", None)):
-            get = self._get  # default
+            get = self._get_impl  # default
 
         return get(feature, **kwargs)
 
+    def _plot_1d(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
+        vals = self._get_impl(feature)
+        ax = self._plot_1d_impl(vals, **kwargs)
+        ax.set_ylabel(_get_feature_name(feature))
+        return ax
+
+    def _plot_histogram(
+        self,
+        feature: FeatureWithKwargs,
+        bins=20,
+        range=None,  # pylint: disable=redefined-builtin
+        **kwargs,
+    ) -> Axes:
+        vals = self._get_impl(feature)
+        bin_edges = np.histogram_bin_edges(vals, bins, range)
+        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
+
     @abstractmethod
-    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _get_impl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
-    # pylint: disable=redefined-builtin
-    def _plot(
-        self, feature: FeatureWithKwargs, bins="auto", range=None, **kwargs
-    ) -> Axes:
-        vals = self._get(feature)
-        bin_edges = np.histogram_bin_edges(vals, bins, range)
-        return self._plot_histogram(vals, bin_edges, **kwargs)
+    @abstractmethod
+    def _plot_1d_impl(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        raise NotImplementedError()
 
     @abstractmethod
-    def _plot_histogram(
+    def _plot_histogram_impl(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         raise NotImplementedError()
@@ -182,27 +202,27 @@ class FeatureExtractor(ABC):
     # custom features
 
     def _plot_node_branch_order(self, *args, **kwargs) -> Axes:
-        return self._impl_plot_node_branch_order(*args, **kwargs)
+        return self._plot_node_branch_order_impl(*args, **kwargs)
 
     def _plot_bifurcation_branch_order(self, *args, **kwargs) -> Axes:
-        return self._impl_plot_node_branch_order(*args, **kwargs)
+        return self._plot_node_branch_order_impl(*args, **kwargs)
 
     def _plot_tip_branch_order(self, *args, **kwargs) -> Axes:
-        return self._impl_plot_node_branch_order(*args, **kwargs)
+        return self._plot_node_branch_order_impl(*args, **kwargs)
 
     def _plot_sholl(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
         _, feat_kwargs = _get_feature_and_kwargs(feature)
         step = feat_kwargs.get("step", 1)  # TODO: remove hard code
-        vals = self._get(feature)
+        vals = self._get_impl(feature)
         bin_edges = np.arange(step / 2, step * (vals.shape[-1] + 1), step)
-        return self._plot_histogram(vals, bin_edges, **kwargs)
+        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
 
-    def _impl_plot_node_branch_order(
+    def _plot_node_branch_order_impl(
         self, feature: FeatureWithKwargs, **kwargs
     ) -> Axes:
-        vals = self._get(feature)
+        vals = self._get_impl(feature)
         bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
-        return self._plot_histogram(vals, bin_edges, **kwargs)
+        return self._plot_histogram_impl(vals, bin_edges, **kwargs)
 
 
 class TreeFeatureExtractor(FeatureExtractor):
@@ -216,10 +236,12 @@ class TreeFeatureExtractor(FeatureExtractor):
         self._tree = tree
         self._features = Features(tree)
 
-    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _get_impl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         return self._features.get(feature, **kwargs)
 
-    def _plot_histogram(
+    def _plot_histogram_impl(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         weights = (vals != 0).astype(np.int32)
@@ -230,9 +252,13 @@ class TreeFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
+    def _plot_1d_impl(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
+        name = basename(self._tree.source)
+        return sns.barplot(x=[name], y=vals.squeeze(), **kwargs)
+
     def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
         name = basename(self._tree.source)
-        ax: Axes = sns.barplot(x=[name], y=self._get(feature).squeeze(), **kwargs)
+        ax: Axes = sns.barplot(x=[name], y=self._get_impl(feature).squeeze(), **kwargs)
         ax.set_ylabel("Length")
         return ax
 
@@ -248,16 +274,20 @@ class PopulationFeatureExtractor(FeatureExtractor):
         self._population = population
         self._features = [Features(t) for t in self._population]
 
-    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _get_impl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         vals = [f.get(feature, **kwargs) for f in self._features]
         len_max = max(len(v) for v in vals)
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
-    def _get_sholl(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _get_sholl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
-    def _plot_histogram(
+    def _plot_histogram_impl(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         hists = [
@@ -271,16 +301,17 @@ class PopulationFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
-    def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
+    def _plot_1d_impl(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
         x = [basename(t.source) for t in self._population]
-        y = self._get(feature).flatten()
+        y = vals.flatten()
         ax: Axes = sns.barplot(x=x, y=y, **kwargs)
         ax.axhline(y=y.mean(), ls="--", lw=1)
-        ax.set_ylabel("Length")
         ax.set_xticks([])
         return ax
 
-    def _plot_sholl(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _plot_sholl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         raise NotImplementedError()
 
 
@@ -297,7 +328,9 @@ class PopulationsFeatureExtractor(FeatureExtractor):
             [Features(t) for t in p] for p in self._populations.populations
         ]
 
-    def _get(self, feature: FeatureWithKwargs, **kwargs) -> npt.NDArray[np.float32]:
+    def _get_impl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
         vals = [[f.get(feature, **kwargs) for f in fs] for fs in self._features]
         len_max1 = max(len(v) for v in vals)
         len_max2 = max(*chain.from_iterable(((len(vv) for vv in v) for v in vals)))
@@ -308,13 +341,13 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
-    def _plot_histogram(
+    def _plot_histogram_impl(
         self, vals: npt.NDArray[np.float32], bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         def histogram(v):
-            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))
+            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
 
-        hists = [[histogram(t)[0] for t in p] for p in vals]
+        hists = [[histogram(t) for t in p] for p in vals]
         hist = np.concatenate(hists).flatten()
 
         repeats = np.prod(vals.shape[:2]).item()
@@ -328,14 +361,17 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         ax.set_ylabel("Count")
         return ax
 
-    def _plot_length(self, feature: FeatureWithKwargs, **kwargs) -> Axes:
-        vals = self._get(feature)
+    def _plot_1d_impl(self, vals: npt.NDArray[np.float32], **kwargs) -> Axes:
         labels = self._populations.labels
         x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
         y = vals.flatten()
         ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
-        ax.set_ylabel("Length")
         return ax
+
+    def _plot_sholl(
+        self, feature: FeatureWithKwargs, **kwargs
+    ) -> npt.NDArray[np.float32]:
+        raise NotImplementedError()
 
 
 def extract_feature(obj: Tree | Population) -> FeatureExtractor:
@@ -356,3 +392,8 @@ def _get_feature_and_kwargs(feature: FeatureWithKwargs, **kwargs):
         return feature[0], {**feature[1], **kwargs}
 
     return feature, kwargs
+
+
+def _get_feature_name(feature: FeatureWithKwargs) -> str:
+    feat, _ = _get_feature_and_kwargs(feature)
+    return feat.replace("_", " ").title()

@@ -24,6 +24,15 @@ class NodeFeatures:
     def __init__(self, tree: Tree) -> None:
         self.tree = tree
 
+    def get_count(self) -> npt.NDArray[np.float32]:
+        """Get number of nodes.
+
+        Returns
+        -------
+        count : array of shape (1,)
+        """
+        return np.array([self.tree.number_of_nodes()], dtype=np.float32)
+
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
         """Get the end-to-end straight-line distance to soma.
 
@@ -37,15 +46,17 @@ class NodeFeatures:
         return radial_distance
 
     def get_branch_order(self) -> npt.NDArray[np.int32]:
-        """Get branch order of tree.
+        """Get branch order of criticle nodes of tree.
 
-        Bifurcation order is the number of bifurcations between current
+        Branch order is the number of bifurcations between current
         position and the root.
+
+        Criticle node means that soma, bifucation nodes, tips.
 
         Returns
         -------
         order : npt.NDArray[np.int32]
-            Array of shape (k,), which k is the number of branchs.
+            Array of shape (N,), which k is the number of branchs.
         """
         order = np.zeros_like(self._branch_tree.id(), dtype=np.int32)
 
@@ -55,8 +66,7 @@ class NodeFeatures:
             return cur_order
 
         self._branch_tree.traverse(enter=assign_depth)
-        nodes = [n.id for n in self._branch_tree if not n.is_tip()]  # filter tips
-        return order[nodes]
+        return order
 
 
 class _SubsetNodesFeatures(ABC):
@@ -70,7 +80,24 @@ class _SubsetNodesFeatures(ABC):
     def __init__(self, features: NodeFeatures) -> None:
         self._features = features
 
+    def get_count(self) -> npt.NDArray[np.float32]:
+        """Get number of nodes.
+
+        Returns
+        -------
+        count : npt.NDArray[np.float32]
+            Array of shape (1,).
+        """
+        return np.array([np.count_nonzero(self.nodes)], dtype=np.float32)
+
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
+        """Get the end-to-end straight-line distance to soma.
+
+        Returns
+        -------
+        radial_distance : npt.NDArray[np.float32]
+            Array of shape (N,).
+        """
         return self._features.get_radial_distance()[self.nodes]
 
     @classmethod
