@@ -5,4 +5,5 @@ from .branch import *
 from .geometry import *
 from .image_stack import *
 from .mst import *
+from .population import *
 from .tree import *

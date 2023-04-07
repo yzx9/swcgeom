@@ -190,15 +190,15 @@ class Populations:
     labels: List[str]
 
     def __init__(
-        self, populations: List[Population], labels: Optional[List[str]] = None
+        self, populations: Iterable[Population], labels: Optional[List[str]] = None
     ) -> None:
         self.len = min(len(p) for p in populations)
-        self.populations = populations
+        self.populations = list(populations)
 
         labels = labels or ["" for i in populations]
         assert len(labels) == len(
-            populations
-        ), f"got {len(populations)} populations, but {len(labels)} labels"
+            self.populations
+        ), f"got {len( self.populations)} populations, but has {len(labels)} labels"
         self.labels = labels
 
     # fmt:off
