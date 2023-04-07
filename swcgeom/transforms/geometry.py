@@ -74,11 +74,11 @@ class _Transform(Generic[T], Transform[T, T]):
             case _:
                 tm = self.tm
 
-        xyzw = x.xyzw().dot(tm)
+        xyzw = x.xyzw().dot(tm).T
         y = x.copy()
         y.ndata[self.names.x] = xyzw[0]
         y.ndata[self.names.y] = xyzw[1]
-        y.ndata[self.names.x] = xyzw[2]
+        y.ndata[self.names.z] = xyzw[2]
         return y
 
     def __repr__(self) -> str:
