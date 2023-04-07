@@ -3,36 +3,129 @@
 import os
 import warnings
 from functools import reduce
-from itertools import chain
-from typing import Any, Dict, Iterator, List, Optional, cast, overload
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Protocol,
+    cast,
+    overload,
+)
 
 import numpy as np
+import numpy.typing as npt
 from typing_extensions import Self
 
 from .swc import eswc_cols
 from .tree import Tree
 
-__all__ = ["Population", "Populations"]
+__all__ = ["LazyLoadingTrees", "ChainTrees", "Population", "Populations"]
+
+
+class Trees(Protocol):
+    """Trees protocol support index and len."""
+
+    # fmt: off
+    def __getitem__(self, key: int, /) -> Tree: ...
+    def __len__(self) -> int: ...
+    # fmt: on
+
+
+class LazyLoadingTrees:
+    """Lazy loading trees."""
+
+    swcs: List[str]
+    trees: List[Tree | None]
+    kwargs: Dict[str, Any]
+
+    def __init__(self, swcs: List[str], **kwargs) -> None:
+        """
+        Paramters
+        ---------
+        swcs : List of str
+        kwargs : Dict[str, Any]
+            Forwarding to `Tree.from_swc`
+        """
+        super().__init__()
+        self.swcs = swcs
+        self.trees = [None for _ in swcs]
+        self.kwargs = kwargs
+
+    def __getitem__(self, key: int, /) -> Tree:
+        idx = _get_idx(key, len(self))
+        self.load(idx)
+        return cast(Tree, self.trees[idx])
+
+    def __len__(self) -> int:
+        return len(self.swcs)
+
+    def load(self, key: int) -> None:
+        if self.trees[key] is None:
+            self.trees[key] = Tree.from_swc(self.swcs[key], **self.kwargs)
+
+
+class ChainTrees:
+    """Chain trees."""
+
+    trees: List[Trees]
+    cumsum: npt.NDArray[np.int64]
+
+    def __init__(self, trees: Iterable[Trees]) -> None:
+        super().__init__()
+        self.trees = list(trees)
+        self.cumsum = np.cumsum([0] + [len(ts) for ts in trees])
+
+    def __getitem__(self, key: int, /) -> Tree:
+        i, j = 1, len(self.trees)  # cumsum[0] === 0
+        idx = _get_idx(key, len(self))
+        while i < j:
+            mid = (i + j) // 2
+            if self.cumsum[mid] <= idx:
+                i = mid + 1
+            else:
+                j = mid
+
+        return self.trees[i - 1][idx - self.cumsum[i - 1]]
+
+    def __len__(self) -> int:
+        return self.cumsum[-1].item()
 
 
 class Population:
     """Neuron population."""
 
-    root: str
-    swcs: List[str]
-    trees: List[Tree | None]
-    kwargs: Dict[str, Any]
+    trees: Trees
 
-    def __init__(
-        self, swcs: List[str], lazy_loading: bool = True, root: str = "", **kwargs
-    ) -> None:
+    # fmt: off
+    @overload
+    def __init__(self, swcs: List[str], lazy_loading: bool = ..., root: str = ..., **kwargs) -> None: ...
+    @overload
+    def __init__(self, trees: Trees, /, *, root: str = "") -> None: ...
+    # fmt: on
+
+    def __init__(self, swcs, lazy_loading=True, root="", **kwargs) -> None:
         super().__init__()
+        if len(swcs) > 0 and isinstance(swcs[0], str):
+            warnings.warn(
+                "`Population(swcs)` has been replaced by "
+                "`Population(LazyLoadingTrees(swcs))` since v0.8.0 "
+                "thus we can create a population from a group of trees, "
+                " and this will be removed in next version",
+                DeprecationWarning,
+            )
+
+            trees = LazyLoadingTrees(swcs, **kwargs)  # type: ignore
+            if not lazy_loading:
+                for i in range(len(swcs)):
+                    trees.load(i)
+        else:
+            trees = swcs
+
+        self.trees = trees  # type: ignore
         self.root = root
-        self.swcs = swcs
-        self.trees = [None for _ in swcs]
-        self.kwargs = kwargs
-        if not lazy_loading:
-            self.load(slice(len(swcs)))
 
     # fmt:off
     @overload
@@ -41,41 +134,22 @@ class Population:
     def __getitem__(self, key: int) -> Tree: ...
     # fmt:on
     def __getitem__(self, key):
-        self.load(key)
         if isinstance(key, slice):
             return [cast(Tree, self.trees[i]) for i in range(*key.indices(len(self)))]
 
         if isinstance(key, (int, np.integer)):
-            return cast(Tree, self.trees[key])
+            return cast(Tree, self.trees[int(key)])
 
         raise TypeError("Invalid argument type.")
 
     def __len__(self) -> int:
-        return len(self.swcs)
+        return len(self.trees)
 
     def __iter__(self) -> Iterator[Tree]:
         return (self[i] for i in range(self.__len__()))
 
     def __repr__(self) -> str:
         return f"Neuron population in '{self.root}'"
-
-    # fmt:off
-    @overload
-    def load(self, key: slice) -> None: ...
-    @overload
-    def load(self, key: int) -> None: ...
-    # fmt:on
-    def load(self, key):
-        if isinstance(key, slice):
-            idx = range(*key.indices(len(self)))
-        elif isinstance(key, (int, np.integer)):
-            idx = [key]
-        else:
-            raise TypeError("Invalid argument type.")
-
-        for i in idx:
-            if self.trees[i] is None:
-                self.trees[i] = Tree.from_swc(self.swcs[i], **self.kwargs)
 
     @classmethod
     def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
@@ -137,6 +211,7 @@ class Populations:
         return [p[key] for p in self.populations]
 
     def __len__(self) -> int:
+        """Miniumn length of populations."""
         return self.len
 
     def __iter__(self) -> Iterator[List[Tree]]:
@@ -152,8 +227,7 @@ class Populations:
         return len(self.populations)
 
     def to_population(self) -> Population:
-        swcs = list(chain.from_iterable(p.swcs for p in self.populations))
-        return Population(swcs)
+        return Population(ChainTrees(p.trees for p in self.populations))
 
     @classmethod
     def from_swc(  # pylint: disable=too-many-arguments
@@ -191,7 +265,9 @@ class Populations:
             assert reduce(lambda a, b: a == b, fs), "not the same among populations"
 
         populations = [
-            Population([os.path.join(d, p) for p in fs[i]], root=d, **kwargs)
+            Population(
+                LazyLoadingTrees([os.path.join(d, p) for p in fs[i]]), root=d, **kwargs
+            )
             for i, d in enumerate(roots)
         ]
         return cls(populations, labels=labels)
@@ -203,3 +279,13 @@ class Populations:
         extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, **kwargs)
+
+
+def _get_idx(key: int, length: int) -> int:
+    if key < -length or key >= length:
+        raise IndexError(f"The index ({key}) is out of range.")
+
+    if key < 0:  # Handle negative indices
+        key += length
+
+    return key
