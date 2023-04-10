@@ -13,6 +13,7 @@ from .base import Transform
 __all__ = [
     "Normalizer",
     "Translate",
+    "TranslateOrigin",
     "Scale",
     "Rotate",
     "RotateX",
@@ -95,6 +96,25 @@ class Translate(_Transform[T]):
     @classmethod
     def transform(cls, x: T, tx: float, ty: float, tz: float) -> T:
         return cls(tx, ty, tz)(x)
+
+
+class TranslateOrigin:
+    """Translate root of SWC to origin point."""
+
+    def __init__(self, names: Optional[SWCNames] = None) -> None:
+        self.names = get_names(names)
+
+    def __call__(self, x: T) -> T:
+        idx = np.nonzero(x.ndata[self.names.pid] == -1)[0].item()
+        xyz = x.xyz()[idx]
+        tm = translate3d(-xyz[0], -xyz[1], -xyz[2])
+
+        xyzw = x.xyzw().dot(tm).T
+        y = x.copy()
+        y.ndata[self.names.x] = xyzw[0]
+        y.ndata[self.names.y] = xyzw[1]
+        y.ndata[self.names.z] = xyzw[2]
+        return y
 
 
 class Scale(_Transform[T]):
