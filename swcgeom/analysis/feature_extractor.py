@@ -239,8 +239,7 @@ class TreeFeatureExtractor(FeatureExtractor):
     def _plot_histogram_impl(
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
-        weights = (vals != 0).astype(np.int32)
-        hist, _ = np.histogram(vals, bins=bin_edges, weights=weights)
+        hist, _ = np.histogram(vals[vals != 0], bins=bin_edges)
         x = (bin_edges[:-1] + bin_edges[1:]) / 2
 
         ax: Axes = sns.barplot(x=x, y=hist, **kwargs)
@@ -295,7 +294,7 @@ class PopulationFeatureExtractor(FeatureExtractor):
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         def hist(v):
-            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
+            return np.histogram(v[v != 0], bins=bin_edges)[0]
 
         xs = (bin_edges[:-1] + bin_edges[1:]) / 2
         ys = np.stack([hist(v) for v in vals])
@@ -368,10 +367,10 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         def hist(v):
-            return np.histogram(v, bins=bin_edges, weights=(v != 0).astype(np.int32))[0]
+            return np.histogram(v[v != 0], bins=bin_edges)[0]
 
         xs = (bin_edges[:-1] + bin_edges[1:]) / 2
-        ys = np.stack([[hist(t) for t in p] for p in vals])
+        ys = np.stack([np.stack([hist(t) for t in p]) for p in vals])
 
         ax = self._lineplot(xs=xs, ys=ys, **kwargs)
         ax.set_ylabel("Count")
@@ -379,20 +378,28 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
     def _plot_1d_impl(self, vals: NDArrayf32, **kwargs) -> Axes:
         labels = self._populations.labels
-        x = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
-        y = vals.flatten()
-        ax: Axes = sns.boxplot(x=x, y=y, **kwargs)
+        xs = np.concatenate([np.full(vals.shape[1], fill_value=i) for i in labels])
+        ys = vals.flatten()
+
+        # The numbers of tree in different populations may not be equal
+        valid = ys != 0
+        xs, ys = xs[valid], ys[valid]
+
+        ax: Axes = sns.boxplot(x=xs, y=ys, **kwargs)
         return ax
 
     def _lineplot(self, xs, ys, **kwargs) -> Axes:
         p, t, f = ys.shape
-        xs = np.tile(xs, p * t)  # (F,) -> (P * T * F)
-        ys = ys.flatten()  # (P, T, F) -> (P * T * F)
-
         labels = self._populations.labels  # (P,)
+        x = np.tile(xs, p * t)  # (F,) -> (P * T * F)
+        y = ys.flatten()  # (P, T, F) -> (P * T * F)
         hue = np.concatenate([np.full(t * f, fill_value=i) for i in labels])
 
-        ax: Axes = sns.lineplot(x=xs, y=ys, hue=hue, **kwargs)
+        # The numbers of tree in different populations may not be equal
+        valid = np.repeat(np.any(ys != 0, axis=2), f)
+        x, y, hue = x[valid], y[valid], hue[valid]
+
+        ax: Axes = sns.lineplot(x=x, y=y, hue=hue, **kwargs)
         ax.set_ylabel("Count")
         return ax
 
