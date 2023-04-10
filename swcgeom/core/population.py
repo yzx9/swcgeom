@@ -127,6 +127,9 @@ class Population:
         self.trees = trees  # type: ignore
         self.root = root
 
+        if len(swcs) == 0:
+            warnings.warn(f"no trees in population from '{root}'")
+
     # fmt:off
     @overload
     def __getitem__(self, key: slice) -> List[Tree]: ...
@@ -153,9 +156,12 @@ class Population:
 
     @classmethod
     def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
+        if not os.path.exists(root):
+            raise FileNotFoundError(
+                f"the root does not refers to an existing directory: {root}"
+            )
+
         swcs = cls.find_swcs(root, ext)
-        if len(swcs) == 0:
-            warnings.warn(f"no trees in population from '{root}'")
         return Population(swcs, root=root, **kwargs)
 
     @classmethod
