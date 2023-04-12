@@ -160,8 +160,9 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
     traverse(topo, enter=lambda n, _: ids.append(n), root=n)
 
     sub_ids = np.array(ids, dtype=np.int32)
-    sub = (sub_ids, swc_like.pid()[sub_ids])
-    return _to_subtree(swc_like, sub)
+    sub_pid = swc_like.pid()[sub_ids]
+    sub_pid[0] = -1
+    return _to_subtree(swc_like, (sub_ids, sub_pid))
 
 
 def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
