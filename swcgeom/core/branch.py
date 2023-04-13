@@ -43,7 +43,9 @@ class Branch(Path, Generic[SWCTypeVar]):
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
         attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
-        return Branch(attact, np.arange(self.number_of_nodes()))
+        attact.ndata[self.names.id] = self.id()
+        attact.ndata[self.names.pid] = self.pid()
+        return Branch(attact, self.id())
 
     @classmethod
     def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> "Branch[DictSWC]":

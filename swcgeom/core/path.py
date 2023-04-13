@@ -30,7 +30,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         self.idx = np.array(idx, dtype=np.int32)
 
     def __iter__(self) -> Iterator[Node]:
-        return (self[i] for i in range(len(self)))
+        return (self.get_node(i) for i in range(len(self)))
 
     def __len__(self) -> int:
         return self.id().shape[0]
@@ -77,9 +77,13 @@ class Path(SWCLike, Generic[SWCTypeVar]):
 
     def detach(self) -> "Path[DictSWC]":
         """Detach from current attached object."""
-        # pylint: disable=consider-using-dict-items
-        attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
-        return Path(attact, self.idx.copy())
+        # pylint: disable-next=consider-using-dict-items
+        attact = DictSWC(
+            **{k: self.get_ndata(k) for k in self.keys()}, names=self.names
+        )
+        attact.ndata[self.names.id] = self.id()
+        attact.ndata[self.names.pid] = self.pid()
+        return Path(attact, self.id())
 
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,).
@@ -122,7 +126,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         The end-to-end straight-line distance between start point and
         end point.
         """
-        return np.linalg.norm(self[-1].xyz() - self[0].xyz()).item()
+        return np.linalg.norm(self.get_node(-1).xyz() - self.get_node(0).xyz()).item()
 
     def tortuosity(self) -> float:
         """Tortuosity of path.
