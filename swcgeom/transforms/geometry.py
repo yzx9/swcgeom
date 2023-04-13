@@ -12,6 +12,7 @@ from .base import Transform
 
 __all__ = [
     "Normalizer",
+    "AffineTransform",
     "Translate",
     "TranslateOrigin",
     "Scale",
@@ -46,7 +47,9 @@ class Normalizer(Generic[T], Transform[T, T]):
         return new_tree
 
 
-class _Transform(Generic[T], Transform[T, T]):
+class AffineTransform(Generic[T], Transform[T, T]):
+    """Apply affine matrix."""
+
     tm: npt.NDArray[np.float32]
     center: Center
     fmt: str
@@ -55,8 +58,8 @@ class _Transform(Generic[T], Transform[T, T]):
         self,
         tm: npt.NDArray[np.float32],
         center: Center = "origin",
-        fmt: str = "",
         *,
+        fmt: str,
         names: Optional[SWCNames] = None,
     ) -> None:
         self.tm, self.center, self.fmt = tm, center, fmt
@@ -86,7 +89,7 @@ class _Transform(Generic[T], Transform[T, T]):
         return self.fmt
 
 
-class Translate(_Transform[T]):
+class Translate(AffineTransform[T]):
     """Translate SWC."""
 
     def __init__(self, tx: float, ty: float, tz: float) -> None:
@@ -117,7 +120,7 @@ class TranslateOrigin:
         return y
 
 
-class Scale(_Transform[T]):
+class Scale(AffineTransform[T]):
     """Scale SWC."""
 
     def __init__(
@@ -133,7 +136,7 @@ class Scale(_Transform[T]):
         return cls(sx, sy, sz, center=center)(x)
 
 
-class Rotate(_Transform[T]):
+class Rotate(AffineTransform[T]):
     """Rotate SWC."""
 
     def __init__(
@@ -149,7 +152,7 @@ class Rotate(_Transform[T]):
         return cls(n, theta, center=center)(x)
 
 
-class RotateX(_Transform[T]):
+class RotateX(AffineTransform[T]):
     """Rotate SWC with x-axis."""
 
     def __init__(self, theta: float, center: Center = "root") -> None:
@@ -160,7 +163,7 @@ class RotateX(_Transform[T]):
         return cls(theta, center=center)(x)
 
 
-class RotateY(_Transform[T]):
+class RotateY(AffineTransform[T]):
     """Rotate SWC with y-axis."""
 
     def __init__(self, theta: float, center: Center = "root") -> None:
@@ -171,7 +174,7 @@ class RotateY(_Transform[T]):
         return cls(theta, center=center)(x)
 
 
-class RotateZ(_Transform[T]):
+class RotateZ(AffineTransform[T]):
     """Rotate SWC with z-axis."""
 
     def __init__(self, theta: float, center: Center = "root") -> None:
