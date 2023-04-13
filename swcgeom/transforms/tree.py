@@ -3,13 +3,16 @@
 import warnings
 from typing import Callable, List, Optional, Tuple
 
-from ..core import BranchTree, Tree, cut_tree, to_subtree
+import numpy as np
+
+from ..core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
 from .base import Transform
 from .branch import BranchConvSmoother
 from .geometry import Normalizer
 
 __all__ = [
     "ToBranchTree",
+    "ToLongestPath",
     "TreeSmoother",
     "TreeNormalizer",
     "CutByBifurcationOrder",
@@ -23,6 +26,15 @@ class ToBranchTree(Transform[Tree, BranchTree]):
 
     def __call__(self, x: Tree) -> BranchTree:
         return BranchTree.from_tree(x)
+
+
+class ToLongestPath(Transform[Tree, Path[DictSWC]]):
+    """Transform tree to longest path."""
+
+    def __call__(self, x: Tree) -> Path[DictSWC]:
+        paths = x.get_paths()
+        idx = np.argmax([p.length() for p in paths])
+        return paths[idx].detach()
 
 
 class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docstring
