@@ -161,7 +161,7 @@ class FeatureExtractor(ABC):
 
     def plot_node_branch_order(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
         vals = self._get("node_branch_order", **feature_kwargs)
-        bin_edges = np.arange(int(np.ceil(vals.max() + 1)))
+        bin_edges = np.arange(int(np.ceil(vals.max() + 1))) + 0.5
         return self._plot_histogram_impl(vals, bin_edges, **kwargs)
 
     # Implements
