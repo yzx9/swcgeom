@@ -1,3 +1,64 @@
+## **0.8.0**&emsp;<sub><sup>2023-04-18 ([3d2d660...bfee570](https://github.com/yzx9/swcgeom/compare/3d2d66034b269b1acf9a62cfeb8a8d3b85d1791a...bfee570d9989f10e5784323a60d2f06d5cf0877d?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- add node count ([149ecec](https://github.com/yzx9/swcgeom/commit/149ecec3543d9f5f63b5a140deb7975328f08589))
+- transform each tree in population ([fcd5fd7](https://github.com/yzx9/swcgeom/commit/fcd5fd734712a530548ef4c03e152045156281b3))
+- plot sholl in populations ([466cd3a](https://github.com/yzx9/swcgeom/commit/466cd3a8e1a85f68945f01fe862b039677da5d95))
+
+##### `core`
+
+- check is it a binary tree ([b919de9](https://github.com/yzx9/swcgeom/commit/b919de98654e3ed5b0934c3757ed22f6024c563c))
+- support create population from trees ([73792a0](https://github.com/yzx9/swcgeom/commit/73792a03f4b69ea3854f5f4dc3226f2301641a58))
+- check valid population ([199db95](https://github.com/yzx9/swcgeom/commit/199db957d73c2eb44ef538f85f97dca127d5a339))
+
+##### `images`
+
+- add image stack folder ([0318f0d](https://github.com/yzx9/swcgeom/commit/0318f0d9fc7ea513b0f9c24db1f7e3254d0ffbbb))
+- pathed image stack folder ([bfee570](https://github.com/yzx9/swcgeom/commit/bfee570d9989f10e5784323a60d2f06d5cf0877d))
+
+##### `transforms`
+
+- add \`LinesToTree\` ([5083f26](https://github.com/yzx9/swcgeom/commit/5083f2631935cfec3db0ad5d2e091e3849e14294))
+- add branch smoother ([a4e8cd2](https://github.com/yzx9/swcgeom/commit/a4e8cd2636fafd1d7cec8a650b54f72c37c78250))
+- add tree smoother ([082b05d](https://github.com/yzx9/swcgeom/commit/082b05df466cd83cfb6606b804d12192220602eb))
+- add transform \`TranslateOorigin\` ([5ef9c43](https://github.com/yzx9/swcgeom/commit/5ef9c43703cf08c0ea3074b1dda6d514f7daed95))
+- expose \`AffineTransform\` ([93d6ca9](https://github.com/yzx9/swcgeom/commit/93d6ca947cf9745a59af44e60e975de7269c8f78))
+
+##### `transfroms`
+
+- get tree longest path ([17b6eda](https://github.com/yzx9/swcgeom/commit/17b6eda9adc4aa32b721ac5084ba0906b2e79a7f))
+
+### Bug Fixes
+
+##### `analysis`
+
+- handle different number of trees ([94ffd2e](https://github.com/yzx9/swcgeom/commit/94ffd2ee3cc48beef295a1d60d31400a6b400bbc))
+- wrong x\-ticks ([ebd2e91](https://github.com/yzx9/swcgeom/commit/ebd2e911aafed1b546684d4832d453f8d0489b48))
+
+##### `core`
+
+- set new root ([54cecf2](https://github.com/yzx9/swcgeom/commit/54cecf2bcec9473fa5141eccf0b254428dc229a9))
+- detach with new id and pid ([a5f1791](https://github.com/yzx9/swcgeom/commit/a5f17914fe59a6695ce2508ca7a0626500557f19))
+
+##### `images`
+
+- patch has 4 dim ([ccdb4d7](https://github.com/yzx9/swcgeom/commit/ccdb4d7c174bb408de7187be092e2af66033808e))
+
+##### `transform`
+
+- typo ([7bfa106](https://github.com/yzx9/swcgeom/commit/7bfa10688c3cf437339cbc4d9a60a34d95d986a9))
+
+### Performance Improvements
+
+##### `images`
+
+- add lru cache for terafly ([f288710](https://github.com/yzx9/swcgeom/commit/f288710f85c5564060a89b7de70cd5af195a9dc1))
+
+<br>
+
 ## **0.7.0**&emsp;<sub><sup>2023-04-02 ([e45b520...df0b693](https://github.com/yzx9/swcgeom/compare/e45b520fc841d4d8ec8d2f49f2505aa099cba730...df0b693facd584fb0c928126256d067fbf896ea3?diff=split))</sup></sub>
 
 ### Features
