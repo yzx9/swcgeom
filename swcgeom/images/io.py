@@ -5,7 +5,8 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Iterable, List, Optional, Tuple, overload
+from functools import cache, lru_cache
+from typing import Any, Callable, Iterable, List, Optional, Tuple, overload
 
 import nrrd
 import numpy as np
@@ -222,17 +223,34 @@ class TeraflyImageStack(ImageStack):
     Nature Methods 13, no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
     """
 
-    def __init__(self, root: str) -> None:
+    _listdir: Callable[[str], List[str]]
+    _read_patch: Callable[[str], npt.NDArray]
+
+    def __init__(self, root: str, *, lru_maxsize: int | None = 1024) -> None:
         """
         Parameters
         ----------
         root : str
             The root of terafly which contains directories named as
             `RES(YxXxZ)`.
+        lru_maxsize : int or None, default to 1024
+            Forwarding to `functools.lru_cache`, setting of 1024
+            requires approximately less than 4GB memeory (not accurate,
+            depends on your data).
         """
         super().__init__()
         self.root = root
         self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(root)
+
+        @cache
+        def listdir(path: str) -> List[str]:
+            return os.listdir(path)
+
+        @lru_cache(maxsize=lru_maxsize)
+        def read_patch(path: str) -> npt.NDArray[np.float32]:
+            return read_imgs(path, swap_xy=True).get_full()  # axes=(IYX)
+
+        self._listdir, self._read_patch = listdir, read_patch
 
     def __getitem__(self, key):
         """Get images in max resolution.
@@ -409,7 +427,7 @@ class TeraflyImageStack(ImageStack):
 
         for v in [y, x, z]:
             # extract v from `y/`, `y_x/`, `y_x_z.tif`
-            dirs = [d for d in os.listdir(cur) if RE_TERAFLY_NAME.match(d)]
+            dirs = [d for d in self._listdir(cur) if RE_TERAFLY_NAME.match(d)]
             diff = np.array([get_v(d) for d in dirs])
             if (invalid := diff > 10 * v).all():
                 return None, None
@@ -420,7 +438,7 @@ class TeraflyImageStack(ImageStack):
             idx = np.argmax(diff)
             cur = os.path.join(cur, dirs[idx])
 
-        patch = read_imgs(cur, swap_xy=True).get_full()  # axes=(IYX)
+        patch = self._read_patch(cur)
         name = os.path.splitext(os.path.basename(cur))[0]
         offset = [int(int(i) / 10) for i in name.split("_")]
         offset[0], offset[1] = offset[1], offset[0]  # (Y, X, _) -> (X, Y, _)
