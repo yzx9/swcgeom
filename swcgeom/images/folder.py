@@ -1,4 +1,4 @@
-"""Datasets."""
+"""Image stack folder."""
 
 import os
 import re
@@ -11,12 +11,16 @@ from typing_extensions import Self
 
 from .io import read_imgs
 
-__all__ = ["ImageStackFolder", "LabeledImageStackFolder"]
+__all__ = [
+    "ImageStackFolder",
+    "LabeledImageStackFolder",
+    "PathImageStackFolder",
+]
 
 T = TypeVar("T")
 
 
-class Folder(ABC):
+class ImageStackFolderBase(ABC):
     """Image stack folder base."""
 
     files: List[str]
@@ -54,7 +58,7 @@ class Folder(ABC):
         return fs
 
 
-class ImageStackFolder(Folder):
+class ImageStackFolder(ImageStackFolderBase):
     """Image stack folder."""
 
     def __getitem__(self, idx: int, /) -> npt.NDArray[np.float32]:
@@ -65,7 +69,7 @@ class ImageStackFolder(Folder):
         return cls(cls.scan(root, pattern=pattern))
 
 
-class LabeledImageStackFolder(Folder):
+class LabeledImageStackFolder(ImageStackFolderBase):
     """Image stack folder with label."""
 
     labels: List[int]
@@ -93,6 +97,20 @@ class LabeledImageStackFolder(Folder):
         else:
             raise ValueError("")
         return cls(files, labels)
+
+
+class PathImageStackFolder(ImageStackFolder):
+    """Image stack folder with relpath."""
+
+    root: str
+
+    def __getitem__(self, idx: int) -> Tuple[npt.NDArray[np.float32], str]:
+        relpath = os.path.relpath(self.files[idx], self.root)
+        return self.read_imgs(self.files[idx]), relpath
+
+    @classmethod
+    def from_dir(cls, root: str, *, pattern: Optional[str] = None) -> Self:
+        return cls(cls.scan(root, pattern=pattern))
 
 
 def truthly(*args, **kwargs) -> Literal[True]:  # pylint: disable=unused-argument
