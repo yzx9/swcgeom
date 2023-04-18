@@ -171,10 +171,10 @@ class NDArrayImageStack(ImageStack):
             sclar_factor /= UINT_MAX[dtype]
 
         if swap_xy:
-            imgs = imgs.swapaxes(1, 2)  # (_, Y, X, _) -> (_, X, Y, _)
+            imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
 
         if filp_xy:
-            imgs = np.flip(imgs, (1, 2))  # (_, X, Y, _)
+            imgs = np.flip(imgs, (0, 1))  # (X, Y, _, _)
 
         self.imgs = imgs.astype(np.float32) * sclar_factor
 
@@ -372,7 +372,7 @@ class TeraflyImageStack(ImageStack):
         patch, offset = self._find_correspond_imgs(starts, res_level=res_level)
         if patch is not None:
             coords = starts - offset
-            lens = np.min([patch.shape - coords, shape], axis=0)
+            lens = np.min([patch.shape[:3] - coords, shape], axis=0)
             out[: lens[0], : lens[1], : lens[2]] = patch[
                 coords[0] : coords[0] + lens[0],
                 coords[1] : coords[1] + lens[1],
@@ -420,11 +420,11 @@ class TeraflyImageStack(ImageStack):
             idx = np.argmax(diff)
             cur = os.path.join(cur, dirs[idx])
 
-        patch = read_imgs(cur, swap_xy=True).get_full()
+        patch = read_imgs(cur, swap_xy=True).get_full()  # axes=(IYX)
         name = os.path.splitext(os.path.basename(cur))[0]
         offset = [int(int(i) / 10) for i in name.split("_")]
         offset[0], offset[1] = offset[1], offset[0]  # (Y, X, _) -> (X, Y, _)
-        if np.less_equal(np.add(offset, patch.shape), p).any():
+        if np.less_equal(np.add(offset, patch.shape[:3]), p).any():
             return None, None
 
         return patch, offset
