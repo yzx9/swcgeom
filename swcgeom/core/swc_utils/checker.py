@@ -7,8 +7,9 @@ import numpy as np
 import pandas as pd
 
 from .base import SWCNames, Topology, get_dsu, get_names
+from ...utils import DisjointSetUnion
 
-__all__ = ["is_single_root", "is_binary_tree", "check_single_root", "is_bifurcate"]
+__all__ = ["is_single_root", "is_binary_tree", "check_single_root", "is_bifurcate", "has_cyclic"]
 
 
 def is_single_root(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> bool:
@@ -31,6 +32,27 @@ def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:
             return False
 
     return True
+
+
+def has_cyclic(topology: Topology) -> bool:
+    """Has cyclic in topology."""
+    node_num = len(topology[0])
+    dsu = DisjointSetUnion(node_number=node_num)
+
+    for i in range(node_num):
+        node_a = topology[0][i]
+        node_b = topology[1][i]
+        # skip the root node
+        if node_b == -1:
+            continue
+
+        # check whether it is circle
+        if dsu.is_same_set(node_a, node_b):
+            return True
+
+        dsu.union_sets(node_a, node_b)
+
+    return False
 
 
 def check_single_root(*args, **kwargs) -> bool:
