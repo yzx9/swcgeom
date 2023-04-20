@@ -1,6 +1,6 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "python.formatting.provider": "black",
+    "python.formatting.provider": "none",
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": true,
     "python.linting.pylintArgs": [
@@ -8,5 +8,8 @@
         "${workspaceFolder}/.pylintrc",
         "-j",
         "0"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    }
 }
