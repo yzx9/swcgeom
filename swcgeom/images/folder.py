@@ -51,9 +51,7 @@ class ImageStackFolderBase(Generic[T], ABC):
 
     @staticmethod
     def read_imgs(fname: str) -> npt.NDArray[np.float32]:
-        imgs = read_imgs(fname).get_full()
-        imgs = np.moveaxis(imgs, -1, 0)  # (X, Y, Z, C) -> (C, X, Y, Z)
-        return imgs
+        return read_imgs(fname).get_full()
 
     @staticmethod
     def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
