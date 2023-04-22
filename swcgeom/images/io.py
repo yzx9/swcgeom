@@ -6,7 +6,7 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from functools import cache, lru_cache
-from typing import Any, Callable, Iterable, List, Optional, Tuple, overload
+from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, overload
 
 import nrrd
 import numpy as np
@@ -94,9 +94,10 @@ def read_imgs(fname: str, **kwargs) -> ImageStack:
 def save_tiff(
     data: npt.NDArray | ImageStack,
     fname: str,
+    *,
     dtype: Optional[np.unsignedinteger | np.floating] = None,
-    c_first: bool = False,
     swap_xy: bool = False,
+    compression: str | Literal[False] = "zlib",
     **kwargs,
 ) -> None:
     """Save image stack as tiff.
@@ -110,18 +111,19 @@ def save_tiff(
         Casting data to specified dtype. If integer and float
         conversions occur, they will be scaled (assuming floats are
         between 0 and 1).
-    c_first : bool, default False
-        If true, data should be an array of shape (C, X, Y, Z), or
-        (X, Y, Z, C) or (X, Y, Z) otherwise.
     swap_xy : bool, default False
         Swap axes `x` and `y`.
+    compression : str | False, default `zlib`
+        Compression algorithm, forwarding to `tifffile.imwrite`. If no
+        algorithnm is specify specified, we will use the zlib algorithm
+        with compression level 6 by default.
+    **kwargs : Dict[str, Any], optional
+        Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):
         data = data.get_full()  # TODO: avoid load full imgs to memory
 
-    if c_first:
-        data = data.swapaxes(0, 1)  # (C, _, _, _) -> (_, _, _, C)
-    elif data.ndim == 3:
+    if data.ndim == 3:
         data = np.expand_dims(data, -1)  # (_, _, _)  -> (_, _, _, C), C === 1
 
     if swap_xy:
@@ -144,13 +146,16 @@ def save_tiff(
 
         data = (data * scaler_factor).astype(dtype)
 
+    if compression is not False:
+        kwargs.setdefault("compression", compression)
+        if compression == "zlib":
+            kwargs.setdefault("compressionargs", {"level": 6})
+
     tifffile.imwrite(
         fname,
         np.moveaxis(data, 2, 0),  # (_, _, Z, _) -> (Z, _, _, _)
         photometric="rgb" if data.shape[-1] == 3 else "minisblack",
         metadata={"axes": "ZXYC" if not swap_xy else "ZYXC"},
-        compression="zlib",
-        compressionargs={"level": 6},
         **kwargs,
     )
 
