@@ -88,6 +88,8 @@ def read_imgs(fname: str, **kwargs) -> ImageStack:
         return NDArrayImageStack(np.load(fname), **kwargs)
     if TeraflyImageStack.is_root(fname):
         return TeraflyImageStack(fname, **kwargs)
+    if not os.path.exists(fname):
+        raise ValueError("image stack not exists")
     raise ValueError("unsupported image stack")
 
 
