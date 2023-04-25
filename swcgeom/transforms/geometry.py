@@ -1,12 +1,13 @@
 """SWC geometry operations."""
 
+import warnings
 from typing import Generic, Literal, Optional, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
 from ..core import DictSWC
-from ..core.swc_utils import SWCNames, get_names
+from ..core.swc_utils import SWCNames
 from ..utils import rotate3d, rotate3d_x, rotate3d_y, rotate3d_z, scale3d, translate3d
 from .base import Transform
 
@@ -30,16 +31,19 @@ Center = Literal["root", "soma", "origin"]
 class Normalizer(Generic[T], Transform[T, T]):
     """Noramlize coordinates and radius to 0-1."""
 
-    names: SWCNames
-
     def __init__(self, *, names: Optional[SWCNames] = None) -> None:
         super().__init__()
-        self.names = get_names(names)
+        if names is not None:
+            warnings.warn(
+                "`name` parameter is no longer needed, now use the "
+                "built-in names table, you can directly remove it.",
+                DeprecationWarning,
+            )
 
     def __call__(self, x: T) -> T:
         """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
         new_tree = x.copy()
-        xyzr = [self.names.x, self.names.y, self.names.z, self.names.r]
+        xyzr = [x.names.x, x.names.y, x.names.z, x.names.r]
         for key in xyzr:  # TODO: does r is the same?
             vs = new_tree.ndata[key]
             new_tree.ndata[key] = (vs - np.min(vs)) / np.max(vs)
@@ -63,12 +67,17 @@ class AffineTransform(Generic[T], Transform[T, T]):
         names: Optional[SWCNames] = None,
     ) -> None:
         self.tm, self.center, self.fmt = tm, center, fmt
-        self.names = get_names(names)
+        if names is not None:
+            warnings.warn(
+                "`name` parameter is no longer needed, now use the "
+                "built-in names table, you can directly remove it.",
+                DeprecationWarning,
+            )
 
     def __call__(self, x: T) -> T:
         match self.center:
             case "root" | "soma":
-                idx = np.nonzero(x.ndata[self.names.pid] == -1)[0].item()
+                idx = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
                 xyz = x.xyz()[idx]
                 tm = (
                     translate3d(-xyz[0], -xyz[1], -xyz[2])
@@ -80,106 +89,118 @@ class AffineTransform(Generic[T], Transform[T, T]):
 
         xyzw = x.xyzw().dot(tm).T
         y = x.copy()
-        y.ndata[self.names.x] = xyzw[0]
-        y.ndata[self.names.y] = xyzw[1]
-        y.ndata[self.names.z] = xyzw[2]
+        y.ndata[x.names.x] = xyzw[0]
+        y.ndata[x.names.y] = xyzw[1]
+        y.ndata[x.names.z] = xyzw[2]
         return y
 
     def __repr__(self) -> str:
         return self.fmt
 
 
-class Translate(AffineTransform[T]):
+class Translate(Generic[T], AffineTransform[T]):
     """Translate SWC."""
 
-    def __init__(self, tx: float, ty: float, tz: float) -> None:
+    def __init__(self, tx: float, ty: float, tz: float, **kwargs) -> None:
         fmt = f"Translate-{tx}-{ty}-{tz}"
-        super().__init__(translate3d(tx, ty, tz), fmt=fmt)
+        super().__init__(translate3d(tx, ty, tz), fmt=fmt, **kwargs)
 
     @classmethod
-    def transform(cls, x: T, tx: float, ty: float, tz: float) -> T:
-        return cls(tx, ty, tz)(x)
+    def transform(cls, x: T, tx: float, ty: float, tz: float, **kwargs) -> T:
+        return cls(tx, ty, tz, **kwargs)(x)
 
 
-class TranslateOrigin:
+class TranslateOrigin(Generic[T], Transform[T, T]):
     """Translate root of SWC to origin point."""
 
-    def __init__(self, names: Optional[SWCNames] = None) -> None:
-        self.names = get_names(names)
-
     def __call__(self, x: T) -> T:
-        idx = np.nonzero(x.ndata[self.names.pid] == -1)[0].item()
+        idx = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
         xyz = x.xyz()[idx]
         tm = translate3d(-xyz[0], -xyz[1], -xyz[2])
 
         xyzw = x.xyzw().dot(tm).T
         y = x.copy()
-        y.ndata[self.names.x] = xyzw[0]
-        y.ndata[self.names.y] = xyzw[1]
-        y.ndata[self.names.z] = xyzw[2]
+        y.ndata[x.names.x] = xyzw[0]
+        y.ndata[x.names.y] = xyzw[1]
+        y.ndata[x.names.z] = xyzw[2]
         return y
 
 
-class Scale(AffineTransform[T]):
+class Scale(Generic[T], AffineTransform[T]):
     """Scale SWC."""
 
     def __init__(
-        self, sx: float, sy: float, sz: float, center: Center = "root"
+        self, sx: float, sy: float, sz: float, center: Center = "root", **kwargs
     ) -> None:
         fmt = f"Scale-{sx}-{sy}-{sz}"
-        super().__init__(scale3d(sx, sy, sz), center=center, fmt=fmt)
+        super().__init__(scale3d(sx, sy, sz), center=center, fmt=fmt, **kwargs)
 
     @classmethod
     def transform(  # pylint: disable=too-many-arguments
-        cls, x: T, sx: float, sy: float, sz: float, center: Center = "root"
+        cls, x: T, sx: float, sy: float, sz: float, center: Center = "root", **kwargs
     ) -> T:
-        return cls(sx, sy, sz, center=center)(x)
+        return cls(sx, sy, sz, center=center, **kwargs)(x)
 
 
-class Rotate(AffineTransform[T]):
+class Rotate(Generic[T], AffineTransform[T]):
     """Rotate SWC."""
 
     def __init__(
-        self, n: npt.NDArray[np.float32], theta: float, center: Center = "root"
+        self,
+        n: npt.NDArray[np.float32],
+        theta: float,
+        center: Center = "root",
+        **kwargs,
     ) -> None:
         fmt = f"Rotate-{n[0]}-{n[1]}-{n[2]}-{theta:.4f}"
-        super().__init__(rotate3d(n, theta), center=center, fmt=fmt)
+        super().__init__(rotate3d(n, theta), center=center, fmt=fmt, **kwargs)
 
     @classmethod
     def transform(
-        cls, x: T, n: npt.NDArray[np.float32], theta: float, center: Center = "root"
+        cls,
+        x: T,
+        n: npt.NDArray[np.float32],
+        theta: float,
+        center: Center = "root",
+        **kwargs,
     ) -> T:
-        return cls(n, theta, center=center)(x)
+        return cls(n, theta, center=center, **kwargs)(x)
 
 
-class RotateX(AffineTransform[T]):
+class RotateX(Generic[T], AffineTransform[T]):
     """Rotate SWC with x-axis."""
 
-    def __init__(self, theta: float, center: Center = "root") -> None:
-        super().__init__(rotate3d_x(theta), center=center, fmt=f"RotateX-{theta}")
+    def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
+        super().__init__(
+            rotate3d_x(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
+        )
 
     @classmethod
-    def transform(cls, x: T, theta: float, center: Center = "root") -> T:
-        return cls(theta, center=center)(x)
+    def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:
+        return cls(theta, center=center, **kwargs)(x)
 
 
-class RotateY(AffineTransform[T]):
+class RotateY(Generic[T], AffineTransform[T]):
     """Rotate SWC with y-axis."""
 
-    def __init__(self, theta: float, center: Center = "root") -> None:
-        super().__init__(rotate3d_y(theta), center=center, fmt=f"RotateX-{theta}")
+    def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
+        super().__init__(
+            rotate3d_y(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
+        )
 
     @classmethod
-    def transform(cls, x: T, theta: float, center: Center = "root") -> T:
-        return cls(theta, center=center)(x)
+    def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:
+        return cls(theta, center=center, **kwargs)(x)
 
 
-class RotateZ(AffineTransform[T]):
+class RotateZ(Generic[T], AffineTransform[T]):
     """Rotate SWC with z-axis."""
 
-    def __init__(self, theta: float, center: Center = "root") -> None:
-        super().__init__(rotate3d_z(theta), center=center, fmt=f"RotateX-{theta}")
+    def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
+        super().__init__(
+            rotate3d_z(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
+        )
 
     @classmethod
-    def transform(cls, x: T, theta: float, center: Center = "root") -> T:
-        return cls(theta, center=center)(x)
+    def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:
+        return cls(theta, center=center, **kwargs)(x)
