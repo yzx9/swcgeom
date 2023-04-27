@@ -87,15 +87,21 @@ class AffineTransform(Generic[T], Transform[T, T]):
             case _:
                 tm = self.tm
 
-        xyzw = x.xyzw().dot(tm).T
+        return self.apply(x, tm)
+
+    def __repr__(self) -> str:
+        return self.fmt
+
+    @staticmethod
+    def apply(x: T, tm: npt.NDArray[np.float32]) -> T:
+        xyzw = x.xyzw().dot(tm.T).T
+        xyzw /= xyzw[3]
+
         y = x.copy()
         y.ndata[x.names.x] = xyzw[0]
         y.ndata[x.names.y] = xyzw[1]
         y.ndata[x.names.z] = xyzw[2]
         return y
-
-    def __repr__(self) -> str:
-        return self.fmt
 
 
 class Translate(Generic[T], AffineTransform[T]):
@@ -114,16 +120,10 @@ class TranslateOrigin(Generic[T], Transform[T, T]):
     """Translate root of SWC to origin point."""
 
     def __call__(self, x: T) -> T:
-        idx = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
-        xyz = x.xyz()[idx]
-        tm = translate3d(-xyz[0], -xyz[1], -xyz[2])
-
-        xyzw = x.xyzw().dot(tm).T
-        y = x.copy()
-        y.ndata[x.names.x] = xyzw[0]
-        y.ndata[x.names.y] = xyzw[1]
-        y.ndata[x.names.z] = xyzw[2]
-        return y
+        pid = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
+        xyzw = x.xyzw()
+        tm = translate3d(-xyzw[pid, 0], -xyzw[pid, 1], -xyzw[pid, 2])
+        return AffineTransform.apply(x, tm)
 
 
 class Scale(Generic[T], AffineTransform[T]):
