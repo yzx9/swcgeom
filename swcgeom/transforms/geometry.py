@@ -120,6 +120,10 @@ class TranslateOrigin(Generic[T], Transform[T, T]):
     """Translate root of SWC to origin point."""
 
     def __call__(self, x: T) -> T:
+        return self.transform(x)
+
+    @classmethod
+    def transform(cls, x: T) -> T:
         pid = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
         xyzw = x.xyzw()
         tm = translate3d(-xyzw[pid, 0], -xyzw[pid, 1], -xyzw[pid, 2])
