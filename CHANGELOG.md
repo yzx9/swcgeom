@@ -1,3 +1,36 @@
+# Changelog
+
+## **0.9.0**&emsp;<sub><sup>2023-05-04 ([1a3e9d4...797934f](https://github.com/yzx9/swcgeom/compare/1a3e9d4f7a0d1442fbb62f4693f5b5ec6d787af4...797934f120c0de266fc7d21038b5d17a1e2fbabc?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- plot sholl circles by default ([797934f](https://github.com/yzx9/swcgeom/commit/797934f120c0de266fc7d21038b5d17a1e2fbabc))
+
+##### `images`
+
+- add transform support to folder ([167f67c](https://github.com/yzx9/swcgeom/commit/167f67c6f6ba58e80280d66df27caf47cf3dd3e6))
+- support disable compression ([9db01e9](https://github.com/yzx9/swcgeom/commit/9db01e94b063c1ec9efcf8fb906f2c732805e45f))
+- check if is a valid fname ([4d98abc](https://github.com/yzx9/swcgeom/commit/4d98abc66955d62760047c4fcfb1007f1dc9d64a))
+
+##### `transform`
+
+- add image stack center transform ([0fd1441](https://github.com/yzx9/swcgeom/commit/0fd14411e7b552f7b6d66a1f9c77f69adb0c379a))
+- expose static method ([c65c0cb](https://github.com/yzx9/swcgeom/commit/c65c0cba316797bedda5070b2db2a1a622931c20))
+
+### Bug Fixes
+
+##### `core`
+- change \`w\` to ones ([325ff1e](https://github.com/yzx9/swcgeom/commit/325ff1efe5cc662f7731003919f313cdd219caad))
+
+### BREAKING CHANGES
+
+- `analysis` plot sholl circles by default ([797934f](https://github.com/yzx9/swcgeom/commit/797934f120c0de266fc7d21038b5d17a1e2fbabc))
+- `images` folder do not move channel to first ([fd3a3cb](https://github.com/yzx9/swcgeom/commit/fd3a3cbea59f910ab31682c9272957cfea56eaa4))
+
+<br>
+
 ## **0.8.0**&emsp;<sub><sup>2023-04-18 ([3d2d660...bfee570](https://github.com/yzx9/swcgeom/compare/3d2d66034b269b1acf9a62cfeb8a8d3b85d1791a...bfee570d9989f10e5784323a60d2f06d5cf0877d?diff=split))</sup></sub>
 
 ### Features
