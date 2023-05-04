@@ -48,11 +48,11 @@ def mark_roots_as_somas_(
     names = get_names(names)
     roots = df[names.pid] == -1
     root_loc = roots.argmax()
-    root_id = df.loc[root_loc, names.id]
+    root_id = df.loc[root_loc, names.id]  # type:ignore
     df[names.pid] = np.where(df[names.pid] != -1, df[names.pid], root_id)
     if update_type is not False:
         df[names.type] = np.where(df[names.pid] != -1, df[names.type], update_type)
-    df.loc[root_loc, names.pid] = -1
+    df.loc[root_loc, names.pid] = -1  # type:ignore
 
 
 def link_roots_to_nearest(
@@ -85,6 +85,10 @@ def sort_nodes(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.Data
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
+
+    See Also
+    --------
+    ~.core.swc_utils.checker.is_sorted
     """
     return _copy_and_apply(sort_nodes_, df, names=names)
 
@@ -93,6 +97,10 @@ def sort_nodes_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
+
+    See Also
+    --------
+    ~.core.swc_utils.checker.is_sorted
     """
     names = get_names(names)
     ids, pids = df[names.id].to_numpy(), df[names.pid].to_numpy()
@@ -143,10 +151,10 @@ def reset_index_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
     names = get_names(names)
     roots = df[names.pid] == -1
     root_loc = roots.argmax()
-    root_id = df.loc[root_loc, names.id]
+    root_id = df.loc[root_loc, names.id]  # type:ignore
     df[names.id] = df[names.id] - root_id
     df[names.pid] = df[names.pid] - root_id
-    df.loc[root_loc, names.pid] = -1
+    df.loc[root_loc, names.pid] = -1  # type:ignore
 
 
 def _copy_and_apply(fn: Callable, df: pd.DataFrame, *args, **kwargs):

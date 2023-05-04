@@ -7,7 +7,15 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-__all__ = ["Topology", "SWCNames", "swc_names", "get_names", "get_dsu", "traverse"]
+__all__ = [
+    "Topology",
+    "SWCNames",
+    "swc_names",
+    "get_names",
+    "get_topology",
+    "get_dsu",
+    "traverse",
+]
 
 T, K = TypeVar("T"), TypeVar("K")
 Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
@@ -34,6 +42,11 @@ swc_names = SWCNames()
 
 def get_names(names: Optional[SWCNames] = None) -> SWCNames:
     return names or swc_names
+
+
+def get_topology(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> Topology:
+    names = get_names(names)
+    return (df[names.id].to_numpy(), df[names.pid].to_numpy())
 
 
 def get_dsu(

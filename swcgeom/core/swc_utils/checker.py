@@ -6,9 +6,15 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from .base import SWCNames, Topology, get_dsu, get_names
+from .base import SWCNames, Topology, get_dsu, get_names, traverse
 
-__all__ = ["is_single_root", "is_binary_tree", "check_single_root", "is_bifurcate"]
+__all__ = [
+    "is_single_root",
+    "is_bifurcate",
+    "is_sorted",
+    "is_binary_tree",
+    "check_single_root",
+]
 
 
 def is_single_root(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> bool:
@@ -31,6 +37,25 @@ def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:
             return False
 
     return True
+
+
+def is_sorted(topology: Topology) -> bool:
+    """Check is it sorted.
+
+    In a sorted topology, parent samples should appear before any child
+    samples.
+    """
+    flag = True
+
+    def enter(idx: int, parent: int | None) -> int:
+        nonlocal flag
+        if parent is not None and idx < parent:
+            flag = False
+
+        return idx
+
+    traverse(topology=topology, enter=enter)
+    return flag
 
 
 def check_single_root(*args, **kwargs) -> bool:
