@@ -277,6 +277,14 @@ class TeraflyImageStack(ImageStack):
     Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional Visualization
     and Annotation of Terabytes of Multidimensional Volumetric Images.”
     Nature Methods 13, no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
+
+    Notes
+    -----
+    Terafly and Vaa3d use a especial right-handed coordinate system
+    (with origin point in the left-top and z-axis points front), but we
+    flip y-axis to makes it a left-handed coordinate system (with orgin
+    point in the left-bottom and z-axis points front). If you need to
+    use its coordinate system, remember to FLIP Y-AXIS BACK.
     """
 
     _listdir: Callable[[str], List[str]]
@@ -352,6 +360,9 @@ class TeraflyImageStack(ImageStack):
         shape_out = np.concatenate([ends - starts, [1]])
         out = np.zeros(shape_out, dtype=np.float32)
         self._get_range(starts, ends, res_level, out=out)
+
+        # flip y-axis to makes it a left-handed coordinate system
+        out = np.flip(out, axis=1)
         return out
 
     def find_correspond_imgs(self, p, res_level=-1):
