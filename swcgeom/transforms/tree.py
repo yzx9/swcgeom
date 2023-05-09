@@ -15,6 +15,9 @@ __all__ = [
     "ToLongestPath",
     "TreeSmoother",
     "TreeNormalizer",
+    "CutByType",
+    "CutAxonTree",
+    "CutDendriteTree",
     "CutByBifurcationOrder",
     "CutShortTipBranch",
 ]
@@ -69,6 +72,56 @@ class TreeNormalizer(Normalizer[Tree]):
             DeprecationWarning,
         )
         super().__init__(*args, **kwargs)
+
+
+class CutByType(Transform[Tree, Tree]):
+    """Cut tree by type.
+
+    In order to preserve the tree structure, all ancestor nodes of the node to be preserved will be preserved.
+
+    Notes
+    -----
+    Not all reserved nodes are of the specified type.
+    """
+
+    def __init__(self, type: int) -> None:  # pylint: disable=redefined-builtin
+        super().__init__()
+        self.type = type
+
+    def __call__(self, x: Tree) -> Tree:
+        removals = set(x.id()[x.type() != 3])
+
+        def leave(n: Tree.Node, keep_children: List[bool]) -> bool:
+            if n.id in removals and any(keep_children):
+                removals.remove(n.id)
+            return n.id not in removals
+
+        x.traverse(leave=leave)
+        y = to_subtree(x, removals)
+        return y
+
+    def __repr__(self) -> str:
+        return f"CutByType-{self.type}"
+
+
+class CutAxonTree(CutByType):
+    """Cut axon tree."""
+
+    def __init__(self) -> None:
+        super().__init__(type=2)
+
+    def __repr__(self) -> str:
+        return "CutAxonTree"
+
+
+class CutDendriteTree(CutByType):
+    """Cut dendrite tree."""
+
+    def __init__(self) -> None:
+        super().__init__(type=3)
+
+    def __repr__(self) -> str:
+        return "CutDenriteTree"
 
 
 class CutByBifurcationOrder(Transform[Tree, Tree]):
