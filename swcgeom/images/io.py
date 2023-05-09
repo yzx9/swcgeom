@@ -26,6 +26,14 @@ UINT_MAX = {
     np.dtype(np.uint64): (2**64) - 1,
 }
 
+AXES_ORDER = {
+    "X": 0,
+    "Y": 1,
+    "Z": 2,
+    "C": 3,
+    "I": 2,  # vaa3d compatibility
+}
+
 
 class ImageStack(ABC):
     """Image stack."""
@@ -98,7 +106,7 @@ def save_tiff(
     fname: str,
     *,
     dtype: Optional[np.unsignedinteger | np.floating] = None,
-    swap_xy: bool = False,
+    swap_xy: Optional[bool] = None,
     compression: str | Literal[False] = "zlib",
     **kwargs,
 ) -> None:
@@ -113,13 +121,11 @@ def save_tiff(
         Casting data to specified dtype. If integer and float
         conversions occur, they will be scaled (assuming floats are
         between 0 and 1).
-    swap_xy : bool, default False
-        Swap axes `x` and `y`.
     compression : str | False, default `zlib`
         Compression algorithm, forwarding to `tifffile.imwrite`. If no
         algorithnm is specify specified, we will use the zlib algorithm
         with compression level 6 by default.
-    **kwargs : Dict[str, Any], optional
+    **kwargs : Dict[str, Any]
         Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):
@@ -128,8 +134,17 @@ def save_tiff(
     if data.ndim == 3:
         data = np.expand_dims(data, -1)  # (_, _, _)  -> (_, _, _, C), C === 1
 
-    if swap_xy:
-        data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
+    axes = "ZXYC"
+    if swap_xy is not None:
+        warnings.warn(
+            "flag `swap_xy` is easy to implement in user space and "
+            "is more flexiable. Since this flag is rarely used, we "
+            "decided to remove it in the next version",
+            DeprecationWarning,
+        )
+        if swap_xy is True:
+            axes = "ZYXC"
+            data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
 
     assert data.ndim == 4, "should be an array of shape (X, Y, Z, C)"
     assert data.shape[-1] in [1, 3], "support 'miniblack' or 'rgb'"
@@ -153,20 +168,22 @@ def save_tiff(
         if compression == "zlib":
             kwargs.setdefault("compressionargs", {"level": 6})
 
-    tifffile.imwrite(
-        fname,
-        np.moveaxis(data, 2, 0),  # (_, _, Z, _) -> (Z, _, _, _)
-        photometric="rgb" if data.shape[-1] == 3 else "minisblack",
-        metadata={"axes": "ZXYC" if not swap_xy else "ZYXC"},
-        **kwargs,
-    )
+    data = np.moveaxis(data, 2, 0)  # (_, _, Z, _) -> (Z, _, _, _)
+    kwargs.setdefault("photometric", "rgb" if data.shape[-1] == 3 else "minisblack")
+    metadata = kwargs.get("metadata", {})
+    metadata.setdefault("axes", axes)
+    kwargs.update(metadata=metadata)
+    tifffile.imwrite(fname, data, **kwargs)
 
 
 class NDArrayImageStack(ImageStack):
     """NDArray image stack."""
 
     def __init__(
-        self, imgs: npt.NDArray[Any], swap_xy: bool = False, filp_xy: bool = False
+        self,
+        imgs: npt.NDArray[Any],
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
     ) -> None:
         super().__init__()
 
@@ -178,11 +195,26 @@ class NDArrayImageStack(ImageStack):
         if np.issubdtype((dtype := imgs.dtype), np.unsignedinteger):
             sclar_factor /= UINT_MAX[dtype]
 
-        if swap_xy:
-            imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
+        if swap_xy is not None:
+            warnings.warn(
+                "flag `swap_xy` now is unnecessary, tifffile will "
+                "automatically adjust dimensions according to "
+                "`tags.axes`, so this flag will be removed in the next "
+                " version",
+                DeprecationWarning,
+            )
+            if swap_xy is True:
+                imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
 
-        if filp_xy:
-            imgs = np.flip(imgs, (0, 1))  # (X, Y, _, _)
+        if filp_xy is not None:
+            warnings.warn(
+                "flag `filp_xy` is easy to implement in user space and "
+                "is more flexiable. Since this flag is rarely used, we "
+                "decided to remove it in the next version",
+                DeprecationWarning,
+            )
+            if filp_xy is True:
+                imgs = np.flip(imgs, (0, 1))  # (X, Y, Z, C)
 
         self.imgs = imgs.astype(np.float32) * sclar_factor
 
@@ -201,10 +233,23 @@ class TiffImageStack(NDArrayImageStack):
     """Tiff image stack."""
 
     def __init__(
-        self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
+        self,
+        fname: str,
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
+        **kwargs,
     ) -> None:
-        frames = tifffile.imread(fname, **kwargs)  # (Z, _, _) or (Z, _, _, _)
-        imgs = np.moveaxis(frames, 0, 2)  # (Z, _, _, ...) -> (_, _, Z, ...)
+        with tifffile.TiffFile(fname, **kwargs) as f:
+            s = f.series[0]
+            imgs, axes = s.asarray(), s.axes
+
+        if len(axes) != imgs.ndim or any(c not in AXES_ORDER for c in axes):
+            axes_raw = axes
+            axes = "ZXYC" if imgs.ndim == 4 else "ZXY"
+            warnings.warn(f"reset unexcept axes `{axes_raw}` to `{axes}` in: {fname}")
+
+        orders = [AXES_ORDER[c] for c in axes]
+        imgs = imgs.transpose(np.argsort(orders))
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
 
 
@@ -212,7 +257,11 @@ class NrrdImageStack(NDArrayImageStack):
     """Nrrd image stack."""
 
     def __init__(
-        self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
+        self,
+        fname: str,
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
+        **kwargs,
     ) -> None:
         imgs, header = nrrd.read(fname, **kwargs)
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
@@ -255,7 +304,7 @@ class TeraflyImageStack(ImageStack):
 
         @lru_cache(maxsize=lru_maxsize)
         def read_patch(path: str) -> npt.NDArray[np.float32]:
-            return read_imgs(path, swap_xy=True).get_full()  # axes=(IYX)
+            return read_imgs(path).get_full()
 
         self._listdir, self._read_patch = listdir, read_patch
 
