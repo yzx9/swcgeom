@@ -1,6 +1,6 @@
 """Neuron trees."""
 
-from . import swc_utils  # do not export all things from swc_utils
+from . import swc_utils
 from .branch import *
 from .branch_tree import *
 from .node import *
