@@ -290,17 +290,18 @@ class TeraflyImageStack(ImageStack):
     _listdir: Callable[[str], List[str]]
     _read_patch: Callable[[str], npt.NDArray]
 
-    def __init__(self, root: str, *, lru_maxsize: int | None = 1024) -> None:
-        """
+    def __init__(self, root: str, *, lru_maxsize: int | None = 128) -> None:
+        r"""
         Parameters
         ----------
         root : str
             The root of terafly which contains directories named as
             `RES(YxXxZ)`.
-        lru_maxsize : int or None, default to 1024
-            Forwarding to `functools.lru_cache`, setting of 1024
-            requires approximately less than 4GB memeory (not accurate,
-            depends on your data).
+        lru_maxsize : int or None, default to 128
+            Forwarding to `functools.lru_cache`. A decompressed array
+            size of (256, 256, 256, 1), which is the typical size of
+            terafly image stack, takes about 256 * 256 * 256 * 1 *
+            4B = 64MB. A cache size of 128 requires about 8GB memeory.
         """
         super().__init__()
         self.root = root
