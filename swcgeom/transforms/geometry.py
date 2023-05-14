@@ -13,6 +13,7 @@ from .base import Transform
 
 __all__ = [
     "Normalizer",
+    "RadiusReseter",
     "AffineTransform",
     "Translate",
     "TranslateOrigin",
@@ -48,6 +49,20 @@ class Normalizer(Generic[T], Transform[T, T]):
             vs = new_tree.ndata[key]
             new_tree.ndata[key] = (vs - np.min(vs)) / np.max(vs)
 
+        return new_tree
+
+
+class RadiusReseter(Generic[T], Transform[T, T]):
+    """Reset radius to fixed value."""
+
+    def __init__(self, r: float) -> None:
+        super().__init__()
+        self.r = r
+
+    def __call__(self, x: T) -> T:
+        r = np.full_like(x.r(), fill_value=self.r)
+        new_tree = x.copy()
+        new_tree.ndata[new_tree.names.r] = r
         return new_tree
 
 
