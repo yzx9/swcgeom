@@ -44,6 +44,9 @@ class SWCLike(ABC):
     def __len__(self) -> int:
         return self.number_of_nodes()
 
+    def __dict__(self) -> Dict[str, npt.NDArray[Any]]:
+        return {k: self.get_ndata(k) for k in self.keys()}
+
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,)."""
         return self.get_ndata(self.names.id)
@@ -165,6 +168,9 @@ class SWCLike(ABC):
         return self.to_swc(fname, extra_cols=extra_cols, **kwargs)  # type: ignore
 
 
+SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
+
+
 class DictSWC(SWCLike):
     """SWC implementation on dict."""
 
@@ -175,8 +181,17 @@ class DictSWC(SWCLike):
         self.names = get_names(names)
         self.ndata = kwargs
 
+    def __dict__(self) -> Dict[str, npt.NDArray[Any]]:
+        return self.ndata
+
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()
+
+    def values(self) -> Iterable[npt.NDArray[Any]]:
+        return self.ndata.values()
+
+    def items(self) -> Iterable[Tuple[str, npt.NDArray[Any]]]:
+        return self.ndata.items()
 
     def get_ndata(self, key: str) -> npt.NDArray[Any]:
         return self.ndata[key]
@@ -184,6 +199,3 @@ class DictSWC(SWCLike):
     def copy(self) -> Self:
         """Make a copy."""
         return deepcopy(self)
-
-
-SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
