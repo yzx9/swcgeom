@@ -50,7 +50,7 @@ class BranchTree(Tree):
 
         branch_tree.branches = {}
         for br in branches:
-            idx = np.nonzero(id_map == br[0].id)[0].item()
+            idx = np.nonzero(id_map == br[0].id)[0][0].item()
             branch_tree.branches.setdefault(idx, [])
             branch_tree.branches[idx].append(br.detach())
 

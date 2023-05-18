@@ -92,7 +92,7 @@ class AffineTransform(Generic[T], Transform[T, T]):
     def __call__(self, x: T) -> T:
         match self.center:
             case "root" | "soma":
-                idx = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
+                idx = np.nonzero(x.ndata[x.names.pid] == -1)[0][0].item()
                 xyz = x.xyz()[idx]
                 tm = (
                     translate3d(-xyz[0], -xyz[1], -xyz[2])
@@ -139,7 +139,7 @@ class TranslateOrigin(Generic[T], Transform[T, T]):
 
     @classmethod
     def transform(cls, x: T) -> T:
-        pid = np.nonzero(x.ndata[x.names.pid] == -1)[0].item()
+        pid = np.nonzero(x.ndata[x.names.pid] == -1)[0][0].item()
         xyzw = x.xyzw()
         tm = translate3d(-xyzw[pid, 0], -xyzw[pid, 1], -xyzw[pid, 2])
         return AffineTransform.apply(x, tm)
