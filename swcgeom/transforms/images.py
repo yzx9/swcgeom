@@ -25,7 +25,7 @@ class Center(Transform[npt.NDArray[np.float32], npt.NDArray[np.float32]]):
     def __call__(self, x: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         diff = np.subtract(x.shape[:3], self.shape_out)
         s = diff // 2
-        e = s + x.shape[:3]
+        e = np.add(s, self.shape_out)
         return x[s[0] : e[0], s[1] : e[1], s[2] : e[2], :]
 
     def __repr__(self) -> str:
