@@ -44,9 +44,6 @@ class SWCLike(ABC):
     def __len__(self) -> int:
         return self.number_of_nodes()
 
-    def __dict__(self) -> Dict[str, npt.NDArray[Any]]:
-        return {k: self.get_ndata(k) for k in self.keys()}
-
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,)."""
         return self.get_ndata(self.names.id)
@@ -180,9 +177,6 @@ class DictSWC(SWCLike):
         super().__init__()
         self.names = get_names(names)
         self.ndata = kwargs
-
-    def __dict__(self) -> Dict[str, npt.NDArray[Any]]:
-        return self.ndata
 
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()
