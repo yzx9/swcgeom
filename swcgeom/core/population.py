@@ -162,7 +162,7 @@ class Population:
             )
 
         swcs = cls.find_swcs(root, ext)
-        return Population(swcs, root=root, **kwargs)
+        return Population(LazyLoadingTrees(swcs, **kwargs), root=root)
 
     @classmethod
     def from_eswc(
@@ -272,7 +272,7 @@ class Populations:
 
         populations = [
             Population(
-                LazyLoadingTrees([os.path.join(d, p) for p in fs[i]]), root=d, **kwargs
+                LazyLoadingTrees([os.path.join(d, p) for p in fs[i]], **kwargs), root=d
             )
             for i, d in enumerate(roots)
         ]
