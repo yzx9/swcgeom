@@ -68,7 +68,13 @@ class Transforms(Transform[T, K]):
                        t7: Transform[T6, Any], /, *transforms: Transform[Any, Any]) -> None: ...
     # fmt:on
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
-        self.transforms = list(transforms)
+        trans = []
+        for t in transforms:
+            if isinstance(t, Transforms):
+                trans.extend(t.transforms)
+            else:
+                trans.append(t)
+        self.transforms = trans
 
     def __call__(self, x: T) -> K:
         """Apply transforms."""
