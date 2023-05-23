@@ -241,7 +241,7 @@ class Populations:
         roots: Iterable[str],
         ext: str = ".swc",
         intersect: bool = True,
-        check_same: bool = True,
+        check_same: bool = False,
         labels: Optional[Iterable[str]] = None,
         **kwargs,
     ) -> Self:
@@ -252,7 +252,7 @@ class Populations:
         roots : list of str
         intersect : bool, default `True`
             Take the intersection of these populations.
-        check_same : bool, default `True`
+        check_same : bool, default `False`
             Check if the directories contains the same swc.
         labels : List of str, optional
             Label of populations.
@@ -283,11 +283,13 @@ class Populations:
         cls,
         roots: Iterable[str],
         extra_cols: Optional[Iterable[str]] = None,
+        *,
+        ext: str = ".eswc",
         **kwargs,
     ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
-        return cls.from_swc(roots, extra_cols=extra_cols, **kwargs)
+        return cls.from_swc(roots, extra_cols=extra_cols, ext=ext, **kwargs)
 
 
 def _get_idx(key: int, length: int) -> int:
