@@ -2,7 +2,7 @@
 
 import warnings
 from collections import OrderedDict
-from typing import Any, Callable, Iterable, List, Literal, Optional, cast
+from typing import Any, Callable, Iterable, Literal, Optional, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -22,7 +22,7 @@ __all__ = ["read_swc", "to_swc"]
 
 def read_swc(
     swc_file: str,
-    extra_cols: List[str] | None = None,
+    extra_cols: Iterable[str] | None = None,
     fix_roots: Literal["somas", "nearest", False] = False,
     sort_nodes: bool = False,
     reset_index: bool = True,
@@ -35,7 +35,7 @@ def read_swc(
     ----------
     swc_file : str
         Path of swc file, the id should be consecutively incremented.
-    extra_cols : List[str], optional
+    extra_cols : Iterable[str], optional
         Read more cols in swc file.
     fix_roots : `somas`|`nearest`|False, default `False`
         Fix multiple roots.
@@ -54,7 +54,7 @@ def read_swc(
         swc_file,
         sep=" ",
         comment="#",
-        names=names.cols() + (extra_cols if extra_cols else []),
+        names=names.cols() + (list(extra_cols) if extra_cols else []),
         dtype=cast(Any, dict(_get_dtypes(names))),
         index_col=False,
     )
@@ -87,7 +87,7 @@ def read_swc(
 def to_swc(
     get_ndata: Callable[[str], npt.NDArray],
     *,
-    extra_cols: Optional[List[str]] = None,
+    extra_cols: Optional[Iterable[str]] = None,
     id_offset: int = 1,
     names: Optional[SWCNames] = None,
 ) -> Iterable[str]:
@@ -104,7 +104,7 @@ def to_swc(
 
         return str(v)
 
-    cols = names.cols() + (extra_cols if extra_cols is not None else [])
+    cols = names.cols() + (list(extra_cols) if extra_cols is not None else [])
     yield f"# {' '.join(cols)}\n"
     for idx in get_ndata(names.id):
         yield " ".join(get_v(k, idx) for k in cols) + "\n"

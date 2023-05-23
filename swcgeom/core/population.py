@@ -41,7 +41,7 @@ class LazyLoadingTrees:
     trees: List[Tree | None]
     kwargs: Dict[str, Any]
 
-    def __init__(self, swcs: List[str], **kwargs) -> None:
+    def __init__(self, swcs: Iterable[str], **kwargs) -> None:
         """
         Paramters
         ---------
@@ -50,7 +50,7 @@ class LazyLoadingTrees:
             Forwarding to `Tree.from_swc`
         """
         super().__init__()
-        self.swcs = swcs
+        self.swcs = list(swcs)
         self.trees = [None for _ in swcs]
         self.kwargs = kwargs
 
@@ -101,7 +101,7 @@ class Population:
 
     # fmt: off
     @overload
-    def __init__(self, swcs: List[str], lazy_loading: bool = ..., root: str = ..., **kwargs) -> None: ...
+    def __init__(self, swcs: Iterable[str], lazy_loading: bool = ..., root: str = ..., **kwargs) -> None: ...
     @overload
     def __init__(self, trees: Trees, /, *, root: str = "") -> None: ...
     # fmt: on
@@ -169,10 +169,10 @@ class Population:
         cls,
         root: str,
         ext: str = ".eswc",
-        extra_cols: Optional[List[str]] = None,
+        extra_cols: Optional[Iterable[str]] = None,
         **kwargs,
     ) -> Self:
-        extra_cols = extra_cols or []
+        extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
@@ -196,12 +196,12 @@ class Populations:
     labels: List[str]
 
     def __init__(
-        self, populations: Iterable[Population], labels: Optional[List[str]] = None
+        self, populations: Iterable[Population], labels: Optional[Iterable[str]] = None
     ) -> None:
         self.len = min(len(p) for p in populations)
         self.populations = list(populations)
 
-        labels = labels or ["" for i in populations]
+        labels = list(labels) if labels is not None else ["" for i in populations]
         assert len(labels) == len(
             self.populations
         ), f"got {len( self.populations)} populations, but has {len(labels)} labels"
@@ -238,11 +238,11 @@ class Populations:
     @classmethod
     def from_swc(  # pylint: disable=too-many-arguments
         cls,
-        roots: List[str],
+        roots: Iterable[str],
         ext: str = ".swc",
         intersect: bool = True,
         check_same: bool = True,
-        labels: Optional[List[str]] = None,
+        labels: Optional[Iterable[str]] = None,
         **kwargs,
     ) -> Self:
         """Get population from dirs.
@@ -280,9 +280,12 @@ class Populations:
 
     @classmethod
     def from_eswc(
-        cls, roots: List[str], extra_cols: Optional[List[str]] = None, **kwargs
+        cls,
+        roots: Iterable[str],
+        extra_cols: Optional[Iterable[str]] = None,
+        **kwargs,
     ) -> Self:
-        extra_cols = extra_cols or []
+        extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, **kwargs)
 

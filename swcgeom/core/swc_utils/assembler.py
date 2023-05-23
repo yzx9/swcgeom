@@ -2,7 +2,7 @@
 
 import warnings
 from copy import copy
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
@@ -89,10 +89,10 @@ def try_assemble_lines(*args, **kwargs) -> Tuple[pd.DataFrame, List[pd.DataFrame
 EPS = 1e-5
 
 
-def assemble_lines_impl(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
-    tree, lines = try_assemble_lines(lines, sort_nodes=False, **kwargs)
+def assemble_lines_impl(lines: Iterable[pd.DataFrame], **kwargs) -> pd.DataFrame:
+    tree, lines = try_assemble_lines_impl(lines, sort_nodes=False, **kwargs)
     while len(lines) > 0:
-        t, lines = try_assemble_lines(
+        t, lines = try_assemble_lines_impl(
             lines, id_offset=len(tree), sort_nodes=False, **kwargs
         )
         tree = pd.concat([tree, t])
@@ -104,7 +104,7 @@ def assemble_lines_impl(lines: List[pd.DataFrame], **kwargs) -> pd.DataFrame:
 
 
 def try_assemble_lines_impl(  # pylint: disable=too-many-arguments
-    lines: List[pd.DataFrame],
+    lines: Iterable[pd.DataFrame],
     undirected: bool = True,
     thre: float = 0.2,
     id_offset: int = 0,
@@ -113,7 +113,7 @@ def try_assemble_lines_impl(  # pylint: disable=too-many-arguments
     names: Optional[SWCNames] = None,
 ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
     names = get_names(names)
-    lines = copy(lines)
+    lines = copy(list(lines))
 
     tree = lines[0]
     tree[names.id] = id_offset + np.arange(len(tree))
