@@ -38,9 +38,10 @@ class Sholl:
 
     def __init__(
         self,
-        tree: Tree,
+        tree: Tree | str,
         step: Optional[float] = None,
     ) -> None:
+        tree = Tree.from_swc(tree) if isinstance(tree, str) else tree
         self.tree = TranslateOrigin.transform(tree)  # shift
         self.rs = np.linalg.norm(self.tree.get_segments().xyz(), axis=2)
         self.rmax = self.rs.max()
@@ -117,7 +118,8 @@ class Sholl:
                 kwargs.setdefault("y_min", 0)
                 drawtree = kwargs.pop("drawtree", True)
                 colorbar = kwargs.pop("colorbar", True)
-                patches = draw_circles(ax, xs, ys, **kwargs)
+                cmap = kwargs.pop("cmap", "Blues")
+                patches = draw_circles(ax, xs, ys, cmap=cmap, **kwargs)
 
                 if drawtree is True:
                     draw(self.tree, ax=ax, direction_indicator=False)
