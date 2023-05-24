@@ -1,5 +1,57 @@
 # Changelog
 
+## **0.10.0**&emsp;<sub><sup>2023-05-23 ([bc48787...8991fe0](https://github.com/yzx9/swcgeom/compare/bc487879ac6655de0a86504d24a2f67ba6afe848...8991fe0ca647febccba7a9bce7facf0e06334a5c?diff=split))</sup></sub>
+
+### Features
+
+* dict\-like swc ([a1f52d7](https://github.com/yzx9/swcgeom/commit/a1f52d7ac3c03df6077fd038fd8833d1fef03c8e))
+
+##### `analysis`
+
+* add str input support ([f98aea5](https://github.com/yzx9/swcgeom/commit/f98aea59b5ab71196691423185d6a2f896c352c3))
+
+##### `core`
+
+* check if is sorted topology ([bc48787](https://github.com/yzx9/swcgeom/commit/bc487879ac6655de0a86504d24a2f67ba6afe848))
+
+##### `images`
+
+* detect tiff axes ([b1e44bb](https://github.com/yzx9/swcgeom/commit/b1e44bb8c35c299fdb5e4b8b3be61358d59ee7b6))
+* change terafly to a left\-handed coordinate system ([b22b69a](https://github.com/yzx9/swcgeom/commit/b22b69acf7715388b0f818eb9c176bee6f39e60a))
+
+##### `transforms`
+
+* cut tree by type ([184482b](https://github.com/yzx9/swcgeom/commit/184482bbb5803e429ac788fa315c0638ad233754))
+* reset radius ([e697e34](https://github.com/yzx9/swcgeom/commit/e697e34c3532dcaf6c9b2c1c8afd820d127f3303))
+
+### Bug Fixes
+
+##### `*`
+
+* np\.nonzero returns a tuple ([091e6eb](https://github.com/yzx9/swcgeom/commit/091e6eb84a464e7ab3978ad74de891fa31f98803))
+
+##### `core`
+
+* forwarding init kwargs ([226b3ef](https://github.com/yzx9/swcgeom/commit/226b3efb32cdb6d421bc9aca5d6a5b2f0f0b6e3c))
+
+##### `transforms`
+
+* crop fixed shape ([e1078d3](https://github.com/yzx9/swcgeom/commit/e1078d33414ef02e27b93b9149bf776a6334b1ca))
+
+### Performance Improvements
+
+##### `transforms`
+
+* flat transforms ([f824651](https://github.com/yzx9/swcgeom/commit/f824651e202015a29716dd441391bbb28f0a3bfa))
+
+### BREAKING CHANGES
+
+* `*` export common classes and methods only ([39de173](https://github.com/yzx9/swcgeom/commit/39de173fb3df8967a7edf46b269c216e73f2cb41))
+* `core` set \`check\_same\` arg to false by default ([0f576e9](https://github.com/yzx9/swcgeom/commit/0f576e9ba352138d4d138a15bd6f12ea3a8e48db))
+* `images` change terafly to a left\-handed coordinate system ([b22b69a](https://github.com/yzx9/swcgeom/commit/b22b69acf7715388b0f818eb9c176bee6f39e60a))
+
+<br>
+
 ## **0.9.0**&emsp;<sub><sup>2023-05-04 ([1a3e9d4...797934f](https://github.com/yzx9/swcgeom/compare/1a3e9d4f7a0d1442fbb62f4693f5b5ec6d787af4...797934f120c0de266fc7d21038b5d17a1e2fbabc?diff=split))</sup></sub>
 
 ### Features
