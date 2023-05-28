@@ -22,9 +22,11 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
 
     References
     ----------
-    [1] Cuntz, Hermann, Alexander Borst, and Idan Segev. “Optimization
-    Principles of Dendritic Structure.” Theoretical Biology and Medical
-    Modelling 4, no. 1 (June 8, 2007): 21. https://doi.org/10.1186/1742-4682-4-21.
+    [1] Cuntz, H., Forstner, F., Borst, A. & Häusser, M. One Rule to
+    Grow Them Al: A General Theory of Neuronal Branching and Its
+    Practical Application. PLOS Comput Biol 6, e1000877 (2010).
+    [2] Cuntz, H., Borst, A. & Segev, I. Optimization principles of
+    dendritic structure. Theor Biol Med Model 4, 21 (2007).
     """
 
     def __init__(
