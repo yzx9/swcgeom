@@ -10,24 +10,24 @@ import bs4
 import urllib3
 import urllib3.exceptions
 
-__all__ = ["download_file", "fetch_page", "clone_index_page"]
+__all__ = ["download", "fetch_page", "clone_index_page"]
 
 
-def download_file(dist: str, url: str) -> None:
+def download(dst: str, url: str) -> None:
     """Download a file."""
     conn = urllib3.connection_from_url(url)
     r = conn.request("GET", url)
 
-    dirname = os.path.dirname(dist)
+    dirname = os.path.dirname(dst)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
 
-    with open(dist, "wb") as file:
+    with open(dst, "wb") as file:
         file.write(r.data)
 
 
 def fetch_page(url: str) -> bs4.BeautifulSoup:
-    """Get page."""
+    """Fetch page content."""
     conn = urllib3.connection_from_url(url)
     r = conn.request("GET", url)
     data = r.data.decode("utf-8")
@@ -56,7 +56,7 @@ def clone_index_page(
     files = get_urls_in_index_page(index_url)
     logging.info("downloader: search `%s`, found %s files.", index_url, len(files))
 
-    def download(url: str) -> None:
+    def task(url: str) -> None:
         filepath = url.removeprefix(index_url)
         dist = os.path.join(dist_dir, filepath)
         if os.path.exists(filepath):
@@ -69,13 +69,13 @@ def clone_index_page(
 
         try:
             logging.info("downloader: downloading `%s` to `%s`", url, dist)
-            download_file(filepath, url)
+            download(filepath, url)
             logging.info("downloader: download `%s` to `%s`", url, dist)
         except urllib3.exceptions.HTTPError as ex:
             logging.info("downloader: fails to download `%s`, except `%s`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
-        p.map(download, files)
+        p.map(task, files)
 
 
 def get_urls_in_index_page(url: str) -> list[str]:
