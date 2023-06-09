@@ -1,6 +1,10 @@
 """NeuroMorpho.org.
 
-Metadata example:
+Examples
+--------
+
+Metadata: 
+
 ```json
 {
     'neuron_id': 1,
@@ -53,7 +57,7 @@ Metadata example:
         },
         'measurements': {
             'href': 'http://neuromorpho.org/api/morphometry/id/1'
-            },
+        },
         'persistence_vector': {
             'href': 'http://neuromorpho.org/api/pvec/id/1'
         }
@@ -69,7 +73,7 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import certifi
 import lmdb
@@ -80,6 +84,7 @@ URL_NEURON = "https://neuromorpho.org/api/neuron"
 URL_CNG_VERSION = (
     "https://neuromorpho.org/dableFiles/$ARCHIVE/CNG%20version/$NEURON.CNG.swc"
 )
+API_NEURON_MAX_SIZE = 500
 KB = 1024
 MB = 1024 * KB
 GB = 1024 * MB
@@ -91,6 +96,7 @@ __all__ = ["neuromorpho_convert_lmdb_to_swc", "download_neuromorpho"]
 # pylint: disable-next=too-many-locals
 def neuromorpho_convert_lmdb_to_swc(
     root: str,
+    dest: Optional[str] = None,
     *,
     group_by: Optional[str | Callable[[Dict[str, Any]], str | None]] = None,
     where: Optional[Callable[[Dict[str, Any]], bool]] = None,
@@ -101,11 +107,12 @@ def neuromorpho_convert_lmdb_to_swc(
     Parameters
     ----------
     path : str
+    dest : str, optional
+        If None, use `path/swc`.
     group_by : str | (metadata: Dict[str, Any]) -> str | None, optional
         Group neurons by metadata. If a None is returned then no
         grouping. If a string is entered, use it as a metadata
-        attribute name for grouping, commonly used `archive` or
-        `species` for grouping.
+        attribute name for grouping, e.g.: `archive`, `species`.
     where : (metadata: Dict[str, Any]) -> bool, optional
         Filter neurons by metadata.
     verbose : bool, default False
@@ -113,7 +120,7 @@ def neuromorpho_convert_lmdb_to_swc(
 
     Notes
     -----
-    We are asseting the following folder.
+    We are asserting the following folder.
 
     ```text
     |- root
@@ -136,15 +143,16 @@ def neuromorpho_convert_lmdb_to_swc(
             group_by = lambda _: None  # pylint: disable=unnecessary-lambda-assignment
         items = []
         for k, v in tx_m.cursor():
-            if where(v):
-                items.append((k, group_by(v)))
+            metadata = json.loads(v)
+            if where(metadata):
+                items.append((k, group_by(metadata)))
 
     env_m.close()
 
-    dst = os.path.join(root, "swc")
-    os.makedirs(dst, exist_ok=True)
+    dest = dest or os.path.join(root, "swc")
+    os.makedirs(dest, exist_ok=True)
     for grp in set(grp for _, grp in items if grp is not None):
-        os.makedirs(os.path.join(dst, grp), exist_ok=True)
+        os.makedirs(os.path.join(dest, grp), exist_ok=True)
 
     env_c = lmdb.Environment(os.path.join(root, "cng_version"), readonly=True)
     with env_c.begin() as tx_c:
@@ -156,9 +164,9 @@ def neuromorpho_convert_lmdb_to_swc(
                     continue
 
                 fs = (
-                    os.path.join(dst, grp, k.decode("utf-8") + ".swc")
+                    os.path.join(dest, grp, k.decode("utf-8") + ".swc")
                     if grp is not None
-                    else os.path.join(dst, k.decode("utf-8") + ".swc")
+                    else os.path.join(dest, k.decode("utf-8") + ".swc")
                 )
                 with open(fs, "wb") as f:
                     f.write(bs)  # type: ignore
@@ -168,32 +176,78 @@ def neuromorpho_convert_lmdb_to_swc(
     env_c.close()
 
 
-def download_neuromorpho(path: str, **kwargs) -> None:
-    metadata = os.path.join(path, "metadata")
-    download_metadata(metadata, **kwargs)
-    download_cng_version(os.path.join(path, "cng_version"), metadata, **kwargs)
+def download_neuromorpho(
+    path: str, *, retry: int = 3, verbose: bool = False, **kwargs
+) -> None:
+    kwargs.setdefault("verbose", verbose)
+
+    path_m = os.path.join(path, "metadata")
+    path_c = os.path.join(path, "cng_version")
+
+    err_pages = download_metadata(path_m, **kwargs)
+    for i in range(retry):
+        if len(err_pages) == 0:
+            break
+
+        log = print if verbose else logging.info
+        log("retry %d of download metadata: %s", i, json.dumps(err_pages))
+        err_pages = download_metadata(path_m, pages=err_pages, **kwargs)
+
+    if len(err_pages) != 0:
+        logging.warning(
+            "download metadata pages failed after %d retry: %s",
+            retry,
+            json.dumps(err_pages),
+        )
+
+    err_keys = download_cng_version(path_c, path_m, **kwargs)
+    for i in range(retry):
+        if len(err_keys) == 0:
+            break
+
+        err_keys_str = json.dumps(i.decode("utf-8") for i in err_keys)
+        log = print if verbose else logging.info
+        log("retry %d of %d download CNG version", i, err_keys_str)
+        err_keys = download_cng_version(path_c, path_m, keys=err_keys, **kwargs)
+
+    if len(err_keys) != 0:
+        err_keys_str = json.dumps(i.decode("utf-8") for i in err_keys)
+        logging.warning(
+            "download CNG version failed after %d retry: %s", retry, err_keys_str
+        )
 
 
-def download_metadata(path: str, verbose: bool = False, **kwargs):
+def download_metadata(
+    path: str, *, pages: Optional[Iterable[int]] = None, verbose: bool = False, **kwargs
+) -> List[int]:
     """Download all neuron metadata.
 
     Parameters
     ----------
     path : str
         Path to save data.
+    pages : list of int, optional
+        If is None, download all pages.
     verbose : bool, default False
         Show verbose log.
     **kwargs :
         Forwarding to `get`.
+
+    Returns
+    -------
+    err_pages : list of int
+        Failed pages.
     """
     # TODO: how to cache between versions?
 
-    res = get_metadata(page=0, page_size=1, **kwargs)
-    total = res["page"]["totalElements"]
-    page_size = 50
-
     env = lmdb.Environment(path, map_size=GB)
-    pages = range(math.ceil(total / page_size))
+    page_size = API_NEURON_MAX_SIZE
+    if pages is None:
+        res = get_metadata(page=0, page_size=1, **kwargs)
+        total = res["page"]["totalElements"]
+        pages = range(math.ceil(total / page_size))
+
+    err_pages = []
     for page in tqdm(pages) if verbose else pages:
         try:
             res = get_metadata(page, page_size=page_size, **kwargs)
@@ -202,56 +256,77 @@ def download_metadata(path: str, verbose: bool = False, **kwargs):
                     k = str(neuron["neuron_id"]).encode("utf-8")
                     v = json.dumps(neuron).encode("utf-8")
                     tx.put(key=k, value=v)
-
-                tx.commit()
         except Exception as e:  # pylint: disable=broad-exception-caught
+            err_pages.append(page)
             logging.warning("fails to get metadata of page %s, err: %s", page, e)
 
     env.close()
+    return err_pages
 
 
+# pylint: disable-next=too-many-locals
 def download_cng_version(
-    path: str, metadata: str, *, override: bool = False, verbose: bool = False, **kwargs
-):
+    path: str,
+    path_metadata: str,
+    *,
+    keys: Optional[Iterable[bytes]] = None,
+    override: bool = False,
+    verbose: bool = False,
+    **kwargs,
+) -> List[bytes]:
     """Download GNG version swc.
 
     Parameters
     ----------
     path : str
         Path to save data.
-    metadata : str
+    path_metadata : str
         Path to lmdb of metadata.
+    keys : list of bytes, optional
+        If exist, ignore `override` option. If None, download all key.
     override : bool, default False
         Override even exists.
     verbose : bool, default False
         Show verbose log.
     **kwargs :
         Forwarding to `get`.
-    """
-    env_m = lmdb.Environment(metadata, readonly=True)
-    env_c = lmdb.Environment(path, map_size=TB)
-    with env_m.begin() as tx_m:
-        if override:
-            keys = [k for k, v in tx_m.cursor()]
-        else:
-            with env_c.begin() as tx:
-                keys = [k for k, v in tx_m.cursor() if tx.get(k) is None]
 
+    Returns
+    -------
+    err_keys : list of str
+        Failed keys.
+    """
+    env_m = lmdb.Environment(path_metadata, readonly=True)
+    env_c = lmdb.Environment(path, map_size=TB)
+    if keys is None:
+        with env_m.begin() as tx_m:
+            if override:
+                keys = [k for k, v in tx_m.cursor()]
+            else:
+                with env_c.begin() as tx:
+                    keys = [k for k, v in tx_m.cursor() if tx.get(k) is None]
+
+    err_keys = []
     for k in tqdm(keys) if verbose else keys:
         try:
             with env_c.begin(write=True) as tx, env_m.begin() as tx_m:
-                data = json.loads(tx_m.get(k).decode("utf-8"))  # type: ignore
-                swc = get_cng_version(data, **kwargs)
+                metadata = json.loads(tx_m.get(k).decode("utf-8"))  # type: ignore
+                swc = get_cng_version(metadata, **kwargs)
                 tx.put(key=k, value=swc)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            idx = k.decode("utf-8")
-            logging.warning("fails to get cng version of '%s', err: %s", idx, e)
+            err_keys.append(k)
+            logging.warning(
+                "fails to get cng version of '%s', err: %s", k.decode("utf-8"), e
+            )
 
     env_m.close()
     env_c.close()
+    return err_keys
 
 
-def get_metadata(page, page_size: int = 500, **kwargs) -> Dict[str, Any]:
+def get_metadata(
+    page, page_size: int = API_NEURON_MAX_SIZE, **kwargs
+) -> Dict[str, Any]:
     params = {
         "page": page,
         "size": page_size,
@@ -265,6 +340,13 @@ def get_metadata(page, page_size: int = 500, **kwargs) -> Dict[str, Any]:
 
 
 def get_cng_version(metadata: Dict[str, Any], **kwargs) -> bytes:
+    """Get CNG version swc.
+
+    Returns
+    -------
+    bs : bytes
+        SWC bytes, encoding is NOT FIXED.
+    """
     archive = urllib.parse.quote(metadata["archive"].lower())
     neuron = urllib.parse.quote(metadata["neuron_name"])
     url = URL_CNG_VERSION.replace("$ARCHIVE", archive).replace("$NEURON", neuron)
@@ -288,12 +370,24 @@ def get(url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None) -> byte
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Download neuron morphologies from neuromorpho.org"
-    )
-    parser.add_argument("-o", "--path", type=str)
-    parser.add_argument("--proxy", type=str, default=None)
-    parser.add_argument("--verbose", type=bool, default=True)
-    args = parser.parse_args()
+    parser = argparse.ArgumentParser(description="Use data from neuromorpho.org")
+    subparsers = parser.add_subparsers(required=True)
 
-    download_neuromorpho(args.path, proxy=args.proxy, verbose=args.verbose)
+    sub = subparsers.add_parser("download")
+    sub.add_argument("-o", "--path", type=str)
+    sub.add_argument("--retry", type=int, default=3)
+    sub.add_argument("--proxy", type=str, default=None)
+    sub.add_argument("--verbose", type=bool, default=True)
+    sub.set_defaults(func=lambda args: download_neuromorpho(**vars(args)))
+
+    sub = subparsers.add_parser("convert")
+    sub.add_argument("-i", "--root", type=str, required=True)
+    sub.add_argument("-o", "--dest", type=str, default=None)
+    sub.add_argument("--group_by", type=str, default=None)
+    sub.add_argument("--verbose", type=bool, default=True)
+    sub.set_defaults(func=lambda args: neuromorpho_convert_lmdb_to_swc(**vars(args)))
+
+    args = parser.parse_args()
+    func = args.func
+    del args.func  # type: ignore
+    func(args)
