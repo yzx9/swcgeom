@@ -15,10 +15,12 @@ keywords = [ "neuron", "swc", "geom" ]
 license = {text = "CC4.0 BY-NC-SA"}
 dependencies = [
   "beautifulsoup4>=4.11.1",
+  "certifi>=2023.5.7",
   "imagecodecs>=2023.3.16",
   "matplotlib>=3.5.2",
   "numpy>=1.22.3",
   "pandas>=1.4.2",
+  "pycurl>=7.0.0",
   "pynrrd>=1.0.0",
   "scipy>=1.9.1",
   "seaborn>=0.12.0",

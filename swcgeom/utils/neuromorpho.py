@@ -1,4 +1,66 @@
-"""NeuroMorpho.org."""
+"""NeuroMorpho.org.
+
+Metadata example:
+```json
+{
+    'neuron_id': 1,
+    'neuron_name': 'cnic_001',
+    'archive': 'Wearne_Hof',
+    'note': 'When originally released, this reconstruction had been incompletely processed, and this issue was fixed in release 6.1 (May 2015). The pre-6.1 version of the processed file is available for download <a href=" dableFiles/previous/v6.1/wearne_hof/cnic_001.CNG.swc ">here</a>.',
+    'age_scale': 'Year',
+    'gender': 'Male/Female',
+    'age_classification': 'old',
+    'brain_region': ['neocortex', 'prefrontal', 'layer 3'],
+    'cell_type': ['Local projecting', 'pyramidal', 'principal cell'],
+    'species': 'monkey',
+    'strain': 'Rhesus',
+    'scientific_name': 'Macaca mulatta',
+    'stain': 'lucifer yellow',
+    'experiment_condition': ['Control'],
+    'protocol': 'in vivo',
+    'slicing_direction': 'custom',
+    'reconstruction_software': 'Neurozoom',
+    'objective_type': 'Not reported',
+    'original_format': 'Neurozoom.swc',
+    'domain': 'Dendrites, Soma, No Axon',
+    'attributes': 'Diameter, 3D, Angles',
+    'magnification': '100',
+    'upload_date': '2006-08-01',
+    'deposition_date': '2005-12-31',
+    'shrinkage_reported': 'Reported',
+    'shrinkage_corrected': 'Not Corrected',
+    'reported_value': None,
+    'reported_xy': None,
+    'reported_z': None,
+    'corrected_value': None,
+    'corrected_xy': None,
+    'corrected_z': None,
+    'soma_surface': '834.0',
+    'surface': '8842.91',
+    'volume': '4725.89',
+    'slicing_thickness': '400',
+    'min_age': '24.0',
+    'max_age': '25.0',
+    'min_weight': '4500.0',
+    'max_weight': '10000.0',
+    'png_url': 'http://neuromorpho.org/images/imageFiles/Wearne_Hof/cnic_001.png',
+    'reference_pmid': ['12204204', '12902394'],
+    'reference_doi': ['10.1016/S0306-4522(02)00305-6', '10.1093/cercor/13.9.950'],
+    'physical_Integrity': 'Dendrites Moderate',
+    '_links': {
+        'self': {
+            'href': 'http://neuromorpho.org/api/neuron/id/1'
+        },
+        'measurements': {
+            'href': 'http://neuromorpho.org/api/morphometry/id/1'
+            },
+        'persistence_vector': {
+            'href': 'http://neuromorpho.org/api/pvec/id/1'
+        }
+    }
+}
+```
+"""
 
 import argparse
 import io
@@ -7,7 +69,7 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 import certifi
 import lmdb
@@ -23,12 +85,93 @@ MB = 1024 * KB
 GB = 1024 * MB
 TB = 1024 * GB
 
-__all__ = ["download_neuromorpho"]
+__all__ = ["neuromorpho_convert_lmdb_to_swc", "download_neuromorpho"]
+
+
+# pylint: disable-next=too-many-locals
+def neuromorpho_convert_lmdb_to_swc(
+    root: str,
+    *,
+    group_by: Optional[str | Callable[[Dict[str, Any]], str | None]] = None,
+    where: Optional[Callable[[Dict[str, Any]], bool]] = None,
+    verbose: bool = False,
+) -> None:
+    """Convert lmdb format to SWCs.
+
+    Parameters
+    ----------
+    path : str
+    group_by : str | (metadata: Dict[str, Any]) -> str | None, optional
+        Group neurons by metadata. If a None is returned then no
+        grouping. If a string is entered, use it as a metadata
+        attribute name for grouping, commonly used `archive` or
+        `species` for grouping.
+    where : (metadata: Dict[str, Any]) -> bool, optional
+        Filter neurons by metadata.
+    verbose : bool, default False
+        Print verbose info.
+
+    Notes
+    -----
+    We are asseting the following folder.
+
+    ```text
+    |- root
+    | |- metadata       # input
+    | |- cng_version    # input
+    | |- swc            # output
+    | | |- groups       # output of groups if grouped
+    ```
+    """
+
+    assert os.path.exists(root)
+
+    env_m = lmdb.Environment(os.path.join(root, "metadata"), readonly=True)
+    with env_m.begin() as tx_m:
+        where = where or (lambda _: True)
+        if isinstance(group_by, str):
+            key = group_by
+            group_by = lambda v: v[key]  # pylint: disable=unnecessary-lambda-assignment
+        elif group_by is None:
+            group_by = lambda _: None  # pylint: disable=unnecessary-lambda-assignment
+        items = []
+        for k, v in tx_m.cursor():
+            if where(v):
+                items.append((k, group_by(v)))
+
+    env_m.close()
+
+    dst = os.path.join(root, "swc")
+    os.makedirs(dst, exist_ok=True)
+    for grp in set(grp for _, grp in items if grp is not None):
+        os.makedirs(os.path.join(dst, grp), exist_ok=True)
+
+    env_c = lmdb.Environment(os.path.join(root, "cng_version"), readonly=True)
+    with env_c.begin() as tx_c:
+        for k, grp in tqdm(items) if verbose else items:
+            try:
+                bs = tx_c.get(k)
+                if bs is None:
+                    logging.warning("cng version of '%s' not exists", k.decode("utf-8"))
+                    continue
+
+                fs = (
+                    os.path.join(dst, grp, k.decode("utf-8") + ".swc")
+                    if grp is not None
+                    else os.path.join(dst, k.decode("utf-8") + ".swc")
+                )
+                with open(fs, "wb") as f:
+                    f.write(bs)  # type: ignore
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logging.warning("fails to convert of %s, err: %s", k.decode("utf-8"), e)
+
+    env_c.close()
 
 
 def download_neuromorpho(path: str, **kwargs) -> None:
-    download_metadata(os.path.join(path, "metadata"), **kwargs)
-    download_cng_version(os.path.join(path, "cng_version"), **kwargs)
+    metadata = os.path.join(path, "metadata")
+    download_metadata(metadata, **kwargs)
+    download_cng_version(os.path.join(path, "cng_version"), metadata, **kwargs)
 
 
 def download_metadata(path: str, verbose: bool = False, **kwargs):
@@ -85,32 +228,30 @@ def download_cng_version(
     **kwargs :
         Forwarding to `get`.
     """
-    env_metadata = lmdb.Environment(metadata)
-    env = lmdb.Environment(path, map_size=TB)
-    with env_metadata.begin() as tx_metadata:
-        entries = tx_metadata.cursor()
-        if verbose:
-            entries = tqdm(entries, total=env_metadata.stat()["entries"])
+    env_m = lmdb.Environment(metadata, readonly=True)
+    env_c = lmdb.Environment(path, map_size=TB)
+    with env_m.begin() as tx_m:
+        if override:
+            keys = [k for k, v in tx_m.cursor()]
+        else:
+            with env_c.begin() as tx:
+                keys = [k for k, v in tx_m.cursor() if tx.get(k) is None]
 
-        for k, v in entries:
-            try:
-                with env.begin(write=True) as tx:
-                    if not override and tx.get(k) is not None:
-                        continue
+    for k in tqdm(keys) if verbose else keys:
+        try:
+            with env_c.begin(write=True) as tx, env_m.begin() as tx_m:
+                data = json.loads(tx_m.get(k).decode("utf-8"))  # type: ignore
+                swc = get_cng_version(data, **kwargs)
+                tx.put(key=k, value=swc)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            idx = k.decode("utf-8")
+            logging.warning("fails to get cng version of '%s', err: %s", idx, e)
 
-                    data = json.loads(v.decode("utf-8"))
-                    swc = get_cng_version(data, **kwargs)
-                    tx.put(key=k, value=swc)
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                logging.warning(
-                    "fails to get cng version: %s, err: %s", k.decode("utf-8"), e
-                )
-
-    env_metadata.close()
-    env.close()
+    env_m.close()
+    env_c.close()
 
 
-def get_metadata(page, page_size: int = 50, **kwargs):
+def get_metadata(page, page_size: int = 500, **kwargs) -> Dict[str, Any]:
     params = {
         "page": page,
         "size": page_size,
@@ -123,26 +264,25 @@ def get_metadata(page, page_size: int = 50, **kwargs):
     return json.loads(s)
 
 
-def get_cng_version(metadata: Dict[str, Any], **kwargs):
+def get_cng_version(metadata: Dict[str, Any], **kwargs) -> bytes:
     archive = urllib.parse.quote(metadata["archive"].lower())
     neuron = urllib.parse.quote(metadata["neuron_name"])
     url = URL_CNG_VERSION.replace("$ARCHIVE", archive).replace("$NEURON", neuron)
     return get(url, **kwargs)
 
 
-def get(url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None):
+def get(url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None) -> bytes:
+    # pylint: disable=c-extension-no-member
     buffer = io.BytesIO()
     c = pycurl.Curl()
-    c.setopt(pycurl.URL, url)  # initializing the request URL
-    c.setopt(pycurl.WRITEDATA, buffer)  # setting options for cURL transfer
-    c.setopt(
-        pycurl.CAINFO, certifi.where()
-    )  # setting the file name holding the certificates
+    c.setopt(pycurl.URL, url)
+    c.setopt(pycurl.WRITEDATA, buffer)
+    c.setopt(pycurl.CAINFO, certifi.where())
     c.setopt(pycurl.TIMEOUT, timeout)
     if proxy is not None:
         c.setopt(pycurl.PROXY, proxy)
-    c.perform()  # perform file transfer
-    c.close()  # Ending the session and freeing the resources
+    c.perform()
+    c.close()
 
     return buffer.getvalue()
 
