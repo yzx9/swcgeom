@@ -101,9 +101,6 @@ def draw_lines(
         Forwarded to `~matplotlib.collections.LineCollection`.
     """
 
-    starts, ends = lines[:, 0], lines[:, 1]
-    starts, ends = to_homogeneous(starts, 1), to_homogeneous(ends, 1)
-
     # model/view transformation
     T = model_view_trasformation(*camera)
     T = translate3d(*camera[0]).dot(T)  # keep origin
@@ -111,8 +108,9 @@ def draw_lines(
     # projection transformation
     T = orthographic_projection_simple().dot(T)
 
-    starts = np.dot(T, starts.T).T[:, 0:2]
-    ends = np.dot(T, ends.T).T[:, 0:2]
+    starts, ends = lines[:, 0], lines[:, 1]
+    starts, ends = to_homogeneous(starts, 1), to_homogeneous(ends, 1)
+    starts, ends = np.dot(T, starts.T).T[:, 0:2], np.dot(T, ends.T).T[:, 0:2]
 
     edges = np.stack([starts, ends], axis=1)
     return ax.add_collection(LineCollection(edges, **kwargs))  # type: ignore
@@ -132,7 +130,7 @@ def draw_direction_indicator(
     )
     direction = model_view_trasformation(*camera).dot(direction)
 
-    ARROW_LENTH, TEXT_OFFSET = 0.05, 0.05
+    arrow_length, text_offset = 0.05, 0.05  # TODO: may still overlap
     text_colors = [["x", "red"], ["y", "green"], ["z", "blue"]]
     for (dx, dy, dz, _), (text, color) in zip(direction, text_colors):
         if 1 - abs(dz) < 1e-5:
@@ -141,8 +139,8 @@ def draw_direction_indicator(
         ax.arrow(
             x,
             y,
-            ARROW_LENTH * dx,
-            ARROW_LENTH * dy,
+            arrow_length * dx,
+            arrow_length * dy,
             head_length=0.02,
             head_width=0.01,
             color=color,
@@ -150,8 +148,8 @@ def draw_direction_indicator(
         )
 
         ax.text(
-            x + (ARROW_LENTH + TEXT_OFFSET) * dx,
-            y + (ARROW_LENTH + TEXT_OFFSET) * dy,
+            x + (arrow_length + text_offset) * dx,
+            y + (arrow_length + text_offset) * dy,
             text,
             color=color,
             transform=ax.transAxes,
