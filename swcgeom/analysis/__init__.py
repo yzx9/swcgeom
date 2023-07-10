@@ -5,4 +5,5 @@ from .feature_extractor import *
 from .node_features import *
 from .path_features import *
 from .sholl import *
+from .trunk import *
 from .visualization import *
