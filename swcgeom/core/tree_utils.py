@@ -120,7 +120,7 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     ndata = {k: swc_like.get_ndata(k)[id_map_arr].copy() for k in swc_like.keys()}
     ndata.update(id=new_id, pid=new_pid)
 
-    subtree = Tree(n_nodes, **ndata)
+    subtree = Tree(n_nodes, **ndata, names=swc_like.names)
     subtree.source = swc_like.source
 
     id_map = {}
@@ -256,6 +256,6 @@ def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
     ndata = {k: swc_like.get_ndata(k)[id_map].copy() for k in swc_like.keys()}
     ndata.update(id=new_id, pid=new_pid)
 
-    subtree = Tree(n_nodes, **ndata)
+    subtree = Tree(n_nodes, **ndata, names=swc_like.names)
     subtree.source = swc_like.source
     return subtree
