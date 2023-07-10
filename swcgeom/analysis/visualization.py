@@ -32,7 +32,7 @@ CameraPresets: Dict[CameraPreset, Camera] = {
 }
 CameraOptions = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
 Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
-locations = {
+locations: Dict[Literal["lt", "lb", "rt", "rb"], Tuple[float, float]] = {
     "lt": (0.10, 0.90),
     "lb": (0.10, 0.10),
     "rt": (0.90, 0.90),
