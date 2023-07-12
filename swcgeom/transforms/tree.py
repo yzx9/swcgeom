@@ -89,7 +89,7 @@ class CutByType(Transform[Tree, Tree]):
         self.type = type
 
     def __call__(self, x: Tree) -> Tree:
-        removals = set(x.id()[x.type() != 3])
+        removals = set(x.id()[x.type() != self.type])
 
         def leave(n: Tree.Node, keep_children: List[bool]) -> bool:
             if n.id in removals and any(keep_children):
