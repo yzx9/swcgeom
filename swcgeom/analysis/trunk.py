@@ -1,20 +1,20 @@
 """Plot trunk and florets."""
 
+# pylint: disable=invalid-name
+
 from itertools import chain
-from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, cast
 
 import numpy as np
-import numpy.linalg as la
 import numpy.typing as npt
+from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
-from matplotlib.patches import Ellipse, Rectangle
+from matplotlib.patches import Circle, Ellipse, Patch, Rectangle
 
-from ..core import SWCLike, Tree, get_subtree, to_subtree
-from ..utils import get_fig_ax
+from ..core import Tree, get_subtree, to_subtree
+from ..utils import get_fig_ax, mvee
 from .visualization import draw
-
-# pylint: disable=invalid-name
 
 __all__ = ["draw_trunk"]
 
@@ -23,25 +23,66 @@ Projection = Literal["2d"]
 
 
 def draw_trunk(
-    t: SWCLike,
+    t: Tree,
     florets: Iterable[int | Iterable[int]],
     *,
     fig: Optional[Figure] = None,
     ax: Optional[Axes] = None,
-    bound: Bounds | Tuple[Bounds, Dict[str, Any]] = "ellipse",
+    bound: Bounds | Tuple[Bounds, Dict[str, Any]] | None = "ellipse",
+    point: bool | Dict[str, Any] = True,
     projection: Projection = "2d",
+    cmap: Any = "viridis",
+    **kwargs,
 ) -> Tuple[Figure, Axes]:
+    """Draw trunk tree.
+
+    Parameters
+    ----------
+    t : Tree
+    florets : List of (int | List of int)
+        The florets that needs to be removed, each floret can be a
+        subtree or multiple subtrees (e.g., dendrites are a bunch of
+        subtrees), each number is the id of a tree node.
+    fig : ~matplotlib.figure.Figure, optional
+    ax : ~matplotlib.axes.Axes, optional
+    bound : Bounds | (Bounds, Dict[str, Any]) | None, default 'ellipse'
+        Kind of bound, support 'aabb', 'ellipse'. If bound is None, no
+        bound will be drawn. If bound is a tuple, the second item will
+        used as kwargs and forward to draw function.
+    point : bool | Dict[str, Any], default True
+        Draw point at the start of a subtree. If point is False, no
+        point will be drawn. If point is a dict, this will used a
+        kwargs and forward to draw function.
+    cmap : Any, default 'viridis'
+        Colormap, any value supported by ~matplotlib.cm.Colormap. We
+        will use the ratio of the length of the subtree to the total
+        length of the tree to determine the color.
+    **kwargs : Dict[str, Any]
+        Forward to ~swcgeom.analysis.draw.
+    """
+    # pylint: disable=too-many-locals
     trunk, tss = split_florets(t, florets)
+    lens = get_length_ratio(t, tss)
+
+    cmap = cm.get_cmap(cmap)
+    c = cmap(lens)
+
     fig, ax = get_fig_ax(fig, ax)
-    bound_kind, bound_kwargs = (bound, {}) if isinstance(bound, str) else bound
-    for ts in tss:
-        draw_bound(ts, ax, bound_kind, projection, **bound_kwargs)
-    draw(trunk, ax=ax)
+    if bound is not None:
+        for ts, cc in zip(tss, c):
+            draw_bound(ts, ax, bound, projection, color=cc)
+
+    if point is not False:
+        point_kwargs = point if isinstance(point, dict) else {}
+        for ts, cc in zip(tss, c):
+            draw_point(ts, ax, projection, color=cc, **point_kwargs)
+
+    draw(trunk, ax=ax, color=cmap(1), **kwargs)
     return fig, ax
 
 
 def split_florets(
-    t: SWCLike, florets: Iterable[int | Iterable[int]]
+    t: Tree, florets: Iterable[int | Iterable[int]]
 ) -> Tuple[Tree, List[List[Tree]]]:
     florets = [[i] if isinstance(i, (int, np.integer)) else i for i in florets]
     subtrees = [[get_subtree(t, ff) for ff in f] for f in florets]
@@ -49,27 +90,39 @@ def split_florets(
     return trunk, subtrees
 
 
+def get_length_ratio(t: Tree, tss: List[List[Tree]]) -> Any:
+    lens = np.array([sum(t.length() for t in ts) for ts in tss])
+    return lens / t.length()
+
+
 # Bounds
 
 
 def draw_bound(
-    ts: Iterable[SWCLike], ax: Axes, bound: Bounds, projection: Projection, **kwargs
+    ts: Iterable[Tree],
+    ax: Axes,
+    bound: Bounds | Tuple[Bounds, Dict[str, Any]],
+    projection: Projection,
+    **kwargs,
 ) -> None:
+    kind, bound_kwargs = (bound, {}) if isinstance(bound, str) else bound
     if projection == "2d":
-        xyz = np.concatenate([t.xyz() for t in ts])
-        xy = xyz[:, :2]  # TODO: camera
-
-        if bound == "aabb":
-            patch = create_aabb_2d(xy, **kwargs)
-        elif bound == "ellipse":
-            patch = create_ellipse_2d(xy, **kwargs)
-        else:
-            raise ValueError(f"unsupport bound {bound} and projection {projection}")
-
+        patch = create_bound_2d(ts, kind, **kwargs, **bound_kwargs)
     else:
         raise ValueError(f"unsupported projection {projection}")
 
     ax.add_patch(patch)
+
+
+def create_bound_2d(ts: Iterable[Tree], bound: Bounds, **kwargs) -> Patch:
+    xyz = np.concatenate([t.xyz() for t in ts])
+    xy = xyz[:, :2]  # TODO: camera
+
+    if bound == "aabb":
+        return create_aabb_2d(xy, **kwargs)
+    if bound == "ellipse":
+        return create_ellipse_2d(xy, **kwargs)
+    raise ValueError(f"unsupport bound `{bound}` in 2d projection")
 
 
 def create_aabb_2d(xy: npt.NDArray, fill: bool = False, **kwargs) -> Rectangle:
@@ -83,11 +136,43 @@ def create_aabb_2d(xy: npt.NDArray, fill: bool = False, **kwargs) -> Rectangle:
 
 
 def create_ellipse_2d(xy: npt.NDArray, fill: bool = False, **kwargs) -> Ellipse:
-    centroid, a, b, alpha = get_stand_ellipse(xy)
-    ellipse = Ellipse(
-        xy=centroid, width=a, height=b, angle=alpha, fill=fill, **kwargs  # type:ignore
+    ellipse = mvee(xy)
+    patch = Ellipse(
+        xy=ellipse.centroid,  # type:ignore
+        width=ellipse.a,
+        height=ellipse.b,
+        angle=ellipse.alpha,
+        fill=fill,
+        **kwargs,
     )
-    return ellipse
+    return patch
+
+
+# point
+
+
+def draw_point(ts: Iterable[Tree], ax: Axes, projection: Projection, **kwargs) -> None:
+    if projection == "2d":
+        patch = create_point_2d(ts, **kwargs)
+    else:
+        raise ValueError(f"unsupported projection {projection}")
+
+    ax.add_patch(patch)
+
+
+def create_point_2d(
+    ts: Iterable[Tree], radius: Optional[float] = None, **kwargs
+) -> Circle:
+    if radius is None:
+        xyz = np.concatenate([t.xyz() for t in ts])  # TODO: cache
+        radius = 0.05 * min(
+            xyz[:, 0].max() - xyz[:, 0].min(),
+            xyz[:, 1].max() - xyz[:, 1].min(),
+        )
+        radius = cast(float, radius)
+
+    center = np.mean([t.xyz()[0, :2] for t in ts], axis=0)
+    return Circle(center, radius, **kwargs)
 
 
 # Helpers
@@ -95,70 +180,3 @@ def create_ellipse_2d(xy: npt.NDArray, fill: bool = False, **kwargs) -> Ellipse:
 
 def get_dendrites(tree: Tree) -> Iterable[int]:  # TODO: move to `Tree`
     return [n.id for n in tree.soma().children() if n.type in [3, 4]]
-
-
-def mvee(
-    points: npt.NDArray[np.floating], tol: float = 1e-3
-) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-    """Finds the Minimum Volume Enclosing Ellipsoid.
-
-    Returns
-    -------
-    A : matrix of shape (d, d)
-        The ellipse equation in the 'center form': (x-c)' * A * (x-c) = 1
-    centroid : array of shape (d,)
-        The center coordinates of the ellipse.
-
-    Reference
-    ---------
-    1. http://stackoverflow.com/questions/14016898/port-matlab-bounding-ellipsoid-code-to-python
-    2. http://stackoverflow.com/questions/1768197/bounding-ellipse/1768440#1768440
-    3. https://minillinim.github.io/GroopM/dev_docs/groopm.ellipsoid-pysrc.html
-    """
-
-    N, d = points.shape
-    Q = np.column_stack((points, np.ones(N))).T
-    err = tol + 1.0
-    u = np.ones(N) / N
-    while err > tol:
-        # assert u.sum() == 1 # invariant
-        X = np.dot(np.dot(Q, np.diag(u)), Q.T)
-        M = np.diag(np.dot(np.dot(Q.T, la.inv(X)), Q))
-        jdx = np.argmax(M)
-        step_size = (M[jdx] - d - 1.0) / ((d + 1) * (M[jdx] - 1.0))
-        new_u = (1 - step_size) * u
-        new_u[jdx] += step_size
-        err = la.norm(new_u - u)
-        u = new_u
-    c = np.dot(u, points)
-    A = (
-        la.inv(np.dot(np.dot(points.T, np.diag(u)), points) - np.multiply.outer(c, c))
-        / d
-    )
-    return A, c
-
-
-def get_stand_ellipse(
-    ps: npt.NDArray,
-) -> Tuple[Iterable[float], float, float, float]:
-    A, centroid = mvee(ps)
-
-    # V is the rotation matrix that gives the orientation of the ellipsoid.
-    # https://en.wikipedia.org/wiki/Rotation_matrix
-    # http://mathworld.wolfram.com/RotationMatrix.html
-    _U, D, V = la.svd(A)
-
-    # x, y radii.
-    rx, ry = 1.0 / np.sqrt(D)
-    # Major and minor semi-axis of the ellipse.
-    dx, dy = 2 * rx, 2 * ry
-    a, b = max(dx, dy), min(dx, dy)
-    # Eccentricity
-    # e = np.sqrt(a ** 2 - b ** 2) / a
-
-    arcsin = -1.0 * np.rad2deg(np.arcsin(V[0][0]))
-    arccos = np.rad2deg(np.arccos(V[0][1]))
-    # Orientation angle (with respect to the x axis counterclockwise).
-    alpha = arccos if arcsin > 0.0 else -1.0 * arccos
-
-    return centroid, a, b, alpha
