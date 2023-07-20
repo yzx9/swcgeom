@@ -15,7 +15,7 @@ __all__ = [
     "rotate3d_y",
     "rotate3d_z",
     "to_homogeneous",
-    "model_view_trasformation",
+    "model_view_transformation",
     "orthographic_projection_simple",
 ]
 
@@ -230,7 +230,7 @@ def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
     return xyz4
 
 
-def model_view_trasformation(
+def model_view_transformation(
     position: Vec3f, look_at: Vec3f, up: Vec3f
 ) -> npt.NDArray[np.float32]:
     r"""Play model/view transformation.
