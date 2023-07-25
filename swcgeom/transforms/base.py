@@ -65,7 +65,7 @@ class Transforms(Transform[T, K]):
     def __init__(self, t1: Transform[T, T1],  t2: Transform[T1, T2],
                        t3: Transform[T2, T3], t4: Transform[T3, T4],
                        t5: Transform[T4, T5], t6: Transform[T5, T6],
-                       t7: Transform[T6, Any], /, *transforms: Transform[Any, Any]) -> None: ...
+                       t7: Transform[T6, Any], /, *transforms: Transform[Any, K]) -> None: ...
     # fmt:on
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
         trans = []
