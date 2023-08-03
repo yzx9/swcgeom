@@ -305,7 +305,11 @@ class Tree(DictSWC):
         ~swcgeom.core.swc_utils.read_swc
         """
 
-        df = read_swc(swc_file, **kwargs)
+        try:
+            df = read_swc(swc_file, **kwargs)
+        except Exception as e:  # pylint: disable=broad-except
+            raise ValueError(f"fails to read swc: {swc_file}") from e
+
         source = os.path.abspath(swc_file)
         return cls.from_data_frame(df, source)
 
