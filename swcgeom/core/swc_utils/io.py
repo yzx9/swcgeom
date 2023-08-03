@@ -4,6 +4,7 @@ import re
 import warnings
 from typing import Callable, Iterable, List, Literal, Optional, Tuple
 
+import chardet
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
@@ -27,6 +28,7 @@ def read_swc(
     sort_nodes: bool = False,
     reset_index: bool = True,
     *,
+    encoding: Literal["detect"] | str = "utf-8",
     names: Optional[SWCNames] = None,
 ) -> pd.DataFrame:
     """Read swc file.
@@ -45,11 +47,29 @@ def read_swc(
     reset_index : bool, default `True`
         Reset node index to start with zero, DO NOT set to false if
         you are not sure what will happend.
+    encoding : str, default `utf-8`
+        The name of the encoding used to decode the file. If is
+        `detect`, we will try to detect the character encoding.
     names : SWCNames, optional
     """
 
     names = get_names(names)
-    df, _ = parse_swc(swc_file, names=names, extra_cols=extra_cols)  # TODO: comments
+
+    if encoding == "detect":
+        with open(swc_file, "rb") as f:
+            data = f.read()
+
+        result = chardet.detect(data)
+        encoding = result["encoding"] or "utf-8"
+        if result["confidence"] < 0.9:
+            warnings.warn(
+                f"parse as `{encoding}` with low confidence "
+                f"{result['confidence']} in `{swc_file}`"
+            )
+
+    df, _ = parse_swc(
+        swc_file, names=names, extra_cols=extra_cols, encoding=encoding
+    )  # TODO: comments
 
     # fix swc
     if fix_roots is not False and np.count_nonzero(df[names.pid] == -1) > 1:
