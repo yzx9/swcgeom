@@ -30,7 +30,7 @@ def read_swc(
     *,
     encoding: Literal["detect"] | str = "utf-8",
     names: Optional[SWCNames] = None,
-) -> pd.DataFrame:
+) -> Tuple[pd.DataFrame, List[str]]:
     """Read swc file.
 
     Parameters
@@ -51,6 +51,11 @@ def read_swc(
         The name of the encoding used to decode the file. If is
         `detect`, we will try to detect the character encoding.
     names : SWCNames, optional
+
+    Returns
+    -------
+    df : ~pandas.DataFrame
+    comments : list of string
     """
 
     names = get_names(names)
@@ -67,9 +72,9 @@ def read_swc(
                 f"{result['confidence']} in `{swc_file}`"
             )
 
-    df, _ = parse_swc(
+    df, comments = parse_swc(
         swc_file, names=names, extra_cols=extra_cols, encoding=encoding
-    )  # TODO: comments
+    )
 
     # fix swc
     if fix_roots is not False and np.count_nonzero(df[names.pid] == -1) > 1:
@@ -93,7 +98,7 @@ def read_swc(
     if (df[names.pid] == -1).argmax() != 0:
         warnings.warn(f"root is not the first node in `{swc_file}`")
 
-    return df
+    return df, comments
 
 
 def to_swc(
@@ -101,11 +106,21 @@ def to_swc(
     *,
     extra_cols: Optional[Iterable[str]] = None,
     id_offset: int = 1,
+    comments: Optional[Iterable[str]] = None,
     names: Optional[SWCNames] = None,
 ) -> Iterable[str]:
     """Convert to swc format."""
 
+    if comments is not None:
+        for c in comments:
+            if not c.isspace():
+                yield f"# {c.lstrip()}\n"
+            else:
+                yield "#"
+
     names = get_names(names)
+    cols = names.cols() + (list(extra_cols) if extra_cols is not None else [])
+    yield f"# {' '.join(cols)}\n"
 
     def get_v(k: str, idx: int) -> str:
         vs = get_ndata(k)
@@ -118,8 +133,6 @@ def to_swc(
 
         return str(v)
 
-    cols = names.cols() + (list(extra_cols) if extra_cols is not None else [])
-    yield f"# {' '.join(cols)}\n"
     for idx in get_ndata(names.id):
         yield " ".join(get_v(k, idx) for k in cols) + "\n"
 
@@ -184,7 +197,7 @@ def parse_swc(
                     for i, trans in enumerate(transforms):
                         vals[i].append(trans(match.group(i + 1)))
                 elif line.startswith("#"):
-                    comments.append(line[1:])
+                    comments.append(line[1:].removesuffix("\n"))
                 elif not line.isspace():
                     raise ValueError(f"invalid row {i} in `{swc_file}`")
     except UnicodeDecodeError as e:

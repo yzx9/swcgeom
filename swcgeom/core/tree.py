@@ -119,6 +119,8 @@ class Tree(DictSWC):
         z: Optional[npt.NDArray[np.float32]] = None,
         r: Optional[npt.NDArray[np.float32]] = None,
         pid: Optional[npt.NDArray[np.int32]] = None,
+        source: str = "",
+        comments: Optional[Iterable[str]] = None,
         names: Optional[SWCNames] = None,
         **kwargs: npt.NDArray,
     ) -> None:
@@ -135,7 +137,9 @@ class Tree(DictSWC):
             names.r: padding1d(n_nodes, r, padding_value=1),
             names.pid: padding1d(n_nodes, pid, dtype=np.int32),
         }
-        super().__init__(**ndata, **kwargs, names=names)
+        super().__init__(
+            **ndata, **kwargs, source=source, comments=comments, names=names
+        )
 
     def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
@@ -286,14 +290,22 @@ class Tree(DictSWC):
 
     @classmethod
     def from_data_frame(
-        cls, df: pd.DataFrame, source: str = "", *, names: Optional[SWCNames] = None
-    ) -> "Tree":
+        cls,
+        df: pd.DataFrame,
+        source: str = "",
+        *,
+        comments: Optional[Iterable[str]] = None,
+        names: Optional[SWCNames] = None,
+    ) -> Self:
         """Read neuron tree from data frame."""
         names = get_names(names)
         tree = Tree(
-            df.shape[0], **{k: df[k].to_numpy() for k in names.cols()}, names=names
+            df.shape[0],
+            **{k: df[k].to_numpy() for k in names.cols()},
+            source=source,
+            comments=comments,
+            names=names,
         )
-        tree.source = source
         return tree
 
     @classmethod
@@ -306,12 +318,12 @@ class Tree(DictSWC):
         """
 
         try:
-            df = read_swc(swc_file, **kwargs)
+            df, comments = read_swc(swc_file, **kwargs)
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(f"fails to read swc: {swc_file}") from e
 
         source = os.path.abspath(swc_file)
-        return cls.from_data_frame(df, source)
+        return cls.from_data_frame(df, source=source, comments=comments)
 
     @classmethod
     def from_eswc(

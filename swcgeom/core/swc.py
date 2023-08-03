@@ -39,6 +39,7 @@ class SWCLike(ABC):
     """ABC of SWC."""
 
     source: str = ""
+    comments: List[str] = []
     names: SWCNames
 
     def __len__(self) -> int:
@@ -119,10 +120,24 @@ class SWCLike(ABC):
         *,
         extra_cols: Optional[List[str]] = None,
         source: bool | str = True,
+        comments: bool = True,
         id_offset: int = 1,
     ) -> str | None:
         """Write swc file."""
-        it = self._to_swc(extra_cols=extra_cols, source=source, id_offset=id_offset)
+        data = []
+        if source is not False:
+            if not isinstance(source, str):
+                source = self.source if self.source else "Unknown"
+            data.append(f"source: {source}")
+            data.append("")
+
+        if comments is True:
+            data.extend(self.comments)
+
+        it = to_swc(
+            self.get_ndata, comments=data, extra_cols=extra_cols, id_offset=id_offset
+        )
+
         if fname is None:
             return "".join(it)
 
@@ -130,14 +145,6 @@ class SWCLike(ABC):
             f.writelines(it)
 
         return None
-
-    def _to_swc(self, source: bool | str, **kwargs) -> Iterable[str]:
-        if source is not False:
-            if not isinstance(source, str):
-                source = self.source if self.source else "Unknown"
-            yield f"# source: {source}\n"
-
-        yield from to_swc(self.get_ndata, **kwargs)
 
     # fmt: off
     @overload
@@ -173,8 +180,17 @@ class DictSWC(SWCLike):
 
     ndata: Dict[str, npt.NDArray]
 
-    def __init__(self, *, names: Optional[SWCNames] = None, **kwargs: npt.NDArray):
+    def __init__(
+        self,
+        *,
+        source: str = "",
+        comments: Optional[Iterable[str]] = None,
+        names: Optional[SWCNames] = None,
+        **kwargs: npt.NDArray,
+    ):
         super().__init__()
+        self.source = source
+        self.comments = list(comments) if comments is not None else []
         self.names = get_names(names)
         self.ndata = kwargs
 
