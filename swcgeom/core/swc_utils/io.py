@@ -1,8 +1,8 @@
 """Read and write swc format."""
 
+import re
 import warnings
-from collections import OrderedDict
-from typing import Any, Callable, Iterable, Literal, Optional, cast
+from typing import Callable, Iterable, List, Literal, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -22,7 +22,7 @@ __all__ = ["read_swc", "to_swc"]
 
 def read_swc(
     swc_file: str,
-    extra_cols: Iterable[str] | None = None,
+    extra_cols: Optional[Iterable[str]] = None,
     fix_roots: Literal["somas", "nearest", False] = False,
     sort_nodes: bool = False,
     reset_index: bool = True,
@@ -49,15 +49,7 @@ def read_swc(
     """
 
     names = get_names(names)
-
-    df = pd.read_csv(
-        swc_file,
-        sep=" ",
-        comment="#",
-        names=names.cols() + (list(extra_cols) if extra_cols else []),
-        dtype=cast(Any, dict(_get_dtypes(names))),
-        index_col=False,
-    )
+    df, _ = parse_swc(swc_file, names=names, extra_cols=extra_cols)  # TODO: comments
 
     # fix swc
     if fix_roots is not False and np.count_nonzero(df[names.pid] == -1) > 1:
@@ -91,6 +83,8 @@ def to_swc(
     id_offset: int = 1,
     names: Optional[SWCNames] = None,
 ) -> Iterable[str]:
+    """Convert to swc format."""
+
     names = get_names(names)
 
     def get_v(k: str, idx: int) -> str:
@@ -110,13 +104,71 @@ def to_swc(
         yield " ".join(get_v(k, idx) for k in cols) + "\n"
 
 
-def _get_dtypes(names: SWCNames) -> OrderedDict[str, np.dtype]:
-    d = OrderedDict()
-    d[names.id] = np.int32
-    d[names.type] = np.int32
-    d[names.x] = np.float32
-    d[names.y] = np.float32
-    d[names.z] = np.float32
-    d[names.r] = np.float32
-    d[names.pid] = np.int32
-    return d
+RE_FLOAT = r"([+-]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
+RE_FLOAT_POS = r"([+]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
+
+
+def parse_swc(
+    swc_file: str,
+    *,
+    names: SWCNames,
+    extra_cols: Iterable[str] | None = None,
+    encoding: str = "utf-8",
+) -> Tuple[pd.DataFrame, List[str]]:
+    """Parse swc file.
+
+    Returns
+    -------
+    df : ~pandas.DataFrame
+    comments : list of string
+    """
+
+    # pylint: disable=too-many-locals
+    extras = list(extra_cols) if extra_cols else []
+
+    keys = names.cols() + extras
+    vals = [[] for _ in keys]
+    transforms = [int, int, float, float, float, float, int] + [float for _ in extras]
+
+    re_swc_cols = [
+        r"([0-9]+)",  # id
+        r"([0-9]+)",  # type
+        RE_FLOAT,  # x
+        RE_FLOAT,  # y
+        RE_FLOAT,  # z
+        RE_FLOAT_POS,  # r
+        r"(-?[0-9]+)",  # pid
+    ] + [
+        RE_FLOAT for _ in extras  # assert float
+    ]
+
+    re_swc_cols_str = r"\s+".join(re_swc_cols)
+    # Leading spaces are allowed, as this is part of the data in
+    # neuromorpho.org. More fields at the end is allowed, such as
+    # reading eswc as swc, but with a warning.
+    re_swc = re.compile(rf"^\s*{re_swc_cols_str}\s*([\s+-.0-9]*)$")
+    last_group = 7 + len(extras) + 1
+
+    comments = []
+    try:
+        with open(swc_file, "r", encoding=encoding) as f:
+            flag = True
+            for i, line in enumerate(f):
+                if (match := re_swc.search(line)) is not None:
+                    if flag and match.group(last_group):
+                        warnings.warn(
+                            f"some fields are ignored in row {i} of `{swc_file}`"
+                        )
+                        flag = False
+
+                    for i, trans in enumerate(transforms):
+                        vals[i].append(trans(match.group(i + 1)))
+                elif line.startswith("#"):
+                    comments.append(line[1:])
+                elif not line.isspace():
+                    raise ValueError(f"invalid row {i} in `{swc_file}`")
+    except UnicodeDecodeError as e:
+        raise ValueError(f"encoding error in `{swc_file}`") from e
+
+    df = pd.DataFrame.from_dict(dict(zip(keys, vals)))
+    return df, comments
