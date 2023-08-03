@@ -80,17 +80,20 @@ import lmdb
 import pycurl
 from tqdm import tqdm
 
+__all__ = ["neuromorpho_convert_lmdb_to_swc", "download_neuromorpho"]
+
 URL_NEURON = "https://neuromorpho.org/api/neuron"
 URL_CNG_VERSION = (
     "https://neuromorpho.org/dableFiles/$ARCHIVE/CNG%20version/$NEURON.CNG.swc"
 )
 API_NEURON_MAX_SIZE = 500
+
+# about 1.1 GB and 18 GB in version 8.5.25 released in 2023-08-01
 KB = 1024
 MB = 1024 * KB
 GB = 1024 * MB
-TB = 1024 * GB
-
-__all__ = ["neuromorpho_convert_lmdb_to_swc", "download_neuromorpho"]
+SIZE_METADATA = 2 * GB
+SIZE_DATA = 20 * GB
 
 
 # pylint: disable-next=too-many-locals
@@ -205,13 +208,14 @@ def download_neuromorpho(
         if len(err_keys) == 0:
             break
 
-        err_keys_str = json.dumps(i.decode("utf-8") for i in err_keys)
-        log = print if verbose else logging.info
-        log("retry %d of %d download CNG version", i, err_keys_str)
+        err_keys_str = json.dumps([i.decode("utf-8") for i in err_keys])
+        logging.info("retry %d download CNG version: %d", i, err_keys_str)
+        if verbose:
+            print(f"retry {i} download CNG version: {err_keys_str}")
         err_keys = download_cng_version(path_c, path_m, keys=err_keys, **kwargs)
 
     if len(err_keys) != 0:
-        err_keys_str = json.dumps(i.decode("utf-8") for i in err_keys)
+        err_keys_str = json.dumps([i.decode("utf-8") for i in err_keys])
         logging.warning(
             "download CNG version failed after %d retry: %s", retry, err_keys_str
         )
@@ -240,7 +244,7 @@ def download_metadata(
     """
     # TODO: how to cache between versions?
 
-    env = lmdb.Environment(path, map_size=GB)
+    env = lmdb.Environment(path, map_size=SIZE_METADATA)
     page_size = API_NEURON_MAX_SIZE
     if pages is None:
         res = get_metadata(page=0, page_size=1, **kwargs)
@@ -296,8 +300,9 @@ def download_cng_version(
     err_keys : list of str
         Failed keys.
     """
-    env_m = lmdb.Environment(path_metadata, readonly=True)
-    env_c = lmdb.Environment(path, map_size=TB)
+
+    env_m = lmdb.Environment(path_metadata, map_size=SIZE_METADATA, readonly=True)
+    env_c = lmdb.Environment(path, map_size=SIZE_DATA)
     if keys is None:
         with env_m.begin() as tx_m:
             if override:
@@ -309,9 +314,11 @@ def download_cng_version(
     err_keys = []
     for k in tqdm(keys) if verbose else keys:
         try:
-            with env_c.begin(write=True) as tx, env_m.begin() as tx_m:
-                metadata = json.loads(tx_m.get(k).decode("utf-8"))  # type: ignore
-                swc = get_cng_version(metadata, **kwargs)
+            with env_m.begin() as tx:
+                metadata = json.loads(tx.get(k).decode("utf-8"))  # type: ignore
+
+            swc = get_cng_version(metadata, **kwargs)
+            with env_c.begin(write=True) as tx:
                 tx.put(key=k, value=swc)
         except Exception as e:  # pylint: disable=broad-exception-caught
             err_keys.append(k)
@@ -364,8 +371,12 @@ def get(url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None) -> byte
     if proxy is not None:
         c.setopt(pycurl.PROXY, proxy)
     c.perform()
-    c.close()
 
+    code = c.getinfo(pycurl.RESPONSE_CODE)
+    if code != 200:
+        raise ConnectionError(f"fails to fetch data, status: {code}")
+
+    c.close()
     return buffer.getvalue()
 
 
