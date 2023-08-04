@@ -98,6 +98,9 @@ def read_swc(
     if (df[names.pid] == -1).argmax() != 0:
         warnings.warn(f"root is not the first node in `{swc_file}`")
 
+    if (df[names.r] <= 0).any():
+        warnings.warn(f"non-positive radius in `{swc_file}`")
+
     return df, comments
 
 
@@ -138,7 +141,6 @@ def to_swc(
 
 
 RE_FLOAT = r"([+-]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
-RE_FLOAT_POS = r"([+]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
 
 
 def parse_swc(
@@ -169,7 +171,7 @@ def parse_swc(
         RE_FLOAT,  # x
         RE_FLOAT,  # y
         RE_FLOAT,  # z
-        RE_FLOAT_POS,  # r
+        RE_FLOAT,  # r
         r"(-?[0-9]+)",  # pid
     ] + [
         RE_FLOAT for _ in extras  # assert float
