@@ -80,7 +80,11 @@ import lmdb
 import pycurl
 from tqdm import tqdm
 
-__all__ = ["neuromorpho_convert_lmdb_to_swc", "download_neuromorpho"]
+__all__ = [
+    "neuromorpho_is_valid",
+    "neuromorpho_convert_lmdb_to_swc",
+    "download_neuromorpho",
+]
 
 URL_NEURON = "https://neuromorpho.org/api/neuron"
 URL_CNG_VERSION = (
@@ -94,6 +98,28 @@ MB = 1024 * KB
 GB = 1024 * MB
 SIZE_METADATA = 2 * GB
 SIZE_DATA = 20 * GB
+
+# fmt:off
+invalid_ids = [
+    # bad file
+    81062, 86970, 79791,
+
+    33294, # bad tree with multi root
+    268441, # invalid type `-1` in L5467
+
+    # # 404 not found
+    # # We don't mark these ids, since they will throw a warning when
+    # # downloading and converting, so that users can find out as early
+    # # as possible, and can recover immediately when the website fixes
+    # # this problem.
+    # 97058, 98302, 125801, 130581, 267258, 267259, 267261, 267772,
+    # 267773, 268284, 268285, 268286
+]
+# fmt: on
+
+
+def neuromorpho_is_valid(metadata: Dict[str, Any]) -> bool:
+    return metadata["neuron_id"] not in invalid_ids
 
 
 # pylint: disable-next=too-many-locals
@@ -132,6 +158,11 @@ def neuromorpho_convert_lmdb_to_swc(
     | |- swc            # output
     | | |- groups       # output of groups if grouped
     ```
+
+    See Also
+    --------
+    neuromorpho_is_valid :
+        Recommend filter function, use `where=neuromorpho_is_valid`
     """
 
     assert os.path.exists(root)
