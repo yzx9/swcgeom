@@ -140,6 +140,7 @@ def to_swc(
         yield " ".join(get_v(k, idx) for k in cols) + "\n"
 
 
+RE_COMMENT = re.compile(r"^\s*#")
 RE_FLOAT = r"([+-]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
 
 
@@ -198,8 +199,9 @@ def parse_swc(
 
                     for i, trans in enumerate(transforms):
                         vals[i].append(trans(match.group(i + 1)))
-                elif line.startswith("#"):
-                    comments.append(line[1:].removesuffix("\n"))
+                elif match := RE_COMMENT.match(line):
+                    comment = line[len(match.group(0)) :].removesuffix("\n")
+                    comments.append(comment)
                 elif not line.isspace():
                     raise ValueError(f"invalid row {i} in `{swc_file}`")
     except UnicodeDecodeError as e:
