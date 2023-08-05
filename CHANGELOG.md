@@ -1,5 +1,44 @@
 # Changelog
 
+## **0.11.0**&emsp;<sub><sup>2023-08-05 ([a8adae5...c075ec4](https://github.com/yzx9/swcgeom/compare/a8adae5d58392bcac737a28bdf6c510d07e30fe6...c075ec4063d387d35dcfdd0a021a3407ccd67770?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+* draw trunk ([4d2e069](https://github.com/yzx9/swcgeom/commit/4d2e069a86a105c585425d730824c8f22a293d01))
+* draw point at the start of subtree ([2c9938f](https://github.com/yzx9/swcgeom/commit/2c9938f9c75aaac807b136baa0f7bd0d8fc4af0a))
+
+##### `core`
+
+* detect swc encoding ([06087bd](https://github.com/yzx9/swcgeom/commit/06087bde32f68b559d0591479538dbf960b92bcd))
+* preserve original swc comments\(close \#2\) ([ac49e25](https://github.com/yzx9/swcgeom/commit/ac49e253cf5a33a27a7e61c84b821d944307b857))
+* accept non\-positive radius ([47c29b5](https://github.com/yzx9/swcgeom/commit/47c29b5503b0ff41ce678491d22ae715383fb2ee))
+* accept space before comments in swc ([c075ec4](https://github.com/yzx9/swcgeom/commit/c075ec4063d387d35dcfdd0a021a3407ccd67770))
+
+##### `utils`
+
+* add neuromorpho related util ([4a22e3d](https://github.com/yzx9/swcgeom/commit/4a22e3d4b8ddf2265fe23106751c0e25232babef))
+* convert neuromorpho lmdb to swc ([e48c1a8](https://github.com/yzx9/swcgeom/commit/e48c1a8b7e1397ae17921f36471fbc4ba1c2cff2))
+* retry download neuromorpho ([ebd9255](https://github.com/yzx9/swcgeom/commit/ebd92557effe525d90c26f32dfa773fc4977f212))
+* mark invalid neuromorpho data ([43a96c6](https://github.com/yzx9/swcgeom/commit/43a96c6e0872c82d4df10783687208ab959f7a11))
+
+### Bug Fixes
+
+##### `core`
+
+* forward names ([52192ce](https://github.com/yzx9/swcgeom/commit/52192ceaa9b687fddb98c3767412aee6cc226ad8))
+
+##### `transform`
+
+* cut by dynamic type ([3293a67](https://github.com/yzx9/swcgeom/commit/3293a675830200c73761c48bc1990554f7d0c82c))
+
+##### `utils`
+
+* should throw http error ([7fb4ee2](https://github.com/yzx9/swcgeom/commit/7fb4ee2ca0ca4308c7d527bec9eb325d22ca0df7))
+
+<br>
+
 ## **0.10.0**&emsp;<sub><sup>2023-05-23 ([bc48787...8991fe0](https://github.com/yzx9/swcgeom/compare/bc487879ac6655de0a86504d24a2f67ba6afe848...8991fe0ca647febccba7a9bce7facf0e06334a5c?diff=split))</sup></sub>
 
 ### Features
