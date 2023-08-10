@@ -179,7 +179,9 @@ def parse_swc(
     # neuromorpho.org. More fields at the end is allowed, such as
     # reading eswc as swc, but with a warning.
     re_swc = re.compile(rf"^\s*{re_swc_cols_str}\s*([\s+-.0-9]*)$")
+
     last_group = 7 + len(extras) + 1
+    ignored_comment = f"# {' '.join(names.cols())}"
     flag = True
 
     comments = []
@@ -197,7 +199,8 @@ def parse_swc(
                         vals[i].append(trans(match.group(i + 1)))
                 elif match := RE_COMMENT.match(line):
                     comment = line[len(match.group(0)) :].removesuffix("\n")
-                    comments.append(comment)
+                    if not comment.startswith(ignored_comment):
+                        comments.append(comment)
                 elif not line.isspace():
                     raise ValueError(f"invalid row {i+1} in `{fname}`")
         except UnicodeDecodeError as e:
