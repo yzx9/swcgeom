@@ -1,16 +1,20 @@
+"""File related utils."""
+
 import warnings
-from io import TextIOWrapper
+from io import BytesIO, TextIOWrapper
 from typing import Literal
 
 import chardet
 
-__all__ = ["FileReader"]
+__all__ = ["FileReader", "PathOrIO"]
+
+PathOrIO = int | str | bytes | BytesIO | TextIOWrapper
 
 
 class FileReader:
     def __init__(
         self,
-        fname: str,
+        fname: PathOrIO,
         *,
         encoding: Literal["detect"] | str = "utf-8",
         low_confidence: float = 0.9,
@@ -28,14 +32,26 @@ class FileReader:
             Used for detect character endocing, raising warning when
             parsing with low confidence.
         """
-        self.fname = fname
+        self.fname, self.fb, self.f = "", None, None
+        if isinstance(fname, TextIOWrapper):
+            self.f = fname
+            encoding = fname.encoding  # skip detect
+        elif isinstance(fname, BytesIO):
+            self.fb = fname
+        else:
+            self.fname = fname
+
         if encoding == "detect":
             encoding = detect_encoding(fname, low_confidence=low_confidence)
         self.encoding = encoding
         self.kwargs = kwargs
 
     def __enter__(self) -> TextIOWrapper:
-        self.f = open(self.fname, "r", encoding=self.encoding, **self.kwargs)
+        if isinstance(self.fb, BytesIO):
+            self.f = TextIOWrapper(self.fb, encoding=self.encoding)
+        elif self.f is None:
+            self.f = open(self.fname, "r", encoding=self.encoding, **self.kwargs)
+
         return self.f
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
@@ -44,9 +60,16 @@ class FileReader:
         return True
 
 
-def detect_encoding(fname: str, *, low_confidence: float = 0.9) -> str:
-    with open(fname, "rb") as f:
-        data = f.read()
+def detect_encoding(fname: PathOrIO, *, low_confidence: float = 0.9) -> str:
+    if isinstance(fname, TextIOWrapper):
+        return fname.encoding
+    elif isinstance(fname, BytesIO):
+        data = fname.read()
+        fname.seek(0, 0)
+    else:
+        with open(fname, "rb") as f:
+            data = f.read()
+
     result = chardet.detect(data)
     encoding = result["encoding"] or "utf-8"
     if result["confidence"] < low_confidence:

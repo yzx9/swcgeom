@@ -8,7 +8,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from ...utils import FileReader
+from ...utils import FileReader, PathOrIO
 from .base import SWCNames, get_names
 from .checker import is_single_root
 from .normalizer import (
@@ -22,7 +22,7 @@ __all__ = ["read_swc", "to_swc"]
 
 
 def read_swc(
-    swc_file: str,
+    swc_file: PathOrIO,
     extra_cols: Optional[Iterable[str]] = None,
     fix_roots: Literal["somas", "nearest", False] = False,
     sort_nodes: bool = False,
@@ -132,7 +132,7 @@ RE_FLOAT = r"([+-]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
 
 
 def parse_swc(
-    fname: str,
+    fname: PathOrIO,
     *,
     names: SWCNames,
     extra_cols: Iterable[str] | None = None,

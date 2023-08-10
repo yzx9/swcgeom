@@ -22,7 +22,7 @@ import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self
 
-from ..utils import padding1d
+from ..utils import PathOrIO, padding1d
 from .branch import Branch
 from .node import Node
 from .path import Path
@@ -309,7 +309,7 @@ class Tree(DictSWC):
         return tree
 
     @classmethod
-    def from_swc(cls, swc_file: str, **kwargs) -> Self:
+    def from_swc(cls, swc_file: PathOrIO, **kwargs) -> Self:
         """Read neuron tree from swc file.
 
         See Also
@@ -322,7 +322,7 @@ class Tree(DictSWC):
         except Exception as e:  # pylint: disable=broad-except
             raise ValueError(f"fails to read swc: {swc_file}") from e
 
-        source = os.path.abspath(swc_file)
+        source = os.path.abspath(swc_file) if isinstance(swc_file, str) else ""
         return cls.from_data_frame(df, source=source, comments=comments)
 
     @classmethod

@@ -12,7 +12,16 @@ from typing_extensions import Self
 
 from .swc_utils import SWCNames, get_names, read_swc, to_swc
 
-__all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "DictSWC", "SWCTypeVar"]
+__all__ = [
+    "swc_cols",
+    "eswc_cols",
+    "SWCLike",
+    "DictSWC",
+    "SWCTypeVar",
+    # TODO: `read_swc` has been deprecated and will be removed in next
+    # version, import from `swcgeom.core.swc_utils` instead
+    "read_swc",
+]
 
 
 swc_names_default = get_names()
