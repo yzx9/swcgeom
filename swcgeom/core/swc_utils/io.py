@@ -4,11 +4,11 @@ import re
 import warnings
 from typing import Callable, Iterable, List, Literal, Optional, Tuple
 
-import chardet
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
+from ...utils import FileReader
 from .base import SWCNames, get_names
 from .checker import is_single_root
 from .normalizer import (
@@ -47,7 +47,7 @@ def read_swc(
     reset_index : bool, default `True`
         Reset node index to start with zero, DO NOT set to false if
         you are not sure what will happend.
-    encoding : str, default `utf-8`
+    encoding : str | 'detect', default `utf-8`
         The name of the encoding used to decode the file. If is
         `detect`, we will try to detect the character encoding.
     names : SWCNames, optional
@@ -59,19 +59,6 @@ def read_swc(
     """
 
     names = get_names(names)
-
-    if encoding == "detect":
-        with open(swc_file, "rb") as f:
-            data = f.read()
-
-        result = chardet.detect(data)
-        encoding = result["encoding"] or "utf-8"
-        if result["confidence"] < 0.9:
-            warnings.warn(
-                f"parse as `{encoding}` with low confidence "
-                f"{result['confidence']} in `{swc_file}`"
-            )
-
     df, comments = parse_swc(
         swc_file, names=names, extra_cols=extra_cols, encoding=encoding
     )
@@ -145,13 +132,22 @@ RE_FLOAT = r"([+-]?(?:\d+(?:[.]\d*)?(?:[eE][+-]?\d+)?|[.]\d+(?:[eE][+-]?\d+)?))"
 
 
 def parse_swc(
-    swc_file: str,
+    fname: str,
     *,
     names: SWCNames,
     extra_cols: Iterable[str] | None = None,
-    encoding: str = "utf-8",
+    encoding: Literal["detect"] | str = "utf-8",
 ) -> Tuple[pd.DataFrame, List[str]]:
     """Parse swc file.
+
+    Parameters
+    ----------
+    fname : str
+    names : SWCNames
+    extra_cols : list of str, optional
+    encoding : str | 'detect', default `utf-8`
+        The name of the encoding used to decode the file. If is
+        `detect`, we will try to detect the character encoding.
 
     Returns
     -------
@@ -184,16 +180,16 @@ def parse_swc(
     # reading eswc as swc, but with a warning.
     re_swc = re.compile(rf"^\s*{re_swc_cols_str}\s*([\s+-.0-9]*)$")
     last_group = 7 + len(extras) + 1
+    flag = True
 
     comments = []
-    try:
-        with open(swc_file, "r", encoding=encoding) as f:
-            flag = True
+    with FileReader(fname, encoding=encoding) as f:
+        try:
             for i, line in enumerate(f):
                 if (match := re_swc.search(line)) is not None:
                     if flag and match.group(last_group):
                         warnings.warn(
-                            f"some fields are ignored in row {i} of `{swc_file}`"
+                            f"some fields are ignored in row {i+1} of `{fname}`"
                         )
                         flag = False
 
@@ -203,9 +199,11 @@ def parse_swc(
                     comment = line[len(match.group(0)) :].removesuffix("\n")
                     comments.append(comment)
                 elif not line.isspace():
-                    raise ValueError(f"invalid row {i} in `{swc_file}`")
-    except UnicodeDecodeError as e:
-        raise ValueError(f"encoding error in `{swc_file}`") from e
+                    raise ValueError(f"invalid row {i+1} in `{fname}`")
+        except UnicodeDecodeError as e:
+            raise ValueError(
+                f"decode failed, try to enable auto detect `encoding='detect'`"
+            ) from e
 
     df = pd.DataFrame.from_dict(dict(zip(keys, vals)))
     return df, comments
