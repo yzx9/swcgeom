@@ -64,6 +64,14 @@ Metadata:
     }
 }
 ```
+
+Notes
+-----
+All denpendencies need to be installed, try:
+
+```sh
+pip install swcgeom[all]
+```
 """
 
 import argparse
@@ -74,11 +82,6 @@ import math
 import os
 import urllib.parse
 from typing import Any, Callable, Dict, Iterable, List, Optional
-
-import certifi
-import lmdb
-import pycurl
-from tqdm import tqdm
 
 __all__ = [
     "neuromorpho_is_valid",
@@ -164,6 +167,8 @@ def neuromorpho_convert_lmdb_to_swc(
     neuromorpho_is_valid :
         Recommend filter function, use `where=neuromorpho_is_valid`
     """
+    import lmdb
+    from tqdm import tqdm
 
     assert os.path.exists(root)
 
@@ -274,6 +279,8 @@ def download_metadata(
         Failed pages.
     """
     # TODO: how to cache between versions?
+    import lmdb
+    from tqdm import tqdm
 
     env = lmdb.Environment(path, map_size=SIZE_METADATA)
     page_size = API_NEURON_MAX_SIZE
@@ -331,6 +338,8 @@ def download_cng_version(
     err_keys : list of str
         Failed keys.
     """
+    import lmdb
+    from tqdm import tqdm
 
     env_m = lmdb.Environment(path_metadata, map_size=SIZE_METADATA, readonly=True)
     env_c = lmdb.Environment(path, map_size=SIZE_DATA)
@@ -393,6 +402,9 @@ def get_cng_version(metadata: Dict[str, Any], **kwargs) -> bytes:
 
 def get(url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None) -> bytes:
     # pylint: disable=c-extension-no-member
+    import certifi
+    import pycurl
+
     buffer = io.BytesIO()
     c = pycurl.Curl()
     c.setopt(pycurl.URL, url)

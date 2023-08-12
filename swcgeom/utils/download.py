@@ -1,4 +1,13 @@
-"""Download helpers."""
+"""Download helpers.
+
+Notes
+-----
+All denpendencies need to be installed, try:
+
+```sh
+pip install swcgeom[all]
+```
+"""
 
 import itertools
 import logging
@@ -6,16 +15,14 @@ import multiprocessing
 import os
 from urllib.parse import urljoin
 
-import bs4
-import urllib3
-import urllib3.exceptions
-
 __all__ = ["download", "fetch_page", "clone_index_page"]
 
 
 def download(dst: str, url: str) -> None:
     """Download a file."""
-    conn = urllib3.connection_from_url(url)
+    from urllib3 import connection_from_url
+
+    conn = connection_from_url(url)
     r = conn.request("GET", url)
 
     dirname = os.path.dirname(dst)
@@ -26,12 +33,15 @@ def download(dst: str, url: str) -> None:
         file.write(r.data)
 
 
-def fetch_page(url: str) -> bs4.BeautifulSoup:
+def fetch_page(url: str):
     """Fetch page content."""
-    conn = urllib3.connection_from_url(url)
+    from bs4 import BeautifulSoup
+    from urllib3 import connection_from_url
+
+    conn = connection_from_url(url)
     r = conn.request("GET", url)
     data = r.data.decode("utf-8")
-    return bs4.BeautifulSoup(data)
+    return BeautifulSoup(data)
 
 
 def clone_index_page(
@@ -52,6 +62,7 @@ def clone_index_page(
     multiprocess : int, default `4`
         How many process are available for download.
     """
+    from urllib3.exceptions import HTTPError
 
     files = get_urls_in_index_page(index_url)
     logging.info("downloader: search `%s`, found %s files.", index_url, len(files))
@@ -71,7 +82,7 @@ def clone_index_page(
             logging.info("downloader: downloading `%s` to `%s`", url, dist)
             download(filepath, url)
             logging.info("downloader: download `%s` to `%s`", url, dist)
-        except urllib3.exceptions.HTTPError as ex:
+        except HTTPError as ex:
             logging.info("downloader: fails to download `%s`, except `%s`", url, ex)
 
     with multiprocessing.Pool(multiprocess) as p:
