@@ -12,9 +12,9 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle, Ellipse, Patch, Rectangle
 
-from ..core import Tree, get_subtree, to_subtree
-from ..utils import get_fig_ax, mvee
-from .visualization import draw
+from swcgeom.analysis.visualization import draw
+from swcgeom.core import Tree, get_subtree, to_subtree
+from swcgeom.utils import get_fig_ax, mvee
 
 __all__ = ["draw_trunk"]
 

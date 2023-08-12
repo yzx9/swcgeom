@@ -9,9 +9,9 @@ will try to flag all breaking changes but NO promises.
 """
 
 
-from .assembler import *
-from .base import *
-from .checker import *
-from .io import *
-from .normalizer import *
-from .subtree import *
+from swcgeom.core.swc_utils.assembler import *
+from swcgeom.core.swc_utils.base import *
+from swcgeom.core.swc_utils.checker import *
+from swcgeom.core.swc_utils.io import *
+from swcgeom.core.swc_utils.normalizer import *
+from swcgeom.core.swc_utils.subtree import *

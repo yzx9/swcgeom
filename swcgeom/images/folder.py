@@ -9,8 +9,8 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from ..transforms import Identity, Transform
-from .io import read_imgs
+from swcgeom.images.io import read_imgs
+from swcgeom.transforms import Identity, Transform
 
 __all__ = [
     "ImageStackFolder",

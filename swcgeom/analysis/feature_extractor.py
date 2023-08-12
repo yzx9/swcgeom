@@ -17,12 +17,16 @@ import numpy.typing as npt
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from ..core import Population, Populations, Tree
-from ..utils import padding1d
-from .branch_features import BranchFeatures
-from .node_features import BifurcationFeatures, NodeFeatures, TipFeatures
-from .path_features import PathFeatures
-from .sholl import Sholl
+from swcgeom.analysis.branch_features import BranchFeatures
+from swcgeom.analysis.node_features import (
+    BifurcationFeatures,
+    NodeFeatures,
+    TipFeatures,
+)
+from swcgeom.analysis.path_features import PathFeatures
+from swcgeom.analysis.sholl import Sholl
+from swcgeom.core import Population, Populations, Tree
+from swcgeom.utils import padding1d
 
 __all__ = ["Feature", "extract_feature"]
 

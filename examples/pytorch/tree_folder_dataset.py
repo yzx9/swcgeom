@@ -4,8 +4,8 @@ from typing import Generic, TypeVar, cast
 
 import torch.utils.data
 
-from ...core import Population, Tree
-from ...transforms import Identity, Transform
+from swcgeom import Population, Tree
+from swcgeom.transforms import Identity, Transform
 
 __all__ = ["TreeFolderDataset"]
 

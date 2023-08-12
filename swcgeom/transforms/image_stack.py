@@ -20,9 +20,9 @@ import numpy as np
 import numpy.typing as npt
 import tifffile
 
-from ..core import Population, Tree
-from ..utils import SDF, SDFCompose, SDFRoundCone
-from .base import Transform
+from swcgeom.core import Population, Tree
+from swcgeom.transforms.base import Transform
+from swcgeom.utils import SDF, SDFCompose, SDFRoundCone
 
 __all__ = ["ToImageStack"]
 

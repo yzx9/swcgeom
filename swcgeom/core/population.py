@@ -19,8 +19,8 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from .swc import eswc_cols
-from .tree import Tree
+from swcgeom.core.swc import eswc_cols
+from swcgeom.core.tree import Tree
 
 __all__ = ["LazyLoadingTrees", "ChainTrees", "Population", "Populations"]
 

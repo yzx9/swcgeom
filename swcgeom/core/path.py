@@ -5,8 +5,8 @@ from typing import Generic, Iterable, Iterator, List, overload
 import numpy as np
 import numpy.typing as npt
 
-from .node import Node
-from .swc import DictSWC, SWCLike, SWCTypeVar
+from swcgeom.core.node import Node
+from swcgeom.core.swc import DictSWC, SWCLike, SWCTypeVar
 
 __all__ = ["Path"]
 

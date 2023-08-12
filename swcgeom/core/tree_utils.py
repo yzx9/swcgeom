@@ -5,8 +5,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, ove
 
 import numpy as np
 
-from .swc import SWCLike
-from .swc_utils import (
+from swcgeom.core.swc import SWCLike
+from swcgeom.core.swc_utils import (
     REMOVAL,
     SWCNames,
     Topology,
@@ -17,7 +17,7 @@ from .swc_utils import (
     to_sub_topology,
     traverse,
 )
-from .tree import Tree
+from swcgeom.core.tree import Tree
 
 __all__ = [
     "sort_tree",

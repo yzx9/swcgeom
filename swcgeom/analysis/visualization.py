@@ -9,8 +9,8 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.legend import Legend
 
-from ..core import SWCLike, Tree
-from ..utils import (
+from swcgeom.core import SWCLike, Tree
+from swcgeom.utils import (
     CameraOptions,
     SimpleCamera,
     draw_direction_indicator,

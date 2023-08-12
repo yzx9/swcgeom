@@ -6,7 +6,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from .base import SWCNames, Topology, get_dsu, get_names, traverse
+from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names, traverse
 
 __all__ = [
     "is_single_root",

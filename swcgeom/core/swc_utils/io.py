@@ -8,15 +8,15 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from ...utils import FileReader, PathOrIO
-from .base import SWCNames, get_names
-from .checker import is_single_root
-from .normalizer import (
+from swcgeom.core.swc_utils.base import SWCNames, get_names
+from swcgeom.core.swc_utils.checker import is_single_root
+from swcgeom.core.swc_utils.normalizer import (
     link_roots_to_nearest_,
     mark_roots_as_somas_,
     reset_index_,
     sort_nodes_,
 )
+from swcgeom.utils import FileReader, PathOrIO
 
 __all__ = ["read_swc", "to_swc"]
 

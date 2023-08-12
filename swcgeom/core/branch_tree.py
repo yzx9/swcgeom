@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
-from .branch import Branch
-from .swc_utils import to_sub_topology
-from .tree import Tree
+from swcgeom.core.branch import Branch
+from swcgeom.core.swc_utils import to_sub_topology
+from swcgeom.core.tree import Tree
 
 __all__ = ["BranchTree"]
 

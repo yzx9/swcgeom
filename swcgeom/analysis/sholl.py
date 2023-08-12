@@ -9,10 +9,10 @@ import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 
-from ..core import Tree
-from ..transforms import TranslateOrigin
-from ..utils import draw_circles, get_fig_ax
-from .visualization import draw
+from swcgeom.analysis.visualization import draw
+from swcgeom.core import Tree
+from swcgeom.transforms import TranslateOrigin
+from swcgeom.utils import draw_circles, get_fig_ax
 
 __all__ = ["Sholl"]
 

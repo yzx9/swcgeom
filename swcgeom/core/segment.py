@@ -5,9 +5,9 @@ from typing import Generic, Iterable, List, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from .path import Path
-from .swc import DictSWC, SWCTypeVar
-from .swc_utils import SWCNames, get_names
+from swcgeom.core.path import Path
+from swcgeom.core.swc import DictSWC, SWCTypeVar
+from swcgeom.core.swc_utils import SWCNames, get_names
 
 __all__ = ["Segment", "Segments"]
 

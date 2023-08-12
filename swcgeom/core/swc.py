@@ -10,7 +10,7 @@ import numpy.typing as npt
 import scipy.sparse as sp
 from typing_extensions import Self
 
-from .swc_utils import SWCNames, get_names, read_swc, to_swc
+from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, to_swc
 
 __all__ = [
     "swc_cols",

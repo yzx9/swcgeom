@@ -9,7 +9,7 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-from .base import SWCNames, Topology, get_dsu, get_names
+from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names
 
 __all__ = [
     "mark_roots_as_somas",

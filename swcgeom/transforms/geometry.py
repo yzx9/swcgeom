@@ -6,10 +6,17 @@ from typing import Generic, Literal, Optional, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from ..core import DictSWC
-from ..core.swc_utils import SWCNames
-from ..utils import rotate3d, rotate3d_x, rotate3d_y, rotate3d_z, scale3d, translate3d
-from .base import Transform
+from swcgeom.core import DictSWC
+from swcgeom.core.swc_utils import SWCNames
+from swcgeom.transforms.base import Transform
+from swcgeom.utils import (
+    rotate3d,
+    rotate3d_x,
+    rotate3d_y,
+    rotate3d_z,
+    scale3d,
+    translate3d,
+)
 
 __all__ = [
     "Normalizer",

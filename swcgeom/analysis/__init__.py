@@ -1,9 +1,9 @@
 """Analysis for neuron trees."""
 
-from .branch_features import *
-from .feature_extractor import *
-from .node_features import *
-from .path_features import *
-from .sholl import *
-from .trunk import *
-from .visualization import *
+from swcgeom.analysis.branch_features import *
+from swcgeom.analysis.feature_extractor import *
+from swcgeom.analysis.node_features import *
+from swcgeom.analysis.path_features import *
+from swcgeom.analysis.sholl import *
+from swcgeom.analysis.trunk import *
+from swcgeom.analysis.visualization import *

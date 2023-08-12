@@ -4,10 +4,13 @@ from typing import Iterable, List, Optional, Tuple
 
 import pandas as pd
 
-from ..core import Tree
-from ..core.swc_utils import SWCNames
-from ..core.swc_utils.assembler import assemble_lines_impl, try_assemble_lines_impl
-from .base import Transform
+from swcgeom import Tree
+from swcgeom.core.swc_utils import SWCNames
+from swcgeom.core.swc_utils.assembler import (
+    assemble_lines_impl,
+    try_assemble_lines_impl,
+)
+from swcgeom.transforms import Transform
 
 
 class LinesToTree(Transform[List[pd.DataFrame], Tree]):

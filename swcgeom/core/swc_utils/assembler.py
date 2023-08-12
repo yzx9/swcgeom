@@ -7,8 +7,8 @@ from typing import Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
-from .base import SWCNames, get_names
-from .normalizer import link_roots_to_nearest_, sort_nodes_
+from swcgeom.core.swc_utils.base import SWCNames, get_names
+from swcgeom.core.swc_utils.normalizer import link_roots_to_nearest_, sort_nodes_
 
 __all__ = ["assemble_lines", "try_assemble_lines"]
 

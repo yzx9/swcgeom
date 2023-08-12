@@ -14,7 +14,7 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from typing_extensions import Self
 
-from .transforms import (
+from swcgeom.utils.transforms import (
     Vec3f,
     model_view_transformation,
     orthographic_projection_simple,

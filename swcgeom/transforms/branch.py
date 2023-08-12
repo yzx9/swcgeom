@@ -7,8 +7,9 @@ import numpy as np
 import numpy.typing as npt
 from scipy import signal
 
-from ..core import Branch, DictSWC
-from ..utils import (
+from swcgeom.core import Branch, DictSWC
+from swcgeom.transforms.base import Transform
+from swcgeom.utils import (
     angle,
     rotate3d_x,
     rotate3d_y,
@@ -17,7 +18,6 @@ from ..utils import (
     to_homogeneous,
     translate3d,
 )
-from .base import Transform
 
 __all__ = ["BranchLinearResampler", "BranchConvSmoother", "BranchStandardizer"]
 

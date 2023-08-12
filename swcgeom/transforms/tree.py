@@ -5,10 +5,10 @@ from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 
-from ..core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
-from .base import Transform
-from .branch import BranchConvSmoother
-from .geometry import Normalizer
+from swcgeom.core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
+from swcgeom.transforms.base import Transform
+from swcgeom.transforms.branch import BranchConvSmoother
+from swcgeom.transforms.geometry import Normalizer
 
 __all__ = [
     "ToBranchTree",

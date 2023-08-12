@@ -6,8 +6,8 @@ from typing import Any, Generic, Iterable
 import numpy as np
 import numpy.typing as npt
 
-from .swc import DictSWC, SWCTypeVar
-from .swc_utils import SWCNames
+from swcgeom.core.swc import DictSWC, SWCTypeVar
+from swcgeom.core.swc_utils import SWCNames
 
 __all__ = ["Node"]
 

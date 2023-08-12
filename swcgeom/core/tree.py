@@ -22,13 +22,13 @@ import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self
 
-from ..utils import PathOrIO, padding1d
-from .branch import Branch
-from .node import Node
-from .path import Path
-from .segment import Segment, Segments
-from .swc import DictSWC, eswc_cols
-from .swc_utils import SWCNames, get_names, read_swc, traverse
+from swcgeom.core.branch import Branch
+from swcgeom.core.node import Node
+from swcgeom.core.path import Path
+from swcgeom.core.segment import Segment, Segments
+from swcgeom.core.swc import DictSWC, eswc_cols
+from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, traverse
+from swcgeom.utils import PathOrIO, padding1d
 
 __all__ = ["Tree"]
 

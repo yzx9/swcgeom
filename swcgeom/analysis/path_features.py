@@ -7,7 +7,7 @@ from typing import List
 import numpy as np
 import numpy.typing as npt
 
-from ..core import Tree
+from swcgeom.core import Tree
 
 __all__ = ["PathFeatures"]
 

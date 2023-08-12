@@ -11,7 +11,7 @@ from typing import Tuple, cast
 import numpy as np
 import numpy.typing as npt
 
-from .base import Topology, traverse
+from swcgeom.core.swc_utils.base import Topology, traverse
 
 __all__ = ["REMOVAL", "to_sub_topology", "propagate_removal"]
 

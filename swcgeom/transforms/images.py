@@ -6,7 +6,7 @@ from typing import Tuple
 import numpy as np
 import numpy.typing as npt
 
-from .base import Transform
+from swcgeom.transforms.base import Transform
 
 __all__ = ["Center"]
 

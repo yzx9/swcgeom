@@ -7,9 +7,9 @@ import numpy.typing as npt
 import pandas as pd
 from numpy import ma
 
-from ..core import Tree
-from ..core.swc_utils import SWCNames, get_names
-from .base import Transform
+from swcgeom.core import Tree
+from swcgeom.core.swc_utils import SWCNames, get_names
+from swcgeom.transforms.base import Transform
 
 __all__ = ["PointsToCuntzMST", "PointsToMST"]
 
