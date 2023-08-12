@@ -83,6 +83,8 @@ import os
 import urllib.parse
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
+from swcgeom.utils import FileReader
+
 __all__ = [
     "neuromorpho_is_valid",
     "neuromorpho_convert_lmdb_to_swc",
@@ -132,6 +134,7 @@ def neuromorpho_convert_lmdb_to_swc(
     *,
     group_by: Optional[str | Callable[[Dict[str, Any]], str | None]] = None,
     where: Optional[Callable[[Dict[str, Any]], bool]] = None,
+    encoding: str | None = "utf-8",
     verbose: bool = False,
 ) -> None:
     """Convert lmdb format to SWCs.
@@ -147,6 +150,9 @@ def neuromorpho_convert_lmdb_to_swc(
         attribute name for grouping, e.g.: `archive`, `species`.
     where : (metadata: Dict[str, Any]) -> bool, optional
         Filter neurons by metadata.
+    encoding : str | None, default to `utf-8`
+        Change swc encoding, part of the original data is not utf-8
+        encoded. If is None, keep the original encoding format.
     verbose : bool, default False
         Print verbose info.
 
@@ -196,21 +202,31 @@ def neuromorpho_convert_lmdb_to_swc(
     env_c = lmdb.Environment(os.path.join(root, "cng_version"), readonly=True)
     with env_c.begin() as tx_c:
         for k, grp in tqdm(items) if verbose else items:
+            kk = k.decode("utf-8")
             try:
                 bs = tx_c.get(k)
                 if bs is None:
-                    logging.warning("cng version of '%s' not exists", k.decode("utf-8"))
+                    logging.warning("cng version of '%s' not exists", kk)
                     continue
 
                 fs = (
-                    os.path.join(dest, grp, k.decode("utf-8") + ".swc")
+                    os.path.join(dest, grp, f"{kk}.swc")
                     if grp is not None
-                    else os.path.join(dest, k.decode("utf-8") + ".swc")
+                    else os.path.join(dest, f"{kk}.swc")
                 )
-                with open(fs, "wb") as f:
-                    f.write(bs)  # type: ignore
+
+                if encoding is None:
+                    with open(fs, "wb") as f:
+                        f.write(bs)  # type: ignore
+                else:
+                    bs = io.BytesIO(bs)  # type: ignore
+                    with (
+                        open(fs, "w", encoding=encoding) as fw,
+                        FileReader(bs, encoding="detect") as fr,
+                    ):
+                        fw.writelines(fr.readlines())
             except Exception as e:  # pylint: disable=broad-exception-caught
-                logging.warning("fails to convert of %s, err: %s", k.decode("utf-8"), e)
+                logging.warning("fails to convert of %s, err: %s", kk, e)
 
     env_c.close()
 
@@ -432,16 +448,17 @@ if __name__ == "__main__":
     sub.add_argument("--retry", type=int, default=3)
     sub.add_argument("--proxy", type=str, default=None)
     sub.add_argument("--verbose", type=bool, default=True)
-    sub.set_defaults(func=lambda args: download_neuromorpho(**vars(args)))
+    sub.set_defaults(func=download_neuromorpho)
 
     sub = subparsers.add_parser("convert")
     sub.add_argument("-i", "--root", type=str, required=True)
     sub.add_argument("-o", "--dest", type=str, default=None)
     sub.add_argument("--group_by", type=str, default=None)
+    sub.add_argument("--encoding", type=str, default="utf-8")
     sub.add_argument("--verbose", type=bool, default=True)
-    sub.set_defaults(func=lambda args: neuromorpho_convert_lmdb_to_swc(**vars(args)))
+    sub.set_defaults(func=neuromorpho_convert_lmdb_to_swc)
 
     args = parser.parse_args()
     func = args.func
     del args.func  # type: ignore
-    func(args)
+    func(**vars(args))
