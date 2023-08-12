@@ -1,10 +1,18 @@
-"""File related utils."""
+"""File related utils.
+
+Notes
+-----
+If character coding is enabled, all denpendencies need to be installed,
+try:
+
+```sh
+pip install swcgeom[all]
+```
+"""
 
 import warnings
 from io import BytesIO, TextIOWrapper
 from typing import Literal
-
-import chardet
 
 __all__ = ["FileReader", "PathOrIO"]
 
@@ -61,6 +69,8 @@ class FileReader:
 
 
 def detect_encoding(fname: PathOrIO, *, low_confidence: float = 0.9) -> str:
+    import chardet
+
     if isinstance(fname, TextIOWrapper):
         return fname.encoding
     elif isinstance(fname, BytesIO):

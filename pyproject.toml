@@ -14,7 +14,6 @@ authors = [
 keywords = [ "neuron", "swc", "geom" ]
 license = {text = "CC4.0 BY-NC-SA"}
 dependencies = [
-  "chardet>=5.2.0",
   "imagecodecs>=2023.3.16",
   "matplotlib>=3.5.2",
   "numpy>=1.22.3",
@@ -30,6 +29,7 @@ dependencies = [
 all = [
   "beautifulsoup4>=4.11.1",
   "certifi>=2023.5.7",
+  "chardet>=5.2.0",
   "lmdb>=1.4.1",
   "pycurl>=7.0.0",
   "tqdm>=4.46.1",
