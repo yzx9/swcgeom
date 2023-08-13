@@ -476,13 +476,13 @@ class TeraflyImageStack(ImageStack):
         if shape[1] > lens[1]:
             starts_y = starts + [0, lens[1], 0]
             ends_y = np.array([starts[0], ends[1], ends[2]])
-            ends_y += [min(shape[0], lens[0]), 0, 0]
+            ends_y += [min(shape[0], lens[0]), 0, 0]  # type: ignore
             self._get_range(starts_y, ends_y, res_level, out[:, lens[1] :, :])
 
         if shape[2] > lens[2]:
             starts_z = starts + [0, 0, lens[2]]
             ends_z = np.array([starts[0], starts[1], ends[2]])
-            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]
+            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]  # type: ignore
             self._get_range(starts_z, ends_z, res_level, out[:, :, lens[2] :])
 
     def _find_correspond_imgs(self, p, res_level):
