@@ -15,9 +15,9 @@ from swcgeom.core.swc_utils import (
     propagate_removal,
     sort_nodes_impl,
     to_sub_topology,
-    traverse,
 )
 from swcgeom.core.tree import Tree
+from swcgeom.core.tree_utils_impl import get_subtree_impl, to_subtree_impl
 
 __all__ = [
     "sort_tree",
@@ -142,7 +142,8 @@ def to_subtree(swc_like: SWCLike, removals: Iterable[int]) -> Tree:
         new_ids[i] = REMOVAL
 
     sub = propagate_removal((new_ids, swc_like.pid()))
-    return _to_subtree(swc_like, sub)
+    n_nodes, ndata, source, names = to_subtree_impl(swc_like, sub)
+    return Tree(n_nodes, **ndata, source=source, names=names)
 
 
 def get_subtree(swc_like: SWCLike, n: int) -> Tree:
@@ -154,14 +155,8 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
     n : int
         Id of the root of the subtree.
     """
-    ids = []
-    topo = (swc_like.id(), swc_like.pid())
-    traverse(topo, enter=lambda n, _: ids.append(n), root=n)
-
-    sub_ids = np.array(ids, dtype=np.int32)
-    sub_pid = swc_like.pid()[sub_ids]
-    sub_pid[0] = -1
-    return _to_subtree(swc_like, (sub_ids, sub_pid))
+    n_nodes, ndata, source, names = get_subtree_impl(swc_like, n)
+    return Tree(n_nodes, **ndata, source=source, names=names)
 
 
 def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
@@ -246,14 +241,3 @@ def _sort_tree(tree: Tree) -> Tree:
     tree.ndata = {k: tree.ndata[k][id_map] for k in tree.ndata}
     tree.ndata.update(id=new_ids, pid=new_pids)
     return tree
-
-
-def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
-    (new_id, new_pid), id_map = to_sub_topology(sub)
-
-    n_nodes = new_id.shape[0]
-    ndata = {k: swc_like.get_ndata(k)[id_map].copy() for k in swc_like.keys()}
-    ndata.update(id=new_id, pid=new_pid)
-
-    subtree = Tree(n_nodes, **ndata, source=swc_like.source, names=swc_like.names)
-    return subtree

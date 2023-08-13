@@ -28,6 +28,7 @@ from swcgeom.core.path import Path
 from swcgeom.core.segment import Segment, Segments
 from swcgeom.core.swc import DictSWC, eswc_cols
 from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, traverse
+from swcgeom.core.tree_utils_impl import get_subtree_impl
 from swcgeom.utils import PathOrIO, padding1d
 
 __all__ = ["Tree"]
@@ -74,6 +75,11 @@ class Tree(DictSWC):
         def radial_distance(self) -> float:
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
+
+        def subtree(self) -> "Tree":
+            """Get subtree from node."""
+            n_nodes, ndata, source, names = get_subtree_impl(self.attach, self.id)
+            return Tree(n_nodes, **ndata, source=source, names=names)
 
         # fmt: off
         @overload
@@ -181,8 +187,13 @@ class Tree(DictSWC):
     def node(self, idx: int | np.integer) -> Node:
         return self.Node(self, idx)
 
-    def soma(self) -> Node:
-        return self.node(0)
+    def soma(self, type_check: bool = True) -> Node:
+        """Get soma of neuron."""
+        # TODO: find soma, see also: https://neuromorpho.org/myfaq.jsp
+        n = self.node(0)
+        if type_check and n.type != 1:
+            raise ValueError(f"no soma found in: {self.source}")
+        return n
 
     def get_bifurcations(self) -> List[Node]:
         """Get all node of bifurcations."""
@@ -245,6 +256,15 @@ class Tree(DictSWC):
 
         paths = self.traverse(enter=assign_path, leave=collect_path)
         return [self.Path(self, idx) for idx in paths]
+
+    def get_neurites(self, type_check: bool = True) -> Iterable[Self]:
+        """Get neurites from soma."""
+        return (n.subtree() for n in self.soma(type_check).children())
+
+    def get_dendrites(self, type_check: bool = True) -> Iterable[Self]:
+        """Get dendrites."""
+        children = self.soma(type_check).children()
+        return (n.subtree() for n in children if n.type in [3, 4])
 
     # fmt: off
     @overload

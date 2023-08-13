@@ -178,5 +178,5 @@ def create_point_2d(
 # Helpers
 
 
-def get_dendrites(tree: Tree) -> Iterable[int]:  # TODO: move to `Tree`
-    return [n.id for n in tree.soma().children() if n.type in [3, 4]]
+def get_dendrites(tree: Tree) -> Iterable[int]:
+    return (t.node(0).id for t in tree.get_dendrites())
