@@ -45,8 +45,7 @@ class BranchTree(Tree):
         ndata = {k: tree.get_ndata(k)[id_map].copy() for k in tree.keys()}
         ndata.update(id=new_id, pid=new_pid)
 
-        branch_tree = cls(n_nodes, **ndata, names=tree.names)
-        branch_tree.source = tree.source  # TODO
+        branch_tree = cls(n_nodes, **ndata, source=tree.source, names=tree.names)
 
         branch_tree.branches = {}
         for br in branches:
