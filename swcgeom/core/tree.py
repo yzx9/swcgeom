@@ -191,7 +191,7 @@ class Tree(DictSWC):
         """Get soma of neuron."""
         # TODO: find soma, see also: https://neuromorpho.org/myfaq.jsp
         n = self.node(0)
-        if type_check and n.type != 1:
+        if type_check and n.type != self.types.soma:
             raise ValueError(f"no soma found in: {self.source}")
         return n
 
@@ -263,8 +263,9 @@ class Tree(DictSWC):
 
     def get_dendrites(self, type_check: bool = True) -> Iterable[Self]:
         """Get dendrites."""
+        types = [self.types.apical_dendrite, self.types.basal_dendrite]
         children = self.soma(type_check).children()
-        return (n.subtree() for n in children if n.type in [3, 4])
+        return (n.subtree() for n in children if n.type in types)
 
     # fmt: off
     @overload

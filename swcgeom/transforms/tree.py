@@ -6,6 +6,7 @@ from typing import Callable, List, Optional, Tuple
 import numpy as np
 
 from swcgeom.core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
+from swcgeom.core.swc_utils import SWCTypes, get_types
 from swcgeom.transforms.base import Transform
 from swcgeom.transforms.branch import BranchConvSmoother
 from swcgeom.transforms.geometry import Normalizer
@@ -107,8 +108,9 @@ class CutByType(Transform[Tree, Tree]):
 class CutAxonTree(CutByType):
     """Cut axon tree."""
 
-    def __init__(self) -> None:
-        super().__init__(type=2)
+    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+        types = get_types(types)
+        super().__init__(type=types.axon)
 
     def __repr__(self) -> str:
         return "CutAxonTree"
@@ -117,8 +119,9 @@ class CutAxonTree(CutByType):
 class CutDendriteTree(CutByType):
     """Cut dendrite tree."""
 
-    def __init__(self) -> None:
-        super().__init__(type=3)
+    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+        types = get_types(types)
+        super().__init__(type=types.basal_dendrite)  # TODO: apical dendrite
 
     def __repr__(self) -> str:
         return "CutDenriteTree"

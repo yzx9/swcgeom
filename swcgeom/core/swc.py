@@ -10,7 +10,14 @@ import numpy.typing as npt
 import scipy.sparse as sp
 from typing_extensions import Self
 
-from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, to_swc
+from swcgeom.core.swc_utils import (
+    SWCNames,
+    SWCTypes,
+    get_names,
+    get_types,
+    read_swc,
+    to_swc,
+)
 
 __all__ = [
     "swc_cols",
@@ -50,6 +57,11 @@ class SWCLike(ABC):
     source: str = ""
     comments: List[str] = []
     names: SWCNames
+    types: SWCTypes
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.types = get_types()
 
     def __len__(self) -> int:
         return self.number_of_nodes()
