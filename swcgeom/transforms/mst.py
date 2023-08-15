@@ -1,14 +1,15 @@
 """Minimum spanning tree."""
 
+import warnings
 from typing import Optional
 
 import numpy as np
-import numpy.typing as npt
 import pandas as pd
 from numpy import ma
+from numpy import typing as npt
 
-from swcgeom.core import Tree
-from swcgeom.core.swc_utils import SWCNames, get_names
+from swcgeom.core import Tree, sort_tree
+from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
 from swcgeom.transforms.base import Transform
 
 __all__ = ["PointsToCuntzMST", "PointsToMST"]
@@ -30,7 +31,14 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
     """
 
     def __init__(
-        self, *, bf: float = 0.4, furcations: int = 2, exclude_soma: bool = True
+        self,
+        *,
+        bf: float = 0.4,
+        furcations: int = 2,
+        exclude_soma: bool = True,
+        sort: bool = True,
+        names: Optional[SWCNames] = None,
+        types: Optional[SWCTypes] = None,
     ) -> None:
         """
         Parameters
@@ -42,10 +50,15 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
             no suppression.
         exclude_soma : bool, default `True`
             Suppress multi-furcations exclude soma.
+        names : SWCNames, optional
+        types : SWCTypes, optional
         """
         self.bf = np.clip(bf, 0, 1)
         self.furcations = furcations
         self.exclude_soma = exclude_soma
+        self.sort = sort
+        self.names = get_names(names)
+        self.types = get_types(types)
 
     def __call__(  # pylint: disable=too-many-locals
         self,
@@ -63,7 +76,17 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
             Position of soma. If none, use the first point as soma.
         names : SWCNames, optional
         """
-        names = get_names(names)
+        if names is None:
+            names = self.names
+        else:
+            warnings.warn(
+                "`PointsToCuntzMST(...)(names=...)` has been "
+                "replaced by `PointsToCuntzMST(...,names=...)` since "
+                "v0.12.0, and will be removed in next version",
+                DeprecationWarning,
+            )
+            names = get_names(names)  # TODO: remove it
+
         if soma is not None:
             soma = np.array(soma)
             assert soma.shape == (3,)
@@ -103,16 +126,19 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
 
         dic = {
             names.id: np.arange(n),
-            names.type: np.full(n, fill_value=7),  # TODO
+            names.type: np.full(n, fill_value=self.types.glia_processes),
             names.x: points[:, 0],
             names.y: points[:, 1],
             names.z: points[:, 2],
             names.r: 1,
             names.pid: pid,
         }
-        dic[names.type][0] = 1
+        dic[names.type][0] = self.types.soma
         df = pd.DataFrame.from_dict(dic)
-        return Tree.from_data_frame(df, names=names)
+        t = Tree.from_data_frame(df, names=names)
+        if self.sort:
+            t = sort_tree(t)
+        return t
 
     def __repr__(self) -> str:
         return (
@@ -120,21 +146,50 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
             f"-bf-{self.bf}"
             f"-furcations-{self.furcations}"
             f"-{'exclude-soma' if self.exclude_soma else 'include-soma'}"
-        )
+        )  # TODO: names, types
 
 
 class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
     """Create minimum spanning tree from points."""
 
-    def __init__(self, k_furcations: int = 2) -> None:
+    def __init__(
+        self,
+        furcations: int = 2,
+        *,
+        k_furcations: Optional[int] = None,
+        exclude_soma: bool = True,
+        names: Optional[SWCNames] = None,
+        types: Optional[SWCTypes] = None,
+        **kwargs,
+    ) -> None:
         """
         Parameters
         ----------
-        k_furcations : int, default `2`
+        furcations : int, default `2`
             Suppress multifurcations which more than k. If set to -1,
             no suppression.
+        exclude_soma : bool, default `True`
+            Suppress multi-furcations exclude soma.
+        names : SWCNames, optional
+        types : SWCTypes, optional
         """
-        super().__init__(bf=0, furcations=k_furcations)
+        if k_furcations is not None:
+            warnings.warn(
+                "`PointsToMST(k_furcations=...)` has been renamed to "
+                "`PointsToMST(furcations=...)` since v0.12.0, and will "
+                "be removed in next version",
+                DeprecationWarning,
+            )
+            furcations = k_furcations
+
+        super().__init__(
+            bf=0,
+            furcations=furcations,
+            exclude_soma=exclude_soma,
+            names=names,
+            types=types,
+            **kwargs,
+        )
 
     def __repr__(self) -> str:
         return (
