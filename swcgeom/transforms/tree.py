@@ -35,10 +35,16 @@ class ToBranchTree(Transform[Tree, BranchTree]):
 class ToLongestPath(Transform[Tree, Path[DictSWC]]):
     """Transform tree to longest path."""
 
+    def __init__(self, *, detach: bool = True) -> None:
+        self.detach = detach
+
     def __call__(self, x: Tree) -> Path[DictSWC]:
         paths = x.get_paths()
         idx = np.argmax([p.length() for p in paths])
-        return paths[idx].detach()
+        path = paths[idx]
+        if self.detach:
+            path = path.detach()
+        return path  # type: ignore
 
 
 class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docstring
