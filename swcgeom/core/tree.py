@@ -69,9 +69,6 @@ class Tree(DictSWC):
 
             return Tree.Branch(self.attach, [n.id for n in ns])
 
-        def is_soma(self) -> bool:
-            return self.id == 0
-
         def radial_distance(self) -> float:
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
@@ -80,6 +77,12 @@ class Tree(DictSWC):
             """Get subtree from node."""
             n_nodes, ndata, source, names = get_subtree_impl(self.attach, self.id)
             return Tree(n_nodes, **ndata, source=source, names=names)
+
+        def is_root(self) -> bool:
+            return self.parent() is None
+
+        def is_soma(self) -> bool:  # TODO: support multi soma, e.g. 3 points
+            return self.type == self.attach.types.soma and self.is_root()
 
         # fmt: off
         @overload
