@@ -173,9 +173,11 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
     """
     tree = tree.copy()
     path = [tree.node(new_root)]
-    while (p := path[-1]).parent() is not None:
+    while (p := path[-1].parent()) is not None:
         path.append(p)
 
+    path[0].pid = -1
+    path[0].type, path[-1].type = path[-1].type, path[0].type
     for n, p in zip(path[1:], path[:-1]):
         n.pid = p.id
 
@@ -188,11 +190,12 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
 def cat_tree(  # pylint: disable=too-many-arguments
     tree1: Tree,
     tree2: Tree,
-    node1: int,
+    node1: int = 0,
     node2: int = 0,
     *,
-    no_move: bool = False,
+    translate: bool = True,
     names: Optional[SWCNames] = None,
+    no_move: Optional[bool] = None,  # legacy
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 
@@ -200,31 +203,44 @@ def cat_tree(  # pylint: disable=too-many-arguments
     ---------
     tree1 : Tree
     tree2 : Tree
-    node1 : int
+    node1 : int, default `0`
         The node id of the tree to be connected.
     node2 : int, default `0`
         The node id of the connection point.
-    no_move : bool, default `False`
-        If true, link connection point without move.
+    translate : bool, default `True`
+        Wheather to translate node_2 to node_1. If False, add link
+        between node_1 and node_2 without translate.
     """
+    if no_move is not None:
+        warnings.warn(
+            "`no_move` has been, it is replaced by `translate` in "
+            "v0.12.0, and this will be removed in next version",
+            DeprecationWarning,
+        )
+        translate = not no_move
+
     names = get_names(names)
     tree, tree2 = tree1.copy(), tree2.copy()
-    if not tree2.node(node2).is_soma():
+    if not tree2.node(node2).is_root():
         tree2 = redirect_tree(tree2, node2, sort=False)
 
     c = tree.node(node1)
-    if not no_move:
+    if translate:
         tree2.ndata[names.x] -= tree2.node(node2).x - c.x
         tree2.ndata[names.y] -= tree2.node(node2).y - c.y
         tree2.ndata[names.z] -= tree2.node(node2).z - c.z
 
-    tree2.ndata[names.id] += tree.number_of_nodes()
-    tree2.ndata[names.pid] += tree.number_of_nodes()
+    ns = tree.number_of_nodes()
     if np.linalg.norm(tree2.node(node2).xyz() - c.xyz()) < EPS:
-        for n in tree2.node(node2).children():
-            n.pid = node1
+        remove = [node2 + ns]
+        link_to_root = [n.id + ns for n in tree2.node(node2).children()]
     else:
-        tree2.node(node2).pid = node1
+        remove = None
+        link_to_root = [node2 + ns]
+
+    # APIs of tree2 are no longer available since we modify the topology
+    tree2.ndata[names.id] += ns
+    tree2.ndata[names.pid] += ns
 
     for k, v in tree.ndata.items():  # only keep keys in tree1
         if k in tree2.ndata:
@@ -232,7 +248,15 @@ def cat_tree(  # pylint: disable=too-many-arguments
         else:
             tree.ndata[k] = np.pad(v, (0, tree2.number_of_nodes()))
 
-    return _sort_tree(tree)
+    for n in link_to_root:
+        tree.node(n).pid = node1
+
+    if remove is not None:  # TODO: This should be easy to implement during sort
+        for k, v in tree.ndata.items():
+            tree.ndata[k] = np.delete(v, remove)
+
+    _sort_tree(tree)
+    return tree
 
 
 def _sort_tree(tree: Tree) -> Tree:
