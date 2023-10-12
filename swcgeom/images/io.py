@@ -12,6 +12,7 @@ import nrrd
 import numpy as np
 import numpy.typing as npt
 import tifffile
+from v3dpy.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
@@ -92,6 +93,10 @@ def read_imgs(fname: str, **kwargs) -> ImageStack:
         return TiffImageStack(fname, **kwargs)
     if ext in [".nrrd"]:
         return NrrdImageStack(fname, **kwargs)
+    if ext in [".v3dpbd"]:
+        return V3dpbdImageStack(fname, **kwargs)
+    if ext in [".v3draw"]:
+        return V3drawImageStack(fname, **kwargs)
     if ext in [".npy", ".npz"]:
         return NDArrayImageStack(np.load(fname), **kwargs)
     if TeraflyImageStack.is_root(fname):
@@ -266,6 +271,29 @@ class NrrdImageStack(NDArrayImageStack):
         imgs, header = nrrd.read(fname, **kwargs)
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
         self.header = header
+
+
+class V3dImageStack(NDArrayImageStack):
+    """v3d image stack."""
+
+    def __init__(self, fname: str, loader: Raw | PBD, **kwargs) -> None:
+        r = loader()
+        imgs = r.load(fname)
+        super().__init__(imgs, **kwargs)
+
+
+class V3drawImageStack(V3dImageStack):
+    """v3draw image stack."""
+
+    def __init__(self, fname: str, **kwargs) -> None:
+        super().__init__(fname, loader=Raw, **kwargs)
+
+
+class V3dpbdImageStack(V3dImageStack):
+    """v3dpbd image stack."""
+
+    def __init__(self, fname: str, **kwargs) -> None:
+        super().__init__(fname, loader=PBD, **kwargs)
 
 
 class TeraflyImageStack(ImageStack):
