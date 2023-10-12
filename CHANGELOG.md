@@ -1,5 +1,53 @@
 # Changelog
 
+## **0.12.0**&emsp;<sub><sup>2023-10-12 ([d9ba943...0824e9b](https://github.com/yzx9/swcgeom/compare/d9ba9433735c69edf979013632278e5f498a6fe0...0824e9b4110f820cd11c469ca6e319c1b2f14145?diff=split))</sup></sub>
+
+### Features
+
+##### `core`
+
+* support read from io ([8fe9df8](https://github.com/yzx9/swcgeom/commit/8fe9df8459e8cef3cd6bde4ff3546e1a83871eda))
+* get neurites and dendrites ([a9acfde](https://github.com/yzx9/swcgeom/commit/a9acfde5ab77bac22d36e7c461089f5159e6330a))
+* add swc types ([7439288](https://github.com/yzx9/swcgeom/commit/7439288d199d558cd170600b07d1ab51a8489bc4))
+* add type check in \`Tree\.Node\.is\_soma\` ([35b53d6](https://github.com/yzx9/swcgeom/commit/35b53d68c30e444b0b8ae57519f8196c5dbdcb4d))
+
+##### `images`
+
+* support \`v3dpbd\` and \`v3draw\` \(close \#6\) ([ca8267d](https://github.com/yzx9/swcgeom/commit/ca8267d694f62abc59b9c8174efc91512a9ccec9))
+
+##### `transforms`
+
+* sort mst tree by default ([7878f3f](https://github.com/yzx9/swcgeom/commit/7878f3fdb9beeebd31ecfa7649611fdd03e34eff))
+* add path transforms ([aaa1b1e](https://github.com/yzx9/swcgeom/commit/aaa1b1e3c718017ae18a52d91918b29c02f302b3))
+
+##### `utils`
+
+* change to utf\-8 encode ([45e971e](https://github.com/yzx9/swcgeom/commit/45e971eef9cc88abb8e1fca5f26b99e46fcb5aaf))
+
+### Bug Fixes
+
+##### `core`
+
+* avoid duplicate cols comments ([f99eaf3](https://github.com/yzx9/swcgeom/commit/f99eaf3946846522d7eac1769f6a9a4fd20e8bf0))
+* inherit source ([702efab](https://github.com/yzx9/swcgeom/commit/702efabb5db9a27e8eaed9d1feb45f24e6b4e808))
+* remove original point when cat tree ([065125e](https://github.com/yzx9/swcgeom/commit/065125e7ccf0d3f6ef9ff9c7689a0e7aeb6be349))
+
+##### `images`
+
+* shape should be vec4i ([0824e9b](https://github.com/yzx9/swcgeom/commit/0824e9b4110f820cd11c469ca6e319c1b2f14145))
+
+##### `transforms`
+
+* add missing exports ([93bf8e6](https://github.com/yzx9/swcgeom/commit/93bf8e6076d8d7a3898a1ff88cbe05d855d1173c))
+
+### Performance Improvements
+
+##### `transforms`
+
+* disable \`detach\` operation ([204d44c](https://github.com/yzx9/swcgeom/commit/204d44cbab563309d85f9c6f64793e5eda028547))
+
+<br>
+
 ## **0.11.1**&emsp;<sub><sup>2023-08-12 ([36fa413...36fa413](https://github.com/yzx9/swcgeom/compare/36fa4135f2001694b8caea74e82c5ffa1118e90d...36fa4135f2001694b8caea74e82c5ffa1118e90d?diff=split))</sup></sub>
 
 *no relevant changes*
