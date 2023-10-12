@@ -6,7 +6,17 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from functools import cache, lru_cache
-from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple, overload
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    cast,
+    overload,
+)
 
 import nrrd
 import numpy as np
@@ -21,10 +31,10 @@ RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
 RE_TERAFLY_NAME = re.compile(r"^\d+(_\d+)?(_\d+)?")
 
 UINT_MAX = {
-    np.dtype(np.uint8): (2**8) - 1,
-    np.dtype(np.uint16): (2**16) - 1,
-    np.dtype(np.uint32): (2**32) - 1,
-    np.dtype(np.uint64): (2**64) - 1,
+    np.dtype(np.uint8): (2**8) - 1,  # type: ignore
+    np.dtype(np.uint16): (2**16) - 1,  # type: ignore
+    np.dtype(np.uint32): (2**32) - 1,  # type: ignore
+    np.dtype(np.uint64): (2**64) - 1,  # type: ignore
 }
 
 AXES_ORDER = {
@@ -231,7 +241,7 @@ class NDArrayImageStack(ImageStack):
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
-        return self.imgs.shape
+        return cast(Tuple[int, int, int, int], self.imgs.shape)
 
 
 class TiffImageStack(NDArrayImageStack):
