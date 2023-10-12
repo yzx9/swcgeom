@@ -421,7 +421,8 @@ class TeraflyImageStack(ImageStack):
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
-        return tuple(self.res[-1])
+        res_max = self.res[-1]
+        return res_max[0], res_max[1], res_max[2], 1
 
     @classmethod
     def get_resolutions(cls, root: str) -> Tuple[List[Vec3i], List[str], List[Vec3i]]:
