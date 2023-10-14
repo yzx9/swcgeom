@@ -7,7 +7,17 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 
-__all__ = ["Topology", "SWCNames", "swc_names", "get_names", "get_dsu", "traverse"]
+__all__ = [
+    "Topology",
+    "SWCNames",
+    "swc_names",  # may not need to export
+    "get_names",
+    "SWCTypes",
+    "get_types",
+    "get_topology",
+    "get_dsu",
+    "traverse",
+]
 
 T, K = TypeVar("T"), TypeVar("K")
 Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
@@ -34,6 +44,38 @@ swc_names = SWCNames()
 
 def get_names(names: Optional[SWCNames] = None) -> SWCNames:
     return names or swc_names
+
+
+@dataclass
+class SWCTypes:
+    """SWC format types.
+
+    See Also
+    ---------
+    NeuroMoprho.org - What is SWC format?
+        https://neuromorpho.org/myfaq.jsp
+    """
+
+    undefined: int = 0
+    soma: int = 1
+    axon: int = 2
+    basal_dendrite: int = 3
+    apical_dendrite: int = 4
+    custom: int = 5  # user-defined preferences
+    unspecified_neurites: int = 6
+    glia_processes: int = 7
+
+
+swc_types = SWCTypes()
+
+
+def get_types(types: Optional[SWCTypes] = None) -> SWCTypes:
+    return types or swc_types
+
+
+def get_topology(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> Topology:
+    names = get_names(names)
+    return (df[names.id].to_numpy(), df[names.pid].to_numpy())
 
 
 def get_dsu(

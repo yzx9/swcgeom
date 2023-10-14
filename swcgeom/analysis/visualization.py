@@ -9,10 +9,10 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.legend import Legend
 
-from ..core import SWCLike, Tree
-from ..utils import (
-    Camera,
-    Vec3f,
+from swcgeom.core import SWCLike, Tree
+from swcgeom.utils import (
+    CameraOptions,
+    SimpleCamera,
     draw_direction_indicator,
     draw_lines,
     get_fig_ax,
@@ -21,18 +21,8 @@ from ..utils import (
 
 __all__ = ["draw"]
 
-CameraPreset = Literal["xy", "yz", "zx", "yx", "zy", "xz"]
-CameraPresets: Dict[CameraPreset, Camera] = {
-    "xy": Camera((0, 0, 0), (0, 0, -1), (0, 1, 0)),
-    "yz": Camera((0, 0, 0), (-1, 0, 0), (0, 0, 1)),
-    "zx": Camera((0, 0, 0), (0, -1, 0), (1, 0, 0)),
-    "yx": Camera((0, 0, 0), (0, 0, -1), (0, -1, 0)),
-    "zy": Camera((0, 0, 0), (-1, 0, 0), (0, 0, -1)),
-    "xz": Camera((0, 0, 0), (0, -1, 0), (-1, 0, 0)),
-}
-CameraOptions = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
 Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
-locations = {
+locations: Dict[Literal["lt", "lb", "rt", "rb"], Tuple[float, float]] = {
     "lt": (0.10, 0.90),
     "lb": (0.10, 0.10),
     "rt": (0.90, 0.90),
@@ -48,7 +38,7 @@ def draw(
     fig: Optional[Figure] = None,
     ax: Optional[Axes] = None,
     show: bool | None = None,
-    camera: CameraOptions | CameraPreset = "xy",
+    camera: CameraOptions = "xy",
     color: Optional[Dict[int, str] | str] = None,
     label: str | bool = True,
     direction_indicator: Positions | Literal[False] = "rb",
@@ -98,7 +88,7 @@ def draw(
     show = (show is True) or (show is None and ax is None)
     fig, ax = get_fig_ax(fig, ax)
 
-    my_camera = _get_camera(camera)
+    my_camera = SimpleCamera.from_options(camera)
     my_color = get_ax_color(ax, swc, color)
 
     xyz = swc.xyz()
@@ -188,16 +178,3 @@ def _set_ax_memo(
     if handle is not None:
         ax_weak_memo[ax].setdefault("handles", [])
         ax_weak_memo[ax]["handles"].append(handle)
-
-
-def _get_camera(camera: CameraOptions | CameraPreset) -> Camera:
-    if isinstance(camera, str):
-        return CameraPresets[camera]
-
-    if len(camera) == 1:
-        return Camera((0, 0, 0), camera, (0, 1, 0))
-
-    if len(camera) == 2:
-        return Camera((0, 0, 0), camera[0], camera[1])
-
-    return Camera(*camera)

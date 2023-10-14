@@ -6,12 +6,23 @@ import re
 import warnings
 from abc import ABC, abstractmethod
 from functools import cache, lru_cache
-from typing import Any, Callable, Iterable, List, Optional, Tuple, overload
+from typing import (
+    Any,
+    Callable,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    cast,
+    overload,
+)
 
 import nrrd
 import numpy as np
 import numpy.typing as npt
 import tifffile
+from v3dpy.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
@@ -20,10 +31,18 @@ RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
 RE_TERAFLY_NAME = re.compile(r"^\d+(_\d+)?(_\d+)?")
 
 UINT_MAX = {
-    np.dtype(np.uint8): (2**8) - 1,
-    np.dtype(np.uint16): (2**16) - 1,
-    np.dtype(np.uint32): (2**32) - 1,
-    np.dtype(np.uint64): (2**64) - 1,
+    np.dtype(np.uint8): (2**8) - 1,  # type: ignore
+    np.dtype(np.uint16): (2**16) - 1,  # type: ignore
+    np.dtype(np.uint32): (2**32) - 1,  # type: ignore
+    np.dtype(np.uint64): (2**64) - 1,  # type: ignore
+}
+
+AXES_ORDER = {
+    "X": 0,
+    "Y": 1,
+    "Z": 2,
+    "C": 3,
+    "I": 2,  # vaa3d compatibility
 }
 
 
@@ -84,19 +103,26 @@ def read_imgs(fname: str, **kwargs) -> ImageStack:
         return TiffImageStack(fname, **kwargs)
     if ext in [".nrrd"]:
         return NrrdImageStack(fname, **kwargs)
+    if ext in [".v3dpbd"]:
+        return V3dpbdImageStack(fname, **kwargs)
+    if ext in [".v3draw"]:
+        return V3drawImageStack(fname, **kwargs)
     if ext in [".npy", ".npz"]:
         return NDArrayImageStack(np.load(fname), **kwargs)
     if TeraflyImageStack.is_root(fname):
         return TeraflyImageStack(fname, **kwargs)
+    if not os.path.exists(fname):
+        raise ValueError("image stack not exists")
     raise ValueError("unsupported image stack")
 
 
 def save_tiff(
     data: npt.NDArray | ImageStack,
     fname: str,
+    *,
     dtype: Optional[np.unsignedinteger | np.floating] = None,
-    c_first: bool = False,
-    swap_xy: bool = False,
+    swap_xy: Optional[bool] = None,
+    compression: str | Literal[False] = "zlib",
     **kwargs,
 ) -> None:
     """Save image stack as tiff.
@@ -110,22 +136,30 @@ def save_tiff(
         Casting data to specified dtype. If integer and float
         conversions occur, they will be scaled (assuming floats are
         between 0 and 1).
-    c_first : bool, default False
-        If true, data should be an array of shape (C, X, Y, Z), or
-        (X, Y, Z, C) or (X, Y, Z) otherwise.
-    swap_xy : bool, default False
-        Swap axes `x` and `y`.
+    compression : str | False, default `zlib`
+        Compression algorithm, forwarding to `tifffile.imwrite`. If no
+        algorithnm is specify specified, we will use the zlib algorithm
+        with compression level 6 by default.
+    **kwargs : Dict[str, Any]
+        Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):
         data = data.get_full()  # TODO: avoid load full imgs to memory
 
-    if c_first:
-        data = data.swapaxes(0, 1)  # (C, _, _, _) -> (_, _, _, C)
-    elif data.ndim == 3:
+    if data.ndim == 3:
         data = np.expand_dims(data, -1)  # (_, _, _)  -> (_, _, _, C), C === 1
 
-    if swap_xy:
-        data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
+    axes = "ZXYC"
+    if swap_xy is not None:
+        warnings.warn(
+            "flag `swap_xy` is easy to implement in user space and "
+            "is more flexiable. Since this flag is rarely used, we "
+            "decided to remove it in the next version",
+            DeprecationWarning,
+        )
+        if swap_xy is True:
+            axes = "ZYXC"
+            data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
 
     assert data.ndim == 4, "should be an array of shape (X, Y, Z, C)"
     assert data.shape[-1] in [1, 3], "support 'miniblack' or 'rgb'"
@@ -144,22 +178,27 @@ def save_tiff(
 
         data = (data * scaler_factor).astype(dtype)
 
-    tifffile.imwrite(
-        fname,
-        np.moveaxis(data, 2, 0),  # (_, _, Z, _) -> (Z, _, _, _)
-        photometric="rgb" if data.shape[-1] == 3 else "minisblack",
-        metadata={"axes": "ZXYC" if not swap_xy else "ZYXC"},
-        compression="zlib",
-        compressionargs={"level": 6},
-        **kwargs,
-    )
+    if compression is not False:
+        kwargs.setdefault("compression", compression)
+        if compression == "zlib":
+            kwargs.setdefault("compressionargs", {"level": 6})
+
+    data = np.moveaxis(data, 2, 0)  # (_, _, Z, _) -> (Z, _, _, _)
+    kwargs.setdefault("photometric", "rgb" if data.shape[-1] == 3 else "minisblack")
+    metadata = kwargs.get("metadata", {})
+    metadata.setdefault("axes", axes)
+    kwargs.update(metadata=metadata)
+    tifffile.imwrite(fname, data, **kwargs)
 
 
 class NDArrayImageStack(ImageStack):
     """NDArray image stack."""
 
     def __init__(
-        self, imgs: npt.NDArray[Any], swap_xy: bool = False, filp_xy: bool = False
+        self,
+        imgs: npt.NDArray[Any],
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
     ) -> None:
         super().__init__()
 
@@ -171,11 +210,26 @@ class NDArrayImageStack(ImageStack):
         if np.issubdtype((dtype := imgs.dtype), np.unsignedinteger):
             sclar_factor /= UINT_MAX[dtype]
 
-        if swap_xy:
-            imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
+        if swap_xy is not None:
+            warnings.warn(
+                "flag `swap_xy` now is unnecessary, tifffile will "
+                "automatically adjust dimensions according to "
+                "`tags.axes`, so this flag will be removed in the next "
+                " version",
+                DeprecationWarning,
+            )
+            if swap_xy is True:
+                imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
 
-        if filp_xy:
-            imgs = np.flip(imgs, (0, 1))  # (X, Y, _, _)
+        if filp_xy is not None:
+            warnings.warn(
+                "flag `filp_xy` is easy to implement in user space and "
+                "is more flexiable. Since this flag is rarely used, we "
+                "decided to remove it in the next version",
+                DeprecationWarning,
+            )
+            if filp_xy is True:
+                imgs = np.flip(imgs, (0, 1))  # (X, Y, Z, C)
 
         self.imgs = imgs.astype(np.float32) * sclar_factor
 
@@ -187,17 +241,30 @@ class NDArrayImageStack(ImageStack):
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
-        return self.imgs.shape
+        return cast(Tuple[int, int, int, int], self.imgs.shape)
 
 
 class TiffImageStack(NDArrayImageStack):
     """Tiff image stack."""
 
     def __init__(
-        self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
+        self,
+        fname: str,
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
+        **kwargs,
     ) -> None:
-        frames = tifffile.imread(fname, **kwargs)  # (Z, _, _) or (Z, _, _, _)
-        imgs = np.moveaxis(frames, 0, 2)  # (Z, _, _, ...) -> (_, _, Z, ...)
+        with tifffile.TiffFile(fname, **kwargs) as f:
+            s = f.series[0]
+            imgs, axes = s.asarray(), s.axes
+
+        if len(axes) != imgs.ndim or any(c not in AXES_ORDER for c in axes):
+            axes_raw = axes
+            axes = "ZXYC" if imgs.ndim == 4 else "ZXY"
+            warnings.warn(f"reset unexcept axes `{axes_raw}` to `{axes}` in: {fname}")
+
+        orders = [AXES_ORDER[c] for c in axes]
+        imgs = imgs.transpose(np.argsort(orders))
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
 
 
@@ -205,11 +272,38 @@ class NrrdImageStack(NDArrayImageStack):
     """Nrrd image stack."""
 
     def __init__(
-        self, fname: str, swap_xy: bool = False, filp_xy: bool = False, **kwargs
+        self,
+        fname: str,
+        swap_xy: Optional[bool] = None,
+        filp_xy: Optional[bool] = None,
+        **kwargs,
     ) -> None:
         imgs, header = nrrd.read(fname, **kwargs)
         super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
         self.header = header
+
+
+class V3dImageStack(NDArrayImageStack):
+    """v3d image stack."""
+
+    def __init__(self, fname: str, loader: Raw | PBD, **kwargs) -> None:
+        r = loader()
+        imgs = r.load(fname)
+        super().__init__(imgs, **kwargs)
+
+
+class V3drawImageStack(V3dImageStack):
+    """v3draw image stack."""
+
+    def __init__(self, fname: str, **kwargs) -> None:
+        super().__init__(fname, loader=Raw, **kwargs)
+
+
+class V3dpbdImageStack(V3dImageStack):
+    """v3dpbd image stack."""
+
+    def __init__(self, fname: str, **kwargs) -> None:
+        super().__init__(fname, loader=PBD, **kwargs)
 
 
 class TeraflyImageStack(ImageStack):
@@ -221,22 +315,31 @@ class TeraflyImageStack(ImageStack):
     Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional Visualization
     and Annotation of Terabytes of Multidimensional Volumetric Images.”
     Nature Methods 13, no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
+
+    Notes
+    -----
+    Terafly and Vaa3d use a especial right-handed coordinate system
+    (with origin point in the left-top and z-axis points front), but we
+    flip y-axis to makes it a left-handed coordinate system (with orgin
+    point in the left-bottom and z-axis points front). If you need to
+    use its coordinate system, remember to FLIP Y-AXIS BACK.
     """
 
     _listdir: Callable[[str], List[str]]
     _read_patch: Callable[[str], npt.NDArray]
 
-    def __init__(self, root: str, *, lru_maxsize: int | None = 1024) -> None:
-        """
+    def __init__(self, root: str, *, lru_maxsize: int | None = 128) -> None:
+        r"""
         Parameters
         ----------
         root : str
             The root of terafly which contains directories named as
             `RES(YxXxZ)`.
-        lru_maxsize : int or None, default to 1024
-            Forwarding to `functools.lru_cache`, setting of 1024
-            requires approximately less than 4GB memeory (not accurate,
-            depends on your data).
+        lru_maxsize : int or None, default to 128
+            Forwarding to `functools.lru_cache`. A decompressed array
+            size of (256, 256, 256, 1), which is the typical size of
+            terafly image stack, takes about 256 * 256 * 256 * 1 *
+            4B = 64MB. A cache size of 128 requires about 8GB memeory.
         """
         super().__init__()
         self.root = root
@@ -248,7 +351,7 @@ class TeraflyImageStack(ImageStack):
 
         @lru_cache(maxsize=lru_maxsize)
         def read_patch(path: str) -> npt.NDArray[np.float32]:
-            return read_imgs(path, swap_xy=True).get_full()  # axes=(IYX)
+            return read_imgs(path).get_full()
 
         self._listdir, self._read_patch = listdir, read_patch
 
@@ -296,6 +399,9 @@ class TeraflyImageStack(ImageStack):
         shape_out = np.concatenate([ends - starts, [1]])
         out = np.zeros(shape_out, dtype=np.float32)
         self._get_range(starts, ends, res_level, out=out)
+
+        # flip y-axis to makes it a left-handed coordinate system
+        out = np.flip(out, axis=1)
         return out
 
     def find_correspond_imgs(self, p, res_level=-1):
@@ -315,7 +421,8 @@ class TeraflyImageStack(ImageStack):
 
     @property
     def shape(self) -> Tuple[int, int, int, int]:
-        return tuple(self.res[-1])
+        res_max = self.res[-1]
+        return res_max[0], res_max[1], res_max[2], 1
 
     @classmethod
     def get_resolutions(cls, root: str) -> Tuple[List[Vec3i], List[str], List[Vec3i]]:
@@ -408,13 +515,13 @@ class TeraflyImageStack(ImageStack):
         if shape[1] > lens[1]:
             starts_y = starts + [0, lens[1], 0]
             ends_y = np.array([starts[0], ends[1], ends[2]])
-            ends_y += [min(shape[0], lens[0]), 0, 0]
+            ends_y += [min(shape[0], lens[0]), 0, 0]  # type: ignore
             self._get_range(starts_y, ends_y, res_level, out[:, lens[1] :, :])
 
         if shape[2] > lens[2]:
             starts_z = starts + [0, 0, lens[2]]
             ends_z = np.array([starts[0], starts[1], ends[2]])
-            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]
+            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]  # type: ignore
             self._get_range(starts_z, ends_z, res_level, out[:, :, lens[2] :])
 
     def _find_correspond_imgs(self, p, res_level):

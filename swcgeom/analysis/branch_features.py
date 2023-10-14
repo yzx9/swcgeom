@@ -6,7 +6,7 @@ from typing import List, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from ..core import Branch, Tree
+from swcgeom.core import Branch, Tree
 
 __all__ = ["BranchFeatures"]
 

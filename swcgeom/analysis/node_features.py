@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from ..core import BranchTree, Tree
+from swcgeom.core import BranchTree, Tree
 
 __all__ = ["NodeFeatures", "BifurcationFeatures", "TipFeatures"]
 

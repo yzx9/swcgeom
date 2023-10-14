@@ -1,4 +1,14 @@
-"""Create image stack from morphology."""
+"""Create image stack from morphology.
+
+Notes
+-----
+- This module has been deprecated, try `github.com/yzx9/swc2skeleton`
+- All denpendencies need to be installed, try:
+
+```sh
+pip install swcgeom[all]
+```
+"""
 
 import math
 import os
@@ -9,11 +19,10 @@ from typing import Any, Iterable, List, Tuple, cast
 import numpy as np
 import numpy.typing as npt
 import tifffile
-from tqdm import tqdm
 
-from ..core import Population, Tree
-from ..utils import SDF, SDFCompose, SDFRoundCone
-from .base import Transform
+from swcgeom.core import Population, Tree
+from swcgeom.transforms.base import Transform
+from swcgeom.utils import SDF, SDFCompose, SDFRoundCone
 
 __all__ = ["ToImageStack"]
 
@@ -71,6 +80,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         self, x: Tree, verbose: bool = True
     ) -> Iterable[npt.NDArray[np.uint8]]:
         # pylint: disable=too-many-locals
+        from tqdm import tqdm
+
         if verbose:
             print("To image stack: " + x.source)
             time_start = time.time()

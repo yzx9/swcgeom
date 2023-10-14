@@ -5,16 +5,20 @@ from typing import Callable, List, Optional, Tuple
 
 import numpy as np
 
-from ..core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
-from .base import Transform
-from .branch import BranchConvSmoother
-from .geometry import Normalizer
+from swcgeom.core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
+from swcgeom.core.swc_utils import SWCTypes, get_types
+from swcgeom.transforms.base import Transform
+from swcgeom.transforms.branch import BranchConvSmoother
+from swcgeom.transforms.geometry import Normalizer
 
 __all__ = [
     "ToBranchTree",
     "ToLongestPath",
     "TreeSmoother",
     "TreeNormalizer",
+    "CutByType",
+    "CutAxonTree",
+    "CutDendriteTree",
     "CutByBifurcationOrder",
     "CutShortTipBranch",
 ]
@@ -31,10 +35,16 @@ class ToBranchTree(Transform[Tree, BranchTree]):
 class ToLongestPath(Transform[Tree, Path[DictSWC]]):
     """Transform tree to longest path."""
 
+    def __init__(self, *, detach: bool = True) -> None:
+        self.detach = detach
+
     def __call__(self, x: Tree) -> Path[DictSWC]:
         paths = x.get_paths()
         idx = np.argmax([p.length() for p in paths])
-        return paths[idx].detach()
+        path = paths[idx]
+        if self.detach:
+            path = path.detach()
+        return path  # type: ignore
 
 
 class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docstring
@@ -69,6 +79,58 @@ class TreeNormalizer(Normalizer[Tree]):
             DeprecationWarning,
         )
         super().__init__(*args, **kwargs)
+
+
+class CutByType(Transform[Tree, Tree]):
+    """Cut tree by type.
+
+    In order to preserve the tree structure, all ancestor nodes of the node to be preserved will be preserved.
+
+    Notes
+    -----
+    Not all reserved nodes are of the specified type.
+    """
+
+    def __init__(self, type: int) -> None:  # pylint: disable=redefined-builtin
+        super().__init__()
+        self.type = type
+
+    def __call__(self, x: Tree) -> Tree:
+        removals = set(x.id()[x.type() != self.type])
+
+        def leave(n: Tree.Node, keep_children: List[bool]) -> bool:
+            if n.id in removals and any(keep_children):
+                removals.remove(n.id)
+            return n.id not in removals
+
+        x.traverse(leave=leave)
+        y = to_subtree(x, removals)
+        return y
+
+    def __repr__(self) -> str:
+        return f"CutByType-{self.type}"
+
+
+class CutAxonTree(CutByType):
+    """Cut axon tree."""
+
+    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+        types = get_types(types)
+        super().__init__(type=types.axon)
+
+    def __repr__(self) -> str:
+        return "CutAxonTree"
+
+
+class CutDendriteTree(CutByType):
+    """Cut dendrite tree."""
+
+    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+        types = get_types(types)
+        super().__init__(type=types.basal_dendrite)  # TODO: apical dendrite
+
+    def __repr__(self) -> str:
+        return "CutDenriteTree"
 
 
 class CutByBifurcationOrder(Transform[Tree, Tree]):

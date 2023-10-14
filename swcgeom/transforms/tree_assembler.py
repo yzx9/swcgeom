@@ -1,13 +1,16 @@
 """Assemble a tree."""
 
-from typing import List, Optional, Tuple
+from typing import Iterable, List, Optional, Tuple
 
 import pandas as pd
 
-from ..core import Tree
-from ..core.swc_utils import SWCNames
-from ..core.swc_utils.assembler import assemble_lines_impl, try_assemble_lines_impl
-from .base import Transform
+from swcgeom.core import Tree
+from swcgeom.core.swc_utils import SWCNames
+from swcgeom.core.swc_utils.assembler import (
+    assemble_lines_impl,
+    try_assemble_lines_impl,
+)
+from swcgeom.transforms.base import Transform
 
 
 class LinesToTree(Transform[List[pd.DataFrame], Tree]):
@@ -27,14 +30,16 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
         self.thre = thre
         self.undirected = undirected
 
-    def __call__(self, lines: List[pd.DataFrame], *, names: Optional[SWCNames] = None):
+    def __call__(
+        self, lines: Iterable[pd.DataFrame], *, names: Optional[SWCNames] = None
+    ):
         return self.assemble(lines, names=names)
 
     def __repr__(self) -> str:
         return f"LinesToTree-thre-{self.thre}-{'undirected' if self.undirected else 'directed'}"
 
     def assemble(
-        self, lines: List[pd.DataFrame], *, names: Optional[SWCNames] = None
+        self, lines: Iterable[pd.DataFrame], *, names: Optional[SWCNames] = None
     ) -> pd.DataFrame:
         """Assemble lines to a tree.
 
@@ -63,7 +68,7 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
 
     def try_assemble(
         self,
-        lines: List[pd.DataFrame],
+        lines: Iterable[pd.DataFrame],
         *,
         id_offset: int = 0,
         sort_nodes: bool = True,

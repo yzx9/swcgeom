@@ -1,4 +1,4 @@
 """Image Stack Related."""
 
-from .folder import *
-from .io import *
+from swcgeom.images.folder import *
+from swcgeom.images.io import *

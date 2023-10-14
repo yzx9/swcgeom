@@ -5,8 +5,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, ove
 
 import numpy as np
 
-from .swc import SWCLike
-from .swc_utils import (
+from swcgeom.core.swc import SWCLike
+from swcgeom.core.swc_utils import (
     REMOVAL,
     SWCNames,
     Topology,
@@ -15,9 +15,9 @@ from .swc_utils import (
     propagate_removal,
     sort_nodes_impl,
     to_sub_topology,
-    traverse,
 )
-from .tree import Tree
+from swcgeom.core.tree import Tree
+from swcgeom.core.tree_utils_impl import get_subtree_impl, to_subtree_impl
 
 __all__ = [
     "sort_tree",
@@ -120,8 +120,7 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     ndata = {k: swc_like.get_ndata(k)[id_map_arr].copy() for k in swc_like.keys()}
     ndata.update(id=new_id, pid=new_pid)
 
-    subtree = Tree(n_nodes, **ndata)
-    subtree.source = swc_like.source
+    subtree = Tree(n_nodes, **ndata, source=swc_like.source, names=swc_like.names)
 
     id_map = {}
     for i, idx in enumerate(id_map_arr):
@@ -143,7 +142,8 @@ def to_subtree(swc_like: SWCLike, removals: Iterable[int]) -> Tree:
         new_ids[i] = REMOVAL
 
     sub = propagate_removal((new_ids, swc_like.pid()))
-    return _to_subtree(swc_like, sub)
+    n_nodes, ndata, source, names = to_subtree_impl(swc_like, sub)
+    return Tree(n_nodes, **ndata, source=source, names=names)
 
 
 def get_subtree(swc_like: SWCLike, n: int) -> Tree:
@@ -155,14 +155,8 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
     n : int
         Id of the root of the subtree.
     """
-    ids = []
-    topo = (swc_like.id(), swc_like.pid())
-    traverse(topo, enter=lambda n, _: ids.append(n), root=n)
-
-    sub_ids = np.array(ids, dtype=np.int32)
-    sub_pid = swc_like.pid()[sub_ids]
-    sub_pid[0] = -1
-    return _to_subtree(swc_like, (sub_ids, sub_pid))
+    n_nodes, ndata, source, names = get_subtree_impl(swc_like, n)
+    return Tree(n_nodes, **ndata, source=source, names=names)
 
 
 def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
@@ -179,9 +173,11 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
     """
     tree = tree.copy()
     path = [tree.node(new_root)]
-    while (p := path[-1]).parent() is not None:
+    while (p := path[-1].parent()) is not None:
         path.append(p)
 
+    path[0].pid = -1
+    path[0].type, path[-1].type = path[-1].type, path[0].type
     for n, p in zip(path[1:], path[:-1]):
         n.pid = p.id
 
@@ -194,11 +190,12 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
 def cat_tree(  # pylint: disable=too-many-arguments
     tree1: Tree,
     tree2: Tree,
-    node1: int,
+    node1: int = 0,
     node2: int = 0,
     *,
-    no_move: bool = False,
+    translate: bool = True,
     names: Optional[SWCNames] = None,
+    no_move: Optional[bool] = None,  # legacy
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 
@@ -206,31 +203,44 @@ def cat_tree(  # pylint: disable=too-many-arguments
     ---------
     tree1 : Tree
     tree2 : Tree
-    node1 : int
+    node1 : int, default `0`
         The node id of the tree to be connected.
     node2 : int, default `0`
         The node id of the connection point.
-    no_move : bool, default `False`
-        If true, link connection point without move.
+    translate : bool, default `True`
+        Wheather to translate node_2 to node_1. If False, add link
+        between node_1 and node_2 without translate.
     """
+    if no_move is not None:
+        warnings.warn(
+            "`no_move` has been, it is replaced by `translate` in "
+            "v0.12.0, and this will be removed in next version",
+            DeprecationWarning,
+        )
+        translate = not no_move
+
     names = get_names(names)
     tree, tree2 = tree1.copy(), tree2.copy()
-    if not tree2.node(node2).is_soma():
+    if not tree2.node(node2).is_root():
         tree2 = redirect_tree(tree2, node2, sort=False)
 
     c = tree.node(node1)
-    if not no_move:
+    if translate:
         tree2.ndata[names.x] -= tree2.node(node2).x - c.x
         tree2.ndata[names.y] -= tree2.node(node2).y - c.y
         tree2.ndata[names.z] -= tree2.node(node2).z - c.z
 
-    tree2.ndata[names.id] += tree.number_of_nodes()
-    tree2.ndata[names.pid] += tree.number_of_nodes()
+    ns = tree.number_of_nodes()
     if np.linalg.norm(tree2.node(node2).xyz() - c.xyz()) < EPS:
-        for n in tree2.node(node2).children():
-            n.pid = node1
+        remove = [node2 + ns]
+        link_to_root = [n.id + ns for n in tree2.node(node2).children()]
     else:
-        tree2.node(node2).pid = node1
+        remove = None
+        link_to_root = [node2 + ns]
+
+    # APIs of tree2 are no longer available since we modify the topology
+    tree2.ndata[names.id] += ns
+    tree2.ndata[names.pid] += ns
 
     for k, v in tree.ndata.items():  # only keep keys in tree1
         if k in tree2.ndata:
@@ -238,7 +248,15 @@ def cat_tree(  # pylint: disable=too-many-arguments
         else:
             tree.ndata[k] = np.pad(v, (0, tree2.number_of_nodes()))
 
-    return _sort_tree(tree)
+    for n in link_to_root:
+        tree.node(n).pid = node1
+
+    if remove is not None:  # TODO: This should be easy to implement during sort
+        for k, v in tree.ndata.items():
+            tree.ndata[k] = np.delete(v, remove)
+
+    _sort_tree(tree)
+    return tree
 
 
 def _sort_tree(tree: Tree) -> Tree:
@@ -247,15 +265,3 @@ def _sort_tree(tree: Tree) -> Tree:
     tree.ndata = {k: tree.ndata[k][id_map] for k in tree.ndata}
     tree.ndata.update(id=new_ids, pid=new_pids)
     return tree
-
-
-def _to_subtree(swc_like: SWCLike, sub: Topology) -> Tree:
-    (new_id, new_pid), id_map = to_sub_topology(sub)
-
-    n_nodes = new_id.shape[0]
-    ndata = {k: swc_like.get_ndata(k)[id_map].copy() for k in swc_like.keys()}
-    ndata.update(id=new_id, pid=new_pid)
-
-    subtree = Tree(n_nodes, **ndata)
-    subtree.source = swc_like.source
-    return subtree

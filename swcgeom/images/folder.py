@@ -3,13 +3,14 @@
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import Callable, Iterable, List, Literal, Optional, Tuple, TypeVar
+from typing import Callable, Generic, Iterable, List, Literal, Optional, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from .io import read_imgs
+from swcgeom.images.io import read_imgs
+from swcgeom.transforms import Identity, Transform
 
 __all__ = [
     "ImageStackFolder",
@@ -20,32 +21,37 @@ __all__ = [
 T = TypeVar("T")
 
 
-class ImageStackFolderBase(ABC):
+class ImageStackFolderBase(Generic[T], ABC):
     """Image stack folder base."""
 
     files: List[str]
+    transform: Transform[npt.NDArray[np.float32], T]
 
-    def __init__(self, files: Iterable[str]) -> None:
+    def __init__(
+        self,
+        files: Iterable[str],
+        *,
+        transform: Optional[Transform[npt.NDArray[np.float32], T]] = None,
+    ) -> None:
         super().__init__()
         self.files = list(files)
+        self.transform = transform or Identity()  # type: ignore
 
     @abstractmethod
-    def __getitem__(self, key: str, /) -> npt.NDArray[np.float32]:
+    def __getitem__(self, key: str, /) -> T:
         raise NotImplementedError()
 
     def __len__(self) -> int:
         return len(self.files)
 
-    def _get(self, fname: str) -> npt.NDArray[np.float32]:
+    def _get(self, fname: str) -> T:
         imgs = self.read_imgs(fname)
-        # TODO: support transforms
+        imgs = self.transform(imgs)
         return imgs
 
     @staticmethod
     def read_imgs(fname: str) -> npt.NDArray[np.float32]:
-        imgs = read_imgs(fname).get_full()
-        imgs = np.moveaxis(imgs, -1, 0)  # (X, Y, Z, C) -> (C, X, Y, Z)
-        return imgs
+        return read_imgs(fname).get_full()
 
     @staticmethod
     def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
@@ -58,24 +64,33 @@ class ImageStackFolderBase(ABC):
         return fs
 
 
-class ImageStackFolder(ImageStackFolderBase):
+class ImageStackFolder(Generic[T], ImageStackFolderBase[T]):
     """Image stack folder."""
 
-    def __getitem__(self, idx: int, /) -> npt.NDArray[np.float32]:
+    def __getitem__(self, idx: int, /) -> T:
         return self._get(self.files[idx])
 
     @classmethod
-    def from_dir(cls, root: str, *, pattern: Optional[str] = None) -> Self:
-        return cls(cls.scan(root, pattern=pattern))
+    def from_dir(cls, root: str, *, pattern: Optional[str] = None, **kwargs) -> Self:
+        """
+        Parameters
+        ----------
+        root : str
+        pattern : str, optional
+            Filter files by pattern.
+        **kwargs
+            Pass to `cls.__init__`
+        """
+        return cls(cls.scan(root, pattern=pattern), **kwargs)
 
 
-class LabeledImageStackFolder(ImageStackFolderBase):
+class LabeledImageStackFolder(Generic[T], ImageStackFolderBase[T]):
     """Image stack folder with label."""
 
     labels: List[int]
 
-    def __init__(self, files: Iterable[str], labels: Iterable[int]):
-        super().__init__(files)
+    def __init__(self, files: Iterable[str], labels: Iterable[int], **kwargs):
+        super().__init__(files, **kwargs)
         self.labels = list(labels)
 
     def __getitem__(self, idx: int) -> Tuple[npt.NDArray[np.float32], int]:
@@ -88,6 +103,7 @@ class LabeledImageStackFolder(ImageStackFolderBase):
         label: int | Callable[[str], int],
         *,
         pattern: Optional[str] = None,
+        **kwargs,
     ) -> Self:
         files = cls.scan(root, pattern=pattern)
         if callable(label):
@@ -95,22 +111,35 @@ class LabeledImageStackFolder(ImageStackFolderBase):
         elif isinstance(label, int):
             labels = [label for _ in files]
         else:
-            raise ValueError("")
-        return cls(files, labels)
+            raise ValueError("invalid label")
+        return cls(files, labels, **kwargs)
 
 
-class PathImageStackFolder(ImageStackFolder):
+class PathImageStackFolder(Generic[T], ImageStackFolder[T]):
     """Image stack folder with relpath."""
 
     root: str
 
-    def __getitem__(self, idx: int) -> Tuple[npt.NDArray[np.float32], str]:
+    def __init__(self, files: Iterable[str], *, root: str, **kwargs):
+        super().__init__(files, **kwargs)
+        self.root = root
+
+    def __getitem__(self, idx: int) -> Tuple[T, str]:
         relpath = os.path.relpath(self.files[idx], self.root)
-        return self.read_imgs(self.files[idx]), relpath
+        return self._get(self.files[idx]), relpath
 
     @classmethod
-    def from_dir(cls, root: str, *, pattern: Optional[str] = None) -> Self:
-        return cls(cls.scan(root, pattern=pattern))
+    def from_dir(cls, root: str, *, pattern: Optional[str] = None, **kwargs) -> Self:
+        """
+        Parameters
+        ----------
+        root : str
+        pattern : str, optional
+            Filter files by pattern.
+        **kwargs
+            Pass to `cls.__init__`
+        """
+        return cls(cls.scan(root, pattern=pattern), root=root, **kwargs)
 
 
 def truthly(*args, **kwargs) -> Literal[True]:  # pylint: disable=unused-argument

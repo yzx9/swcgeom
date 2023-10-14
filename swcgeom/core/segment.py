@@ -5,9 +5,9 @@ from typing import Generic, Iterable, List, TypeVar
 import numpy as np
 import numpy.typing as npt
 
-from .path import Path
-from .swc import DictSWC, SWCTypeVar
-from .swc_utils import SWCNames, get_names
+from swcgeom.core.path import Path
+from swcgeom.core.swc import DictSWC, SWCTypeVar
+from swcgeom.core.swc_utils import SWCNames, get_names
 
 __all__ = ["Segment", "Segments"]
 
@@ -30,7 +30,11 @@ class Segment(Path, Generic[SWCTypeVar]):
     def detach(self) -> "Segment[DictSWC]":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
-        attact = DictSWC(**{k: self[k] for k in self.keys()}, names=self.names)
+        attact = DictSWC(
+            **{k: self[k] for k in self.keys()},
+            source=self.attach.source,
+            names=self.names,
+        )
         attact.ndata[self.names.id] = self.id()
         attact.ndata[self.names.pid] = self.pid()
         return Segment(attact, 0, 1)

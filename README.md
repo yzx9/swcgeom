@@ -1,18 +1,16 @@
-# SWC GEOM
+# SWCGEOM
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />
 
 [![Release to GitHub](https://github.com/yzx9/swcgeom/actions/workflows/github-publish.yml/badge.svg)](https://github.com/yzx9/swcgeom/releases)
-
 [![Release to PyPI](https://github.com/yzx9/swcgeom/actions/workflows/pypi-publish.yml/badge.svg)](https://pypi.org/project/swcgeom/)
-
 [![Release to Test PyPI](https://github.com/yzx9/swcgeom/actions/workflows/test-pypi-publish.yml/badge.svg)](https://test.pypi.org/project/swcgeom/)
 
 A neuron geometry library for swc format.
 
 ## Usage
 
-See documents for details.
+See examples for details.
 
 ## Development
 

@@ -1,3 +1,181 @@
+# Changelog
+
+## **0.12.0**&emsp;<sub><sup>2023-10-12 ([d9ba943...0824e9b](https://github.com/yzx9/swcgeom/compare/d9ba9433735c69edf979013632278e5f498a6fe0...0824e9b4110f820cd11c469ca6e319c1b2f14145?diff=split))</sup></sub>
+
+### Features
+
+##### `core`
+
+* support read from io ([8fe9df8](https://github.com/yzx9/swcgeom/commit/8fe9df8459e8cef3cd6bde4ff3546e1a83871eda))
+* get neurites and dendrites ([a9acfde](https://github.com/yzx9/swcgeom/commit/a9acfde5ab77bac22d36e7c461089f5159e6330a))
+* add swc types ([7439288](https://github.com/yzx9/swcgeom/commit/7439288d199d558cd170600b07d1ab51a8489bc4))
+* add type check in \`Tree\.Node\.is\_soma\` ([35b53d6](https://github.com/yzx9/swcgeom/commit/35b53d68c30e444b0b8ae57519f8196c5dbdcb4d))
+
+##### `images`
+
+* support \`v3dpbd\` and \`v3draw\` \(close \#6\) ([ca8267d](https://github.com/yzx9/swcgeom/commit/ca8267d694f62abc59b9c8174efc91512a9ccec9))
+
+##### `transforms`
+
+* sort mst tree by default ([7878f3f](https://github.com/yzx9/swcgeom/commit/7878f3fdb9beeebd31ecfa7649611fdd03e34eff))
+* add path transforms ([aaa1b1e](https://github.com/yzx9/swcgeom/commit/aaa1b1e3c718017ae18a52d91918b29c02f302b3))
+
+##### `utils`
+
+* change to utf\-8 encode ([45e971e](https://github.com/yzx9/swcgeom/commit/45e971eef9cc88abb8e1fca5f26b99e46fcb5aaf))
+
+### Bug Fixes
+
+##### `core`
+
+* avoid duplicate cols comments ([f99eaf3](https://github.com/yzx9/swcgeom/commit/f99eaf3946846522d7eac1769f6a9a4fd20e8bf0))
+* inherit source ([702efab](https://github.com/yzx9/swcgeom/commit/702efabb5db9a27e8eaed9d1feb45f24e6b4e808))
+* remove original point when cat tree ([065125e](https://github.com/yzx9/swcgeom/commit/065125e7ccf0d3f6ef9ff9c7689a0e7aeb6be349))
+
+##### `images`
+
+* shape should be vec4i ([0824e9b](https://github.com/yzx9/swcgeom/commit/0824e9b4110f820cd11c469ca6e319c1b2f14145))
+
+##### `transforms`
+
+* add missing exports ([93bf8e6](https://github.com/yzx9/swcgeom/commit/93bf8e6076d8d7a3898a1ff88cbe05d855d1173c))
+
+### Performance Improvements
+
+##### `transforms`
+
+* disable \`detach\` operation ([204d44c](https://github.com/yzx9/swcgeom/commit/204d44cbab563309d85f9c6f64793e5eda028547))
+
+<br>
+
+## **0.11.1**&emsp;<sub><sup>2023-08-12 ([36fa413...36fa413](https://github.com/yzx9/swcgeom/compare/36fa4135f2001694b8caea74e82c5ffa1118e90d...36fa4135f2001694b8caea74e82c5ffa1118e90d?diff=split))</sup></sub>
+
+*no relevant changes*
+
+<br>
+
+## **0.11.0**&emsp;<sub><sup>2023-08-05 ([a8adae5...c075ec4](https://github.com/yzx9/swcgeom/compare/a8adae5d58392bcac737a28bdf6c510d07e30fe6...c075ec4063d387d35dcfdd0a021a3407ccd67770?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+* draw trunk ([4d2e069](https://github.com/yzx9/swcgeom/commit/4d2e069a86a105c585425d730824c8f22a293d01))
+* draw point at the start of subtree ([2c9938f](https://github.com/yzx9/swcgeom/commit/2c9938f9c75aaac807b136baa0f7bd0d8fc4af0a))
+
+##### `core`
+
+* detect swc encoding ([06087bd](https://github.com/yzx9/swcgeom/commit/06087bde32f68b559d0591479538dbf960b92bcd))
+* preserve original swc comments\(close \#2\) ([ac49e25](https://github.com/yzx9/swcgeom/commit/ac49e253cf5a33a27a7e61c84b821d944307b857))
+* accept non\-positive radius ([47c29b5](https://github.com/yzx9/swcgeom/commit/47c29b5503b0ff41ce678491d22ae715383fb2ee))
+* accept space before comments in swc ([c075ec4](https://github.com/yzx9/swcgeom/commit/c075ec4063d387d35dcfdd0a021a3407ccd67770))
+
+##### `utils`
+
+* add neuromorpho related util ([4a22e3d](https://github.com/yzx9/swcgeom/commit/4a22e3d4b8ddf2265fe23106751c0e25232babef))
+* convert neuromorpho lmdb to swc ([e48c1a8](https://github.com/yzx9/swcgeom/commit/e48c1a8b7e1397ae17921f36471fbc4ba1c2cff2))
+* retry download neuromorpho ([ebd9255](https://github.com/yzx9/swcgeom/commit/ebd92557effe525d90c26f32dfa773fc4977f212))
+* mark invalid neuromorpho data ([43a96c6](https://github.com/yzx9/swcgeom/commit/43a96c6e0872c82d4df10783687208ab959f7a11))
+
+### Bug Fixes
+
+##### `core`
+
+* forward names ([52192ce](https://github.com/yzx9/swcgeom/commit/52192ceaa9b687fddb98c3767412aee6cc226ad8))
+
+##### `transform`
+
+* cut by dynamic type ([3293a67](https://github.com/yzx9/swcgeom/commit/3293a675830200c73761c48bc1990554f7d0c82c))
+
+##### `utils`
+
+* should throw http error ([7fb4ee2](https://github.com/yzx9/swcgeom/commit/7fb4ee2ca0ca4308c7d527bec9eb325d22ca0df7))
+
+<br>
+
+## **0.10.0**&emsp;<sub><sup>2023-05-23 ([bc48787...8991fe0](https://github.com/yzx9/swcgeom/compare/bc487879ac6655de0a86504d24a2f67ba6afe848...8991fe0ca647febccba7a9bce7facf0e06334a5c?diff=split))</sup></sub>
+
+### Features
+
+* dict\-like swc ([a1f52d7](https://github.com/yzx9/swcgeom/commit/a1f52d7ac3c03df6077fd038fd8833d1fef03c8e))
+
+##### `analysis`
+
+* add str input support ([f98aea5](https://github.com/yzx9/swcgeom/commit/f98aea59b5ab71196691423185d6a2f896c352c3))
+
+##### `core`
+
+* check if is sorted topology ([bc48787](https://github.com/yzx9/swcgeom/commit/bc487879ac6655de0a86504d24a2f67ba6afe848))
+
+##### `images`
+
+* detect tiff axes ([b1e44bb](https://github.com/yzx9/swcgeom/commit/b1e44bb8c35c299fdb5e4b8b3be61358d59ee7b6))
+* change terafly to a left\-handed coordinate system ([b22b69a](https://github.com/yzx9/swcgeom/commit/b22b69acf7715388b0f818eb9c176bee6f39e60a))
+
+##### `transforms`
+
+* cut tree by type ([184482b](https://github.com/yzx9/swcgeom/commit/184482bbb5803e429ac788fa315c0638ad233754))
+* reset radius ([e697e34](https://github.com/yzx9/swcgeom/commit/e697e34c3532dcaf6c9b2c1c8afd820d127f3303))
+
+### Bug Fixes
+
+##### `*`
+
+* np\.nonzero returns a tuple ([091e6eb](https://github.com/yzx9/swcgeom/commit/091e6eb84a464e7ab3978ad74de891fa31f98803))
+
+##### `core`
+
+* forwarding init kwargs ([226b3ef](https://github.com/yzx9/swcgeom/commit/226b3efb32cdb6d421bc9aca5d6a5b2f0f0b6e3c))
+
+##### `transforms`
+
+* crop fixed shape ([e1078d3](https://github.com/yzx9/swcgeom/commit/e1078d33414ef02e27b93b9149bf776a6334b1ca))
+
+### Performance Improvements
+
+##### `transforms`
+
+* flat transforms ([f824651](https://github.com/yzx9/swcgeom/commit/f824651e202015a29716dd441391bbb28f0a3bfa))
+
+### BREAKING CHANGES
+
+* `*` export common classes and methods only ([39de173](https://github.com/yzx9/swcgeom/commit/39de173fb3df8967a7edf46b269c216e73f2cb41))
+* `core` set \`check\_same\` arg to false by default ([0f576e9](https://github.com/yzx9/swcgeom/commit/0f576e9ba352138d4d138a15bd6f12ea3a8e48db))
+* `images` change terafly to a left\-handed coordinate system ([b22b69a](https://github.com/yzx9/swcgeom/commit/b22b69acf7715388b0f818eb9c176bee6f39e60a))
+
+<br>
+
+## **0.9.0**&emsp;<sub><sup>2023-05-04 ([1a3e9d4...797934f](https://github.com/yzx9/swcgeom/compare/1a3e9d4f7a0d1442fbb62f4693f5b5ec6d787af4...797934f120c0de266fc7d21038b5d17a1e2fbabc?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+
+- plot sholl circles by default ([797934f](https://github.com/yzx9/swcgeom/commit/797934f120c0de266fc7d21038b5d17a1e2fbabc))
+
+##### `images`
+
+- add transform support to folder ([167f67c](https://github.com/yzx9/swcgeom/commit/167f67c6f6ba58e80280d66df27caf47cf3dd3e6))
+- support disable compression ([9db01e9](https://github.com/yzx9/swcgeom/commit/9db01e94b063c1ec9efcf8fb906f2c732805e45f))
+- check if is a valid fname ([4d98abc](https://github.com/yzx9/swcgeom/commit/4d98abc66955d62760047c4fcfb1007f1dc9d64a))
+
+##### `transform`
+
+- add image stack center transform ([0fd1441](https://github.com/yzx9/swcgeom/commit/0fd14411e7b552f7b6d66a1f9c77f69adb0c379a))
+- expose static method ([c65c0cb](https://github.com/yzx9/swcgeom/commit/c65c0cba316797bedda5070b2db2a1a622931c20))
+
+### Bug Fixes
+
+##### `core`
+- change \`w\` to ones ([325ff1e](https://github.com/yzx9/swcgeom/commit/325ff1efe5cc662f7731003919f313cdd219caad))
+
+### BREAKING CHANGES
+
+- `analysis` plot sholl circles by default ([797934f](https://github.com/yzx9/swcgeom/commit/797934f120c0de266fc7d21038b5d17a1e2fbabc))
+- `images` folder do not move channel to first ([fd3a3cb](https://github.com/yzx9/swcgeom/commit/fd3a3cbea59f910ab31682c9272957cfea56eaa4))
+
+<br>
+
 ## **0.8.0**&emsp;<sub><sup>2023-04-18 ([3d2d660...bfee570](https://github.com/yzx9/swcgeom/compare/3d2d66034b269b1acf9a62cfeb8a8d3b85d1791a...bfee570d9989f10e5784323a60d2f06d5cf0877d?diff=split))</sup></sub>
 
 ### Features

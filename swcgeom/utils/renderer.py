@@ -1,6 +1,7 @@
 """Rendering related utils."""
 
-from typing import Dict, NamedTuple, Optional, Tuple
+from functools import cached_property
+from typing import Dict, Literal, Optional, Tuple, cast
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,17 +12,19 @@ from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
+from typing_extensions import Self
 
-from .transforms import (
+from swcgeom.utils.transforms import (
     Vec3f,
-    model_view_trasformation,
+    model_view_transformation,
     orthographic_projection_simple,
     to_homogeneous,
     translate3d,
 )
 
 __all__ = [
-    "Camera",
+    "CameraOptions",
+    "SimpleCamera",
     "palette",
     "draw_lines",
     "draw_direction_indicator",
@@ -29,12 +32,57 @@ __all__ = [
     "get_fig_ax",
 ]
 
-Camera = NamedTuple("Camera", position=Vec3f, look_at=Vec3f, up=Vec3f)
+CameraOption = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
+CameraPreset = Literal["xy", "yz", "zx", "yx", "zy", "xz"]
+CameraPresets: Dict[CameraPreset, Tuple[Vec3f, Vec3f, Vec3f]] = {
+    "xy": ((0.0, 0.0, 0.0), (+0.0, +0.0, -1.0), (+0.0, +1.0, +0.0)),
+    "yz": ((0.0, 0.0, 0.0), (-1.0, +0.0, +0.0), (+0.0, +0.0, +1.0)),
+    "zx": ((0.0, 0.0, 0.0), (+0.0, -1.0, +0.0), (+1.0, +0.0, +0.0)),
+    "yx": ((0.0, 0.0, 0.0), (+0.0, +0.0, -1.0), (+0.0, -1.0, +0.0)),
+    "zy": ((0.0, 0.0, 0.0), (-1.0, +0.0, +0.0), (+0.0, +0.0, -1.0)),
+    "xz": ((0.0, 0.0, 0.0), (+0.0, -1.0, +0.0), (-1.0, +0.0, +0.0)),
+}
+CameraOptions = CameraOption | CameraPreset
 
 
-# pylint: disable=too-few-public-methods
+class SimpleCamera:
+    """Simplest camera."""
+
+    def __init__(self, position: Vec3f, look_at: Vec3f, up: Vec3f):
+        self.position = position
+        self.look_at = look_at
+        self.up = up
+
+    @cached_property
+    def MV(self) -> npt.NDArray[np.float32]:  # pylint: disable=invalid-name
+        return model_view_transformation(self.position, self.look_at, self.up)
+
+    @cached_property
+    def P(self) -> npt.NDArray[np.float32]:  # pylint: disable=invalid-name
+        return orthographic_projection_simple()
+
+    @cached_property
+    def MVP(self) -> npt.NDArray[np.float32]:  # pylint: disable=invalid-name
+        return self.P.dot(self.MV)
+
+    @classmethod
+    def from_options(cls, camera: CameraOptions) -> Self:
+        if isinstance(camera, str):
+            return cls(*CameraPresets[camera])
+
+        if len(camera) == 2:
+            return cls((0, 0, 0), camera[0], camera[1])
+
+        if isinstance(camera[0], tuple):
+            return cls((0, 0, 0), cast(Vec3f, camera), (0, 1, 0))
+
+        return cls(*cast(Tuple[Vec3f, Vec3f, Vec3f], camera))
+
+
 class Palette:
     """The palette provides default and vaa3d color matching."""
+
+    # pylint: disable=too-few-public-methods
 
     default: Dict[int, str]
     vaa3d: Dict[int, str]
@@ -85,7 +133,7 @@ palette = Palette()
 
 
 def draw_lines(
-    ax: Axes, lines: npt.NDArray[np.floating], camera: Camera, **kwargs
+    ax: Axes, lines: npt.NDArray[np.floating], camera: SimpleCamera, **kwargs
 ) -> LineCollection:
     """Draw lines.
 
@@ -101,28 +149,22 @@ def draw_lines(
         Forwarded to `~matplotlib.collections.LineCollection`.
     """
 
+    T = camera.MVP
+    T = translate3d(*camera.position).dot(T)  # keep origin
+
     starts, ends = lines[:, 0], lines[:, 1]
     starts, ends = to_homogeneous(starts, 1), to_homogeneous(ends, 1)
-
-    # model/view transformation
-    T = model_view_trasformation(*camera)
-    T = translate3d(*camera[0]).dot(T)  # keep origin
-
-    # projection transformation
-    T = orthographic_projection_simple().dot(T)
-
-    starts = np.dot(T, starts.T).T[:, 0:2]
-    ends = np.dot(T, ends.T).T[:, 0:2]
+    starts, ends = np.dot(T, starts.T).T[:, 0:2], np.dot(T, ends.T).T[:, 0:2]
 
     edges = np.stack([starts, ends], axis=1)
     return ax.add_collection(LineCollection(edges, **kwargs))  # type: ignore
 
 
 def draw_direction_indicator(
-    ax: Axes, camera: Camera, loc: Tuple[float, float]
+    ax: Axes, camera: SimpleCamera, loc: Tuple[float, float]
 ) -> None:
     x, y = loc
-    direction = np.array(
+    direction = camera.MV.dot(
         [
             [1, 0, 0, 1],
             [0, 1, 0, 1],
@@ -130,9 +172,8 @@ def draw_direction_indicator(
             [0, 0, 0, 1],
         ]
     )
-    direction = model_view_trasformation(*camera).dot(direction)
 
-    ARROW_LENTH, TEXT_OFFSET = 0.05, 0.05
+    arrow_length, text_offset = 0.05, 0.05  # TODO: may still overlap
     text_colors = [["x", "red"], ["y", "green"], ["z", "blue"]]
     for (dx, dy, dz, _), (text, color) in zip(direction, text_colors):
         if 1 - abs(dz) < 1e-5:
@@ -141,8 +182,8 @@ def draw_direction_indicator(
         ax.arrow(
             x,
             y,
-            ARROW_LENTH * dx,
-            ARROW_LENTH * dy,
+            arrow_length * dx,
+            arrow_length * dy,
             head_length=0.02,
             head_width=0.01,
             color=color,
@@ -150,8 +191,8 @@ def draw_direction_indicator(
         )
 
         ax.text(
-            x + (ARROW_LENTH + TEXT_OFFSET) * dx,
-            y + (ARROW_LENTH + TEXT_OFFSET) * dy,
+            x + (arrow_length + text_offset) * dx,
+            y + (arrow_length + text_offset) * dy,
             text,
             color=color,
             transform=ax.transAxes,

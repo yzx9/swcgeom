@@ -2,8 +2,8 @@
 
 from typing import List
 
-from ..core import Population, Tree
-from .base import Transform
+from swcgeom.core import Population, Tree
+from swcgeom.transforms.base import Transform
 
 __all__ = ["PopulationTransform"]
 

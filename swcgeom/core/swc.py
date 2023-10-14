@@ -10,9 +10,25 @@ import numpy.typing as npt
 import scipy.sparse as sp
 from typing_extensions import Self
 
-from .swc_utils import SWCNames, get_names, read_swc, to_swc
+from swcgeom.core.swc_utils import (
+    SWCNames,
+    SWCTypes,
+    get_names,
+    get_types,
+    read_swc,
+    to_swc,
+)
 
-__all__ = ["swc_cols", "eswc_cols", "read_swc", "SWCLike", "DictSWC", "SWCTypeVar"]
+__all__ = [
+    "swc_cols",
+    "eswc_cols",
+    "SWCLike",
+    "DictSWC",
+    "SWCTypeVar",
+    # TODO: `read_swc` has been deprecated and will be removed in next
+    # version, import from `swcgeom.core.swc_utils` instead
+    "read_swc",
+]
 
 
 swc_names_default = get_names()
@@ -39,7 +55,13 @@ class SWCLike(ABC):
     """ABC of SWC."""
 
     source: str = ""
+    comments: List[str] = []
     names: SWCNames
+    types: SWCTypes
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.types = get_types()
 
     def __len__(self) -> int:
         return self.number_of_nodes()
@@ -78,7 +100,7 @@ class SWCLike(ABC):
 
     def xyzw(self) -> npt.NDArray[np.float32]:
         """Get the homogeneous coordinates of shape(n_sample, 4)."""
-        w = np.zeros_like(self.x())
+        w = np.ones_like(self.x())
         return np.stack([self.x(), self.y(), self.z(), w], axis=1)
 
     def xyzr(self) -> npt.NDArray[np.float32]:
@@ -119,10 +141,24 @@ class SWCLike(ABC):
         *,
         extra_cols: Optional[List[str]] = None,
         source: bool | str = True,
+        comments: bool = True,
         id_offset: int = 1,
     ) -> str | None:
         """Write swc file."""
-        it = self._to_swc(extra_cols=extra_cols, source=source, id_offset=id_offset)
+        data = []
+        if source is not False:
+            if not isinstance(source, str):
+                source = self.source if self.source else "Unknown"
+            data.append(f"source: {source}")
+            data.append("")
+
+        if comments is True:
+            data.extend(self.comments)
+
+        it = to_swc(
+            self.get_ndata, comments=data, extra_cols=extra_cols, id_offset=id_offset
+        )
+
         if fname is None:
             return "".join(it)
 
@@ -130,14 +166,6 @@ class SWCLike(ABC):
             f.writelines(it)
 
         return None
-
-    def _to_swc(self, source: bool | str, **kwargs) -> Iterable[str]:
-        if source is not False:
-            if not isinstance(source, str):
-                source = self.source if self.source else "Unknown"
-            yield f"# source: {source}\n"
-
-        yield from to_swc(self.get_ndata, **kwargs)
 
     # fmt: off
     @overload
@@ -165,18 +193,36 @@ class SWCLike(ABC):
         return self.to_swc(fname, extra_cols=extra_cols, **kwargs)  # type: ignore
 
 
+SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
+
+
 class DictSWC(SWCLike):
     """SWC implementation on dict."""
 
     ndata: Dict[str, npt.NDArray]
 
-    def __init__(self, *, names: Optional[SWCNames] = None, **kwargs: npt.NDArray):
+    def __init__(
+        self,
+        *,
+        source: str = "",
+        comments: Optional[Iterable[str]] = None,
+        names: Optional[SWCNames] = None,
+        **kwargs: npt.NDArray,
+    ):
         super().__init__()
+        self.source = source
+        self.comments = list(comments) if comments is not None else []
         self.names = get_names(names)
         self.ndata = kwargs
 
     def keys(self) -> Iterable[str]:
         return self.ndata.keys()
+
+    def values(self) -> Iterable[npt.NDArray[Any]]:
+        return self.ndata.values()
+
+    def items(self) -> Iterable[Tuple[str, npt.NDArray[Any]]]:
+        return self.ndata.items()
 
     def get_ndata(self, key: str) -> npt.NDArray[Any]:
         return self.ndata[key]
@@ -184,6 +230,3 @@ class DictSWC(SWCLike):
     def copy(self) -> Self:
         """Make a copy."""
         return deepcopy(self)
-
-
-SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)

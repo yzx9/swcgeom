@@ -1,11 +1,11 @@
 """Neuron trees."""
 
-from . import swc_utils  # do not export all things from swc_utils
-from .branch import *
-from .branch_tree import *
-from .node import *
-from .path import *
-from .population import *
-from .swc import *
-from .tree import *
-from .tree_utils import *
+from swcgeom.core import swc_utils
+from swcgeom.core.branch import *
+from swcgeom.core.branch_tree import *
+from swcgeom.core.node import *
+from swcgeom.core.path import *
+from swcgeom.core.population import *
+from swcgeom.core.swc import *
+from swcgeom.core.tree import *
+from swcgeom.core.tree_utils import *

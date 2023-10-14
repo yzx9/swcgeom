@@ -5,7 +5,7 @@ Refs: https://iquilezles.org/articles/distfunctions/
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Iterable, List, Tuple
+from typing import Iterable, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -72,7 +72,8 @@ class SDF(ABC):
 class SDFCompose(SDF):
     """Compose multiple SDFs."""
 
-    def __init__(self, sdfs: List[SDF]) -> None:
+    def __init__(self, sdfs: Iterable[SDF]) -> None:
+        sdfs = list(sdfs)
         assert len(sdfs) != 0, "must combine at least one SDF"
 
         if len(sdfs) == 1:

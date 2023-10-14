@@ -5,8 +5,8 @@ from typing import Generic, Iterable, Iterator, List, overload
 import numpy as np
 import numpy.typing as npt
 
-from .node import Node
-from .swc import DictSWC, SWCLike, SWCTypeVar
+from swcgeom.core.node import Node
+from swcgeom.core.swc import DictSWC, SWCLike, SWCTypeVar
 
 __all__ = ["Path"]
 
@@ -28,6 +28,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         self.attach = attach
         self.names = attach.names
         self.idx = np.array(idx, dtype=np.int32)
+        self.source = self.attach.source
 
     def __iter__(self) -> Iterator[Node]:
         return (self.get_node(i) for i in range(len(self)))
@@ -79,7 +80,9 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         """Detach from current attached object."""
         # pylint: disable-next=consider-using-dict-items
         attact = DictSWC(
-            **{k: self.get_ndata(k) for k in self.keys()}, names=self.names
+            **{k: self.get_ndata(k) for k in self.keys()},
+            source=self.source,
+            names=self.names,
         )
         attact.ndata[self.names.id] = self.id()
         attact.ndata[self.names.pid] = self.pid()

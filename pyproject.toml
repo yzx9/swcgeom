@@ -5,27 +5,34 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "swcgeom"
 dynamic = ["version"]
-description = "A neuron geometry library for swc format"
+description = "Neuron geometry library for swc format"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-  { name = "yzx9", email = "yuan.zx@outlook.com" },
-]
-keywords = [ "neuron", "swc", "geom" ]
-license = {text = "CC4.0 BY-NC-SA"}
+authors = [{ name = "yzx9", email = "yuan.zx@outlook.com" }]
+keywords = ["neuronscience", "neuron", "neuroanatomy", "neuron-morphology"]
+license = { text = "CC4.0 BY-NC-SA" }
 dependencies = [
-  "beautifulsoup4>=4.11.1",
-  "imagecodecs>=2023.3.16",
-  "matplotlib>=3.5.2",
-  "numpy>=1.22.3",
-  "pandas>=1.4.2",
-  "pynrrd>=1.0.0",
-  "scipy>=1.9.1",
-  "seaborn>=0.12.0",
-  "tifffile>=2022.8.12",
-  "tqdm>=4.46.1",
-  "typing_extensions>=4.4.0",
-  "urllib3>=1.26.0",
+    "imagecodecs>=2023.3.16",
+    "matplotlib>=3.5.2",
+    "numpy>=1.22.3",
+    "pandas>=1.4.2",
+    "pynrrd>=1.0.0",
+    "scipy>=1.9.1",
+    "seaborn>=0.12.0",
+    "tifffile>=2022.8.12",
+    "typing_extensions>=4.4.0",
+    "v3d-py-helper-0.1.0",
+]
+
+[project.optional-dependencies]
+all = [
+    "beautifulsoup4>=4.11.1",
+    "certifi>=2023.5.7",
+    "chardet>=5.2.0",
+    "lmdb>=1.4.1",
+    "pycurl>=7.0.0",
+    "tqdm>=4.46.1",
+    "urllib3>=1.26.0",
 ]
 
 [project.urls]

@@ -22,13 +22,14 @@ import numpy.typing as npt
 import pandas as pd
 from typing_extensions import Self
 
-from ..utils import padding1d
-from .branch import Branch
-from .node import Node
-from .path import Path
-from .segment import Segment, Segments
-from .swc import DictSWC, eswc_cols
-from .swc_utils import SWCNames, get_names, read_swc, traverse
+from swcgeom.core.branch import Branch
+from swcgeom.core.node import Node
+from swcgeom.core.path import Path
+from swcgeom.core.segment import Segment, Segments
+from swcgeom.core.swc import DictSWC, eswc_cols
+from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, traverse
+from swcgeom.core.tree_utils_impl import get_subtree_impl
+from swcgeom.utils import PathOrIO, padding1d
 
 __all__ = ["Tree"]
 
@@ -68,12 +69,20 @@ class Tree(DictSWC):
 
             return Tree.Branch(self.attach, [n.id for n in ns])
 
-        def is_soma(self) -> bool:
-            return self.id == 0
-
         def radial_distance(self) -> float:
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
+
+        def subtree(self) -> "Tree":
+            """Get subtree from node."""
+            n_nodes, ndata, source, names = get_subtree_impl(self.attach, self.id)
+            return Tree(n_nodes, **ndata, source=source, names=names)
+
+        def is_root(self) -> bool:
+            return self.parent() is None
+
+        def is_soma(self) -> bool:  # TODO: support multi soma, e.g. 3 points
+            return self.type == self.attach.types.soma and self.is_root()
 
         # fmt: off
         @overload
@@ -119,6 +128,8 @@ class Tree(DictSWC):
         z: Optional[npt.NDArray[np.float32]] = None,
         r: Optional[npt.NDArray[np.float32]] = None,
         pid: Optional[npt.NDArray[np.int32]] = None,
+        source: str = "",
+        comments: Optional[Iterable[str]] = None,
         names: Optional[SWCNames] = None,
         **kwargs: npt.NDArray,
     ) -> None:
@@ -135,7 +146,9 @@ class Tree(DictSWC):
             names.r: padding1d(n_nodes, r, padding_value=1),
             names.pid: padding1d(n_nodes, pid, dtype=np.int32),
         }
-        super().__init__(**ndata, **kwargs, names=names)
+        super().__init__(
+            **ndata, **kwargs, source=source, comments=comments, names=names
+        )
 
     def __iter__(self) -> Iterator[Node]:
         return (self[i] for i in range(len(self)))
@@ -177,8 +190,13 @@ class Tree(DictSWC):
     def node(self, idx: int | np.integer) -> Node:
         return self.Node(self, idx)
 
-    def soma(self) -> Node:
-        return self.node(0)
+    def soma(self, type_check: bool = True) -> Node:
+        """Get soma of neuron."""
+        # TODO: find soma, see also: https://neuromorpho.org/myfaq.jsp
+        n = self.node(0)
+        if type_check and n.type != self.types.soma:
+            raise ValueError(f"no soma found in: {self.source}")
+        return n
 
     def get_bifurcations(self) -> List[Node]:
         """Get all node of bifurcations."""
@@ -242,6 +260,16 @@ class Tree(DictSWC):
         paths = self.traverse(enter=assign_path, leave=collect_path)
         return [self.Path(self, idx) for idx in paths]
 
+    def get_neurites(self, type_check: bool = True) -> Iterable[Self]:
+        """Get neurites from soma."""
+        return (n.subtree() for n in self.soma(type_check).children())
+
+    def get_dendrites(self, type_check: bool = True) -> Iterable[Self]:
+        """Get dendrites."""
+        types = [self.types.apical_dendrite, self.types.basal_dendrite]
+        children = self.soma(type_check).children()
+        return (n.subtree() for n in children if n.type in types)
+
     # fmt: off
     @overload
     def traverse(self, *,
@@ -286,18 +314,26 @@ class Tree(DictSWC):
 
     @classmethod
     def from_data_frame(
-        cls, df: pd.DataFrame, source: str = "", *, names: Optional[SWCNames] = None
-    ) -> "Tree":
+        cls,
+        df: pd.DataFrame,
+        source: str = "",
+        *,
+        comments: Optional[Iterable[str]] = None,
+        names: Optional[SWCNames] = None,
+    ) -> Self:
         """Read neuron tree from data frame."""
         names = get_names(names)
         tree = Tree(
-            df.shape[0], **{k: df[k].to_numpy() for k in names.cols()}, names=names
+            df.shape[0],
+            **{k: df[k].to_numpy() for k in names.cols()},
+            source=source,
+            comments=comments,
+            names=names,
         )
-        tree.source = source
         return tree
 
     @classmethod
-    def from_swc(cls, swc_file: str, **kwargs) -> Self:
+    def from_swc(cls, swc_file: PathOrIO, **kwargs) -> Self:
         """Read neuron tree from swc file.
 
         See Also
@@ -305,9 +341,13 @@ class Tree(DictSWC):
         ~swcgeom.core.swc_utils.read_swc
         """
 
-        df = read_swc(swc_file, **kwargs)
-        source = os.path.abspath(swc_file)
-        return cls.from_data_frame(df, source)
+        try:
+            df, comments = read_swc(swc_file, **kwargs)
+        except Exception as e:  # pylint: disable=broad-except
+            raise ValueError(f"fails to read swc: {swc_file}") from e
+
+        source = os.path.abspath(swc_file) if isinstance(swc_file, str) else ""
+        return cls.from_data_frame(df, source=source, comments=comments)
 
     @classmethod
     def from_eswc(

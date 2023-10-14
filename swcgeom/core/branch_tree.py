@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Self
 
-from .branch import Branch
-from .swc_utils import to_sub_topology
-from .tree import Tree
+from swcgeom.core.branch import Branch
+from swcgeom.core.swc_utils import to_sub_topology
+from swcgeom.core.tree import Tree
 
 __all__ = ["BranchTree"]
 
@@ -45,12 +45,11 @@ class BranchTree(Tree):
         ndata = {k: tree.get_ndata(k)[id_map].copy() for k in tree.keys()}
         ndata.update(id=new_id, pid=new_pid)
 
-        branch_tree = cls(n_nodes, **ndata, names=tree.names)
-        branch_tree.source = tree.source  # TODO
+        branch_tree = cls(n_nodes, **ndata, source=tree.source, names=tree.names)
 
         branch_tree.branches = {}
         for br in branches:
-            idx = np.nonzero(id_map == br[0].id)[0].item()
+            idx = np.nonzero(id_map == br[0].id)[0][0].item()
             branch_tree.branches.setdefault(idx, [])
             branch_tree.branches[idx].append(br.detach())
 
