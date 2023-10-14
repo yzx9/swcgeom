@@ -1,6 +1,7 @@
 """Check common """
 
 import warnings
+from collections import defaultdict
 from typing import Optional
 
 import numpy as np
@@ -8,6 +9,7 @@ import pandas as pd
 
 from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names, traverse
 from swcgeom.utils import DisjointSetUnion
+
 
 __all__ = [
     "is_single_root",
@@ -28,13 +30,11 @@ def is_single_root(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> boo
 def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:
     """Check is it a bifurcate topology."""
 
-    children = {}
+    children = defaultdict(list)
     for idx, pid in zip(*topology):
-        s = children.get(pid, [])
-        s.append(idx)
-        children[pid] = s
+        children[pid].append(idx)
 
-    root = children.get(-1, [])
+    root = children[-1]
     for k, v in children.items():
         if len(v) > 1 and (not exclude_root or k in root):
             return False
