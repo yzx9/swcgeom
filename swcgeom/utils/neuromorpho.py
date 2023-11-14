@@ -97,14 +97,19 @@ URL_CNG_VERSION = (
 )
 API_NEURON_MAX_SIZE = 500
 
-# about 1.1 GB and 18 GB in version 8.5.25 released in 2023-08-01
 KB = 1024
 MB = 1024 * KB
 GB = 1024 * MB
+
+# Test version: 8.5.25 (2023-08-01)
+# About 1.1 GB and 18 GB
+# No ETAs for future version
 SIZE_METADATA = 2 * GB
 SIZE_DATA = 20 * GB
 
 # fmt:off
+# Test version: 8.5.25 (2023-08-01)
+# No ETAs for future version
 invalid_ids = [
     # bad file
     81062, 86970, 79791,
@@ -171,7 +176,7 @@ def neuromorpho_convert_lmdb_to_swc(
     See Also
     --------
     neuromorpho_is_valid :
-        Recommend filter function, use `where=neuromorpho_is_valid`
+        Recommended filter function, try `where=neuromorpho_is_valid`
     """
     import lmdb
     from tqdm import tqdm
