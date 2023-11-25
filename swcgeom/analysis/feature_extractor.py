@@ -288,9 +288,11 @@ class PopulationFeatureExtractor(FeatureExtractor):
         v = np.stack([padding1d(len_max, v, dtype=np.float32) for v in vals])
         return v
 
-    def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
+    def _get_sholl_impl(
+        self, steps: int = 20, **kwargs
+    ) -> Tuple[NDArrayf32, NDArrayf32]:
         rmax = max(t.sholl.rmax for t in self._features)
-        rs = Sholl.get_rs(rmax=rmax, steps=20)
+        rs = Sholl.get_rs(rmax=rmax, steps=steps)
         vals = self._get_impl("sholl", steps=rs, **kwargs)
         return vals, rs
 
@@ -360,10 +362,12 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
         return out
 
-    def _get_sholl_impl(self, **kwargs) -> Tuple[NDArrayf32, NDArrayf32]:
+    def _get_sholl_impl(
+        self, steps: int = 20, **kwargs
+    ) -> Tuple[NDArrayf32, NDArrayf32]:
         rmaxs = chain.from_iterable((t.sholl.rmax for t in p) for p in self._features)
         rmax = max(rmaxs)
-        rs = Sholl.get_rs(rmax=rmax, steps=20)
+        rs = Sholl.get_rs(rmax=rmax, steps=steps)
         vals = self._get_impl("sholl", steps=rs, **kwargs)
         return vals, rs
 
@@ -408,7 +412,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
         return ax
 
 
-def extract_feature(obj: Tree | Population) -> FeatureExtractor:
+def extract_feature(obj: Tree | Population | Populations) -> FeatureExtractor:
     if isinstance(obj, Tree):
         return TreeFeatureExtractor(obj)
 

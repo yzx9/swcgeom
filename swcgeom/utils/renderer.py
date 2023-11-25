@@ -9,7 +9,7 @@ import numpy.typing as npt
 from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.collections import LineCollection, PatchCollection
-from matplotlib.colors import Normalize
+from matplotlib.colors import Colormap, Normalize
 from matplotlib.figure import Figure
 from matplotlib.patches import Circle
 from typing_extensions import Self
@@ -208,14 +208,15 @@ def draw_circles(
     *,
     y_min: Optional[float] = None,
     y_max: Optional[float] = None,
-    cmap: str = "viridis",
+    cmap: str | Colormap = "viridis",
 ) -> PatchCollection:
     """Draw a sequential of circles."""
+
     y_min = y.min() if y_min is None else y_min
     y_max = y.max() if y_max is None else y_max
     norm = Normalize(y_min, y_max)
 
-    color_map = cm.get_cmap(name=cmap)
+    color_map = cmap if isinstance(cmap, Colormap) else cm.get_cmap(name=cmap)
     colors = color_map(norm(y))
 
     circles = [

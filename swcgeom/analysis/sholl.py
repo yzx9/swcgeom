@@ -42,9 +42,12 @@ class Sholl:
         step: Optional[float] = None,
     ) -> None:
         tree = Tree.from_swc(tree) if isinstance(tree, str) else tree
-        self.tree = TranslateOrigin.transform(tree)  # shift
-        self.rs = np.linalg.norm(self.tree.get_segments().xyz(), axis=2)
-        self.rmax = self.rs.max()
+        try:
+            self.tree = TranslateOrigin.transform(tree)  # shift
+            self.rs = np.linalg.norm(self.tree.get_segments().xyz(), axis=2)
+            self.rmax = self.rs.max()
+        except Exception as e:
+            raise ValueError(f"invalid tree: {tree.source or ''}") from e
 
         if step is not None:
             warnings.warn(
@@ -96,6 +99,7 @@ class Sholl:
         **kwargs :
             Forwarding to plot method.
         """
+
         if plot_type is not None:
             warnings.warn(
                 "`plot_type` has been renamed to `kind` since v0.5.0, "
