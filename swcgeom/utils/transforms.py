@@ -212,6 +212,31 @@ def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
     Parameters
     ----------
     xyz : ArrayLike
+        Coordinate of shape (..., 3)
+    w : float
+        w of homogeneous coordinate, 1 for dot, 0 for vector.
+
+    Returns
+    -------
+    xyz4 : npt.NDArray[np.float32]
+        Array of shape (..., 4)
+    """
+    xyz = np.array(xyz)
+    if xyz.ndim == 1:
+        return _to_homogeneous(xyz[None, ...], w)[0]
+
+    shape = xyz.shape[:-1]
+    xyz = xyz.reshape(-1, xyz.shape[-1])
+    xyz4 = _to_homogeneous(xyz, w).reshape(*shape, 4)
+    return xyz4
+
+
+def _to_homogeneous(xyz: npt.NDArray, w: float) -> npt.NDArray[np.float32]:
+    """Fill xyz to homogeneous coordinates.
+
+    Parameters
+    ----------
+    xyz : npt.NDArray
         Coordinate of shape (N, 3)
     w : float
         w of homogeneous coordinate, 1 for dot, 0 for vector.
@@ -221,10 +246,10 @@ def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
     xyz4 : npt.NDArray[np.float32]
         Array of shape (N, 4)
     """
-    xyz = np.array(xyz)
     if xyz.shape[1] == 4:
         return xyz
 
+    assert xyz.shape[1] == 3
     filled = np.full((xyz.shape[0], 1), fill_value=w)
     xyz4 = np.concatenate([xyz, filled], axis=1)
     return xyz4
