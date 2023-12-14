@@ -7,3 +7,4 @@ from swcgeom.analysis.path_features import *
 from swcgeom.analysis.sholl import *
 from swcgeom.analysis.trunk import *
 from swcgeom.analysis.visualization import *
+from swcgeom.analysis.volume import *
