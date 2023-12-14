@@ -25,6 +25,7 @@ from swcgeom.analysis.node_features import (
 )
 from swcgeom.analysis.path_features import PathFeatures
 from swcgeom.analysis.sholl import Sholl
+from swcgeom.analysis.volume import get_volume
 from swcgeom.core import Population, Populations, Tree
 from swcgeom.utils import padding1d
 
@@ -32,6 +33,7 @@ __all__ = ["Feature", "extract_feature"]
 
 Feature = Literal[
     "length",
+    "volume",
     "sholl",
     # node
     "node_count",
@@ -54,7 +56,7 @@ Feature = Literal[
 NDArrayf32 = npt.NDArray[np.float32]
 FeatAndKwargs = Feature | Tuple[Feature, Dict[str, Any]]
 
-Feature1D = set(["length", "node_count", "bifurcation_count", "tip_count"])
+Feature1D = set(["length", "volume", "node_count", "bifurcation_count", "tip_count"])
 
 
 class Features:
@@ -104,6 +106,9 @@ class Features:
 
     def get_length(self, **kwargs) -> NDArrayf32:
         return np.array([self.tree.length(**kwargs)], dtype=np.float32)
+
+    def get_volume(self, **kwargs) -> NDArrayf32:
+        return np.array([get_volume(self.tree, **kwargs)], dtype=np.float32)
 
     def get_sholl(self, **kwargs) -> NDArrayf32:
         return self.sholl.get(**kwargs).astype(np.float32)
