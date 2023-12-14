@@ -1,5 +1,30 @@
 # Changelog
 
+## **0.13.0**&emsp;<sub><sup>2023-12-14 ([e2add59...06239bd](https://github.com/yzx9/swcgeom/compare/e2add59652bfc02d802f6770ea2c5fbc3fd7d729...06239bd129e6fab329ec80326352b48049fb504e?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+* import sholl plot ([b03b45c](https://github.com/yzx9/swcgeom/commit/b03b45c4f20f2ed57263b1c2398316533b45b837))
+* calc volume of tree \(close \#9\) ([a5004da](https://github.com/yzx9/swcgeom/commit/a5004dab71e71e68fd4a512757c9310f557878cf))
+
+##### `core`
+* check if it has a cyclic \(\#1\) ([e2add59](https://github.com/yzx9/swcgeom/commit/e2add59652bfc02d802f6770ea2c5fbc3fd7d729))
+
+##### `utils`
+* transform batch of vec3 to vec4 ([d2d660c](https://github.com/yzx9/swcgeom/commit/d2d660ca53b9886a81b02193ea77f76da4620ffa))
+
+### Bug Fixes
+
+##### `utils`
+* should support \`StringIO\` ([de439db](https://github.com/yzx9/swcgeom/commit/de439dba00ce7407d4ae18c9427eab1e5af4d95e))
+
+### Performance Improvements
+* improve dsu ([8b414c3](https://github.com/yzx9/swcgeom/commit/8b414c37f4fc3f4ded9c8b19eb8ee0ad52dedd53))
+
+<br>
+
+
 ## **0.12.0**&emsp;<sub><sup>2023-10-12 ([d9ba943...0824e9b](https://github.com/yzx9/swcgeom/compare/d9ba9433735c69edf979013632278e5f498a6fe0...0824e9b4110f820cd11c469ca6e319c1b2f14145?diff=split))</sup></sub>
 
 ### Features
