@@ -35,7 +35,7 @@ def read_swc(
 
     Parameters
     ----------
-    swc_file : str
+    swc_file : PathOrIO
         Path of swc file, the id should be consecutively incremented.
     extra_cols : Iterable[str], optional
         Read more cols in swc file.
@@ -142,7 +142,7 @@ def parse_swc(
 
     Parameters
     ----------
-    fname : str
+    fname : PathOrIO
     names : SWCNames
     extra_cols : list of str, optional
     encoding : str | 'detect', default `utf-8`
