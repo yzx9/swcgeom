@@ -11,12 +11,12 @@ pip install swcgeom[all]
 """
 
 import warnings
-from io import BytesIO, TextIOWrapper
+from io import BytesIO, TextIOBase, TextIOWrapper
 from typing import Literal
 
 __all__ = ["FileReader", "PathOrIO"]
 
-PathOrIO = int | str | bytes | BytesIO | TextIOWrapper
+PathOrIO = int | str | bytes | BytesIO | TextIOBase
 
 
 class FileReader:
@@ -32,7 +32,7 @@ class FileReader:
 
         Parameters
         ----------
-        fname : str
+        fname : PathOrIO
         encoding : str | 'detect', default `utf-8`
             The name of the encoding used to decode the file. If is
             `detect`, we will try to detect the character encoding.
@@ -40,8 +40,9 @@ class FileReader:
             Used for detect character endocing, raising warning when
             parsing with low confidence.
         """
+        # TODO: support StringIO
         self.fname, self.fb, self.f = "", None, None
-        if isinstance(fname, TextIOWrapper):
+        if isinstance(fname, TextIOBase):
             self.f = fname
             encoding = fname.encoding  # skip detect
         elif isinstance(fname, BytesIO):
@@ -54,7 +55,7 @@ class FileReader:
         self.encoding = encoding
         self.kwargs = kwargs
 
-    def __enter__(self) -> TextIOWrapper:
+    def __enter__(self) -> TextIOBase:
         if isinstance(self.fb, BytesIO):
             self.f = TextIOWrapper(self.fb, encoding=self.encoding)
         elif self.f is None:
@@ -71,7 +72,7 @@ class FileReader:
 def detect_encoding(fname: PathOrIO, *, low_confidence: float = 0.9) -> str:
     import chardet
 
-    if isinstance(fname, TextIOWrapper):
+    if isinstance(fname, TextIOBase):
         return fname.encoding
     elif isinstance(fname, BytesIO):
         data = fname.read()
