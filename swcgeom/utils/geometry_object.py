@@ -292,7 +292,6 @@ def _project_point_on_line(
     A = np.array(point_a)
     n = np.array(direction_vector)
     P = np.array(point_p)
-    print(A.dtype, n.dtype, P.dtype)
 
     AP = P - A
     projection = A + np.dot(AP, n) / np.dot(n, n) * n

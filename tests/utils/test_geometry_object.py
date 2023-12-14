@@ -83,16 +83,6 @@ def test_intersect_volume_sphere_sphere():
     ), "Test Failed: Non-intersecting spheres should have zero intersecting volume"
 
 
-def test_intersect_volume_sphere_frustum_cone_1():
-    # The height of the frustum is bigger than the sum of two sphere radius
-    frustum1 = GeomFrustumCone((0.0, 0.0, 0.0), 4, (0.0, 0.0, 8.0), 2)
-    sphere1a = GeomSphere((0.0, 0.0, 0.0), 4)
-    sphere1b = GeomSphere((0.0, 0.0, 8.0), 2)
-
-    volume1a = sphere1a.get_intersect_volume(frustum1)
-    print(volume1a)
-
-
 def test_intersect_volume_sphere_frustum_cone():
     # The height of the frustum is bigger than the sum of two sphere radius
     frustum1 = GeomFrustumCone((0.0, 0.0, 0.0), 4, (0.0, 0.0, 8.0), 2)
