@@ -9,4 +9,5 @@ from swcgeom.utils.neuromorpho import *
 from swcgeom.utils.numpy_helper import *
 from swcgeom.utils.renderer import *
 from swcgeom.utils.sdf import *
+from swcgeom.utils.solid_geometry import *
 from swcgeom.utils.transforms import *

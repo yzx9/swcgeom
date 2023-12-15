@@ -56,7 +56,6 @@ def test_spherical_cap_volume():
 
 
 def test_intersect_volume_sphere_sphere():
-    # Create spheres
     sphere1 = GeomSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
     sphere2 = GeomSphere((3.0, 0.0, 0.0), 2)  # Center at (3,0,0), radius 2
     sphere3 = GeomSphere((0.0, 0.0, 0.0), 1)  # Center at origin, radius 1
@@ -128,3 +127,10 @@ def test_intersect_volume_sphere_frustum_cone():
     assert np.isclose(
         volume3b, excepted_volume3b
     ), "Test Failed: Expected volume should be half of the sphere volume"
+
+    # The edge case where the frustum is like a cylinder
+    sphere = GeomSphere((391.58, 324.97, -12.89), 0.493507)
+    frustum_cone = GeomFrustumCone(
+        (391.58, 324.97, -12.89), 0.493507, (388.07, 320.41, -13.57), 0.493506
+    )
+    assert sphere.get_intersect_volume(frustum_cone) > 0
