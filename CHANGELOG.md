@@ -1,5 +1,20 @@
 # Changelog
 
+## **0.13.1**&emsp;<sub><sup>2023-12-15 ([0b5b45a...45b4040](https://github.com/yzx9/swcgeom/compare/0b5b45a7997a95298075635d32552dcd91002e4a...45b4040394b3d6a5636d069b5442945d9134b428?diff=split))</sup></sub>
+
+### Bug Fixes
+* import missing volume related file ([0b5b45a](https://github.com/yzx9/swcgeom/commit/0b5b45a7997a95298075635d32552dcd91002e4a))
+
+##### `analysis`
+* add volume between spheres ([b8c6dfe](https://github.com/yzx9/swcgeom/commit/b8c6dfe5d6cf53f35dbe8fccfb47d19a2b802753))
+
+##### `utils`
+* remove debug printting ([dd1569e](https://github.com/yzx9/swcgeom/commit/dd1569e5a02fef185050e2640ba583b3da60e3db))
+* solve real values only ([2f7459b](https://github.com/yzx9/swcgeom/commit/2f7459b06b6a1f3b284f7bbec688ac871d232d1a))
+
+<br>
+
+
 ## **0.13.0**&emsp;<sub><sup>2023-12-14 ([e2add59...06239bd](https://github.com/yzx9/swcgeom/compare/e2add59652bfc02d802f6770ea2c5fbc3fd7d729...06239bd129e6fab329ec80326352b48049fb504e?diff=split))</sup></sub>
 
 ### Features
