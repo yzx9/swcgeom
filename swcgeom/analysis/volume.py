@@ -65,17 +65,3 @@ def get_volume(tree: Tree):
 
     tree.traverse(leave=leave)
     return volume
-
-
-if __name__ == "__main__":
-    from io import StringIO
-
-    swc = """
-1 1 0 0 0 1 -1
-2 1 2 0 0 1  1
-3 1 4 0 0 1  2
-"""
-
-    tree = Tree.from_swc(StringIO(swc))
-    volume = get_volume(tree)
-    print(volume)
