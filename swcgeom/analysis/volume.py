@@ -2,6 +2,8 @@
 
 from typing import List
 
+import numpy as np
+
 from swcgeom.core import Tree
 from swcgeom.utils import GeomFrustumCone, GeomSphere
 
@@ -34,20 +36,19 @@ def get_volume(tree: Tree):
     structures, or frustums, with varying radii at their top and bottom
     surfaces.
 
-    More representation methods will be supported in the future.
+    We welcome additional representation methods through pull requests.
     """
     volume = 0.0
 
-    def leave(node: Tree.Node, children: List[GeomSphere]) -> GeomSphere:
-        sphere = GeomSphere(node.xyz(), node.r)
-        frustum_cones = [
-            GeomFrustumCone(node.xyz(), node.r, c.center, c.radius) for c in children
-        ]
+    def leave(n: Tree.Node, children: List[GeomSphere]) -> GeomSphere:
+        sphere = GeomSphere(n.xyz(), n.r)
+        cones = [GeomFrustumCone(n.xyz(), n.r, c.center, c.radius) for c in children]
 
         v = sphere.get_volume()
-        v += sum(fc.get_volume() for fc in frustum_cones)
-        v -= sum(sphere.get_intersect_volume(fc) for fc in frustum_cones)
-        v -= sum(s.get_intersect_volume(fc) for s, fc in zip(children, frustum_cones))
+        v += sum(fc.get_volume() for fc in cones)
+        v -= sum(sphere.get_intersect_volume(fc) for fc in cones)
+        v -= sum(s.get_intersect_volume(fc) for s, fc in zip(children, cones))
+        v += sum(s.get_intersect_volume(sphere) for s in children)
 
         # TODO
         # remove volume of intersection between frustum cones
