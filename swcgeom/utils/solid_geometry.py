@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import numpy as np
 import numpy.typing as npt
-from sympy import Eq, solve, symbols
 
 __all__ = [
     "find_unit_vector_on_plane",
@@ -31,26 +30,32 @@ def find_sphere_line_intersection(
     line_point_a: npt.NDArray,
     line_point_b: npt.NDArray,
 ) -> List[Tuple[float, npt.NDArray[np.float64]]]:
-    x1, y1, z1 = sphere_center
-    x2, y2, z2 = line_point_a
-    x3, y3, z3 = line_point_b
-    t = symbols("t", real=True)
+    A = np.array(line_point_a)
+    B = np.array(line_point_b)
+    C = np.array(sphere_center)
 
-    # line
-    x = x2 + t * (x3 - x2)
-    y = y2 + t * (y3 - y2)
-    z = z2 + t * (z3 - z2)
+    D = B - A  # line direction vector
+    f = A - C  # line to sphere center
 
-    # sphere
-    sphere_eq = Eq((x - x1) ** 2 + (y - y1) ** 2 + (z - z1) ** 2, sphere_radius**2)
+    # solve: a*t^2 + b*t + c = 0
+    a = np.dot(D, D)
+    b = 2 * np.dot(f, D)
+    c = np.dot(f, f) - sphere_radius**2
+    discriminant = b**2 - 4 * a * c
 
-    # solve
-    t_values = solve(sphere_eq, t)
-    intersections = [
-        np.array([x.subs(t, t_val), y.subs(t, t_val), z.subs(t, t_val)], dtype=float)
-        for t_val in t_values
-    ]
-    return list(zip(t_values, intersections))
+    if discriminant < 0:
+        return []  # no intersection
+
+    if discriminant == 0:
+        t = -b / (2 * a)
+        p = A + t * D
+        return [(t, p)]  # single intersection, a tangent
+
+    t1 = (-b - np.sqrt(discriminant)) / (2 * a)
+    t2 = (-b + np.sqrt(discriminant)) / (2 * a)
+    p1 = A + t1 * D
+    p2 = A + t2 * D
+    return [(t1, p1), (t2, p2)]
 
 
 def project_point_on_line(
