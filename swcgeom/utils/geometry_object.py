@@ -211,13 +211,13 @@ def calc_intersect_volume_sphere_frustum_cone(
 
     # Fast-Path: The surface of the frustum concentric with the sphere
     # is the surface with smaller radius
-    if r2 >= r1:
+    if r2 - r1 >= -eps:  # r2 >= r1:
+        v_himisphere = GeomSphere.calc_volume_spherical_cap(r1, r1)
         if h >= r1:
             # The hemisphere is completely inside the frustum cone
-            return GeomSphere.calc_volume_spherical_cap(r1, r1)
+            return v_himisphere
 
         # The frustum cone is lower than the hemisphere
-        v_himisphere = GeomSphere.calc_volume_spherical_cap(r1, r1)
         v_cap = GeomSphere.calc_volume_spherical_cap(r1, r1 - h)
         return v_himisphere - v_cap
 
@@ -225,6 +225,11 @@ def calc_intersect_volume_sphere_frustum_cone(
     v = _find_unit_vector_on_plane(up)
 
     intersections = _find_sphere_line_intersection(c1, r1, c1 + r1 * v, c2 + r2 * v)
+    if len(intersections) == 0:
+        # Tricky case: Since the intersection point not found with
+        # numerical precision, we can simply assume that there are two
+        # intersection points and at the same position
+        intersections = [(0, c1 + r1 * v), (0, c1 + r1 * v)]
     assert len(intersections) == 2
     t, p = max(intersections, key=lambda x: x[0])
 
@@ -248,12 +253,14 @@ def calc_intersect_volume_sphere_frustum_cone(
 
 def _find_unit_vector_on_plane(normal_vec3: npt.NDArray) -> npt.NDArray:
     r = np.random.rand(3)
+    r /= np.linalg.norm(r)
     while np.allclose(r, normal_vec3) or np.allclose(r, -normal_vec3):
         r = np.random.rand(3)
+        r /= np.linalg.norm(r)
 
     u = np.cross(r, normal_vec3)
-    unit_vector = u / np.linalg.norm(u)
-    return unit_vector
+    u /= np.linalg.norm(u)
+    return u
 
 
 def _find_sphere_line_intersection(
@@ -265,7 +272,7 @@ def _find_sphere_line_intersection(
     x1, y1, z1 = sphere_center
     x2, y2, z2 = line_point_a
     x3, y3, z3 = line_point_b
-    t = symbols("t")
+    t = symbols("t", real=True)
 
     # line
     x = x2 + t * (x3 - x2)
@@ -278,9 +285,7 @@ def _find_sphere_line_intersection(
     # solve
     t_values = solve(sphere_eq, t)
     intersections = [
-        np.array(
-            [float(x.subs(t, t_val)), float(y.subs(t, t_val)), float(z.subs(t, t_val))]
-        )
+        np.array([x.subs(t, t_val), y.subs(t, t_val), z.subs(t, t_val)], dtype=float)
         for t_val in t_values
     ]
     return list(zip(t_values, intersections))
@@ -296,3 +301,11 @@ def _project_point_on_line(
     AP = P - A
     projection = A + np.dot(AP, n) / np.dot(n, n) * n
     return projection
+
+
+if __name__ == "__main__":
+    sphere = GeomSphere((391.58, 324.97, -12.89), 0.493507)
+    frustum_cone = GeomFrustumCone(
+        (391.58, 324.97, -12.89), 0.493507, (388.07, 320.41, -13.57), 0.493506
+    )
+    print(calc_intersect_volume_sphere_frustum_cone(sphere, frustum_cone))
