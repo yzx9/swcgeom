@@ -1,5 +1,13 @@
 # Changelog
 
+## **0.13.2**&emsp;<sub><sup>2023-12-16 ([10f330d...291ae2a](https://github.com/yzx9/swcgeom/compare/10f330d13b49aba19c043b91c42c183e1f9ad4d4...291ae2afde6d29d234e8f1b3521d3f221350e01e?diff=split))</sup></sub>
+
+### Performance Improvements
+* impl a direct algorithm for finding sphere\-line intersections ([410acad](https://github.com/yzx9/swcgeom/commit/410acad545df66d69f8f04d693310986e53f17f6))
+
+<br>
+
+
 ## **0.13.1**&emsp;<sub><sup>2023-12-15 ([0b5b45a...45b4040](https://github.com/yzx9/swcgeom/compare/0b5b45a7997a95298075635d32552dcd91002e4a...45b4040394b3d6a5636d069b5442945d9134b428?diff=split))</sup></sub>
 
 ### Bug Fixes
