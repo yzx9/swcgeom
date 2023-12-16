@@ -2,8 +2,6 @@
 
 from typing import List
 
-import numpy as np
-
 from swcgeom.core import Tree
 from swcgeom.utils import GeomFrustumCone, GeomSphere
 
@@ -46,9 +44,9 @@ def get_volume(tree: Tree):
 
         v = sphere.get_volume()
         v += sum(fc.get_volume() for fc in cones)
-        v -= sum(sphere.get_intersect_volume(fc) for fc in cones)
-        v -= sum(s.get_intersect_volume(fc) for s, fc in zip(children, cones))
-        v += sum(s.get_intersect_volume(sphere) for s in children)
+        v -= sum(sphere.intersect(fc).get_volume() for fc in cones)
+        v -= sum(s.intersect(fc).get_volume() for s, fc in zip(children, cones))
+        v += sum(s.intersect(sphere).get_volume() for s in children)
 
         # TODO
         # remove volume of intersection between frustum cones

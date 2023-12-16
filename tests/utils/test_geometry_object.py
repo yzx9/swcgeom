@@ -58,21 +58,21 @@ class TestIntersectVolumeSphereSphere:
     def test_overlapping(self):
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
         sphere2 = GeomSphere((3.0, 0.0, 0.0), 2)  # Center at (3,0,0), radius 2
-        volume1 = sphere1.get_intersect_volume(sphere2)
+        volume1 = sphere1.intersect(sphere2).get_volume()
         expected_volume1 = GeomSphere.calc_volume_spherical_cap(2, 0.5) * 2
         npt.assert_allclose(volume1, expected_volume1)
 
     def test_contains(self):
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
         sphere2 = GeomSphere((0.0, 0.0, 0.0), 1)  # Center at origin, radius 1
-        volume = sphere1.get_intersect_volume(sphere2)
+        volume = sphere1.intersect(sphere2).get_volume()
         expected_volume = GeomSphere.calc_volume(1)
         npt.assert_allclose(volume, expected_volume)
 
     def test_no_intersection(self):
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
         sphere2 = GeomSphere((0.0, 5.0, 0.0), 2)  # Center at (0,5,0), radius 2
-        volume = sphere1.get_intersect_volume(sphere2)
+        volume = sphere1.intersect(sphere2).get_volume()
         assert volume == 0
 
 
@@ -83,10 +83,10 @@ class TestIntersectVolumeSphereFrustumCone:
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 4)
         sphere2 = GeomSphere((0.0, 0.0, 8.0), 2)
 
-        volume1 = sphere1.get_intersect_volume(frustum)
+        volume1 = sphere1.intersect(frustum).get_volume()
         assert volume1 > 0  # TODO: expected volume?
 
-        volume2 = sphere2.get_intersect_volume(frustum)
+        volume2 = sphere2.intersect(frustum).get_volume()
         excepted_volume2 = sphere2.get_volume() / 2
         npt.assert_allclose(volume2, excepted_volume2)
         # TODO
@@ -97,10 +97,10 @@ class TestIntersectVolumeSphereFrustumCone:
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 4)
         sphere2 = GeomSphere((0.0, 0.0, 5.0), 2)
 
-        volume1 = sphere1.get_intersect_volume(frustum)
+        volume1 = sphere1.intersect(frustum).get_volume()
         assert volume1 > 0  # TODO: expected volume?
 
-        volume2 = sphere2.get_intersect_volume(frustum)
+        volume2 = sphere2.intersect(frustum).get_volume()
         excepted_volume2 = sphere2.get_volume() / 2
         npt.assert_allclose(volume2, excepted_volume2)
 
@@ -110,10 +110,10 @@ class TestIntersectVolumeSphereFrustumCone:
         sphere1 = GeomSphere((0.0, 0.0, 0.0), 4)
         sphere2 = GeomSphere((0.0, 0.0, 1.0), 2)
 
-        volume3a = sphere1.get_intersect_volume(frustum)
+        volume3a = sphere1.intersect(frustum).get_volume()
         assert volume3a > 0  # TODO: expected volume?
 
-        volume3b = sphere2.get_intersect_volume(frustum)
+        volume3b = sphere2.intersect(frustum).get_volume()
         excepted_volume3b = sphere2.get_volume_spherical_cap(
             2
         ) - sphere2.get_volume_spherical_cap(1)
@@ -125,4 +125,4 @@ class TestIntersectVolumeSphereFrustumCone:
         frustum_cone = GeomFrustumCone(
             (391.58, 324.97, -12.89), 0.493507, (388.07, 320.41, -13.57), 0.493506
         )
-        assert sphere.get_intersect_volume(frustum_cone) > 0
+        assert sphere.intersect(frustum_cone).get_volume() > 0
