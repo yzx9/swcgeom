@@ -3,7 +3,7 @@
 from typing import List
 
 from swcgeom.core import Tree
-from swcgeom.utils import GeomFrustumCone, GeomSphere
+from swcgeom.utils import VolFrustumCone, VolSphere
 
 __all__ = ["get_volume"]
 
@@ -38,9 +38,9 @@ def get_volume(tree: Tree):
     """
     volume = 0.0
 
-    def leave(n: Tree.Node, children: List[GeomSphere]) -> GeomSphere:
-        sphere = GeomSphere(n.xyz(), n.r)
-        cones = [GeomFrustumCone(n.xyz(), n.r, c.center, c.radius) for c in children]
+    def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
+        sphere = VolSphere(n.xyz(), n.r)
+        cones = [VolFrustumCone(n.xyz(), n.r, c.center, c.radius) for c in children]
 
         v = sphere.get_volume()
         v += sum(fc.get_volume() for fc in cones)

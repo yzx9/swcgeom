@@ -1,4 +1,4 @@
-"""Geometry object."""
+"""Volume object."""
 
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
@@ -12,13 +12,13 @@ from swcgeom.utils.solid_geometry import (
     project_point_on_line,
 )
 
-__all__ = ["GeomObject", "GeomSphere", "GeomFrustumCone"]
+__all__ = ["VolumetricObject", "VolSphere", "VolFrustumCone"]
 
 eps = 1e-6
 
 
-class GeomObject(ABC):
-    """Geometry object."""
+class VolumetricObject(ABC):
+    """Volumetric object."""
 
     volume = None
 
@@ -34,23 +34,23 @@ class GeomObject(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def union(self, obj: "GeomObject") -> "GeomObject":
-        """Union with another geometry object."""
+    def union(self, obj: "VolumetricObject") -> "VolumetricObject":
+        """Union with another volume object."""
         classname = obj.__class__.__name__
         raise NotImplementedError(f"unable to union with {classname}")
 
     @abstractmethod
-    def intersect(self, obj: "GeomObject") -> "GeomObject":
-        """Intersect with another geometry object."""
+    def intersect(self, obj: "VolumetricObject") -> "VolumetricObject":
+        """Intersect with another volume object."""
         classname = obj.__class__.__name__
         raise NotImplementedError(f"unable to intersect with {classname}")
 
 
-# Primitive Geometry Objects
+# Primitive Volumetric Objects
 
 
-class GeomSphere(GeomObject):
-    """Geometry Sphere."""
+class VolSphere(VolumetricObject):
+    """Volumetric Sphere."""
 
     def __init__(self, center: npt.ArrayLike, radius: float):
         super().__init__()
@@ -66,21 +66,21 @@ class GeomSphere(GeomObject):
     def get_volume_spherical_cap(self, h: float) -> float:
         return self.calc_volume_spherical_cap(self.radius, h)
 
-    def union(self, obj: GeomObject) -> GeomObject:
-        if isinstance(obj, GeomSphere):
-            return GeomSphere2Union(self, obj)
+    def union(self, obj: VolumetricObject) -> VolumetricObject:
+        if isinstance(obj, VolSphere):
+            return VolSphere2Union(self, obj)
 
-        if isinstance(obj, GeomFrustumCone):
-            return GeomSphereFrustumConeUnion(self, obj)
+        if isinstance(obj, VolFrustumCone):
+            return VolSphereFrustumConeUnion(self, obj)
 
         return super().union(obj)
 
-    def intersect(self, obj: GeomObject) -> GeomObject:
-        if isinstance(obj, GeomSphere):
-            return GeomSphere2Intersection(self, obj)
+    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
+        if isinstance(obj, VolSphere):
+            return VolSphere2Intersection(self, obj)
 
-        if isinstance(obj, GeomFrustumCone):
-            return GeomSphereFrustumConeIntersection(self, obj)
+        if isinstance(obj, VolFrustumCone):
+            return VolSphereFrustumConeIntersection(self, obj)
 
         return super().intersect(obj)
 
@@ -122,8 +122,8 @@ class GeomSphere(GeomObject):
         return np.pi * h**2 * (3 * r - h) / 3
 
 
-class GeomFrustumCone(GeomObject):
-    """Geometry Frustum."""
+class VolFrustumCone(VolumetricObject):
+    """Volumetric Frustum."""
 
     def __init__(self, c1: npt.ArrayLike, r1: float, c2: npt.ArrayLike, r2: float):
         super().__init__()
@@ -144,13 +144,13 @@ class GeomFrustumCone(GeomObject):
     def _get_volume(self) -> float:
         return self.calc_volume(self.r1, self.r2, self.height())
 
-    def union(self, obj: GeomObject) -> GeomObject:
-        if isinstance(obj, GeomSphere):
-            return GeomSphereFrustumConeUnion(obj, self)
+    def union(self, obj: VolumetricObject) -> VolumetricObject:
+        if isinstance(obj, VolSphere):
+            return VolSphereFrustumConeUnion(obj, self)
 
         return super().union(obj)
 
-    def intersect(self, obj: GeomObject) -> GeomObject:
+    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
         return super().intersect(obj)
 
     @staticmethod
@@ -169,24 +169,24 @@ class GeomFrustumCone(GeomObject):
         return (1 / 3) * np.pi * height * (r1**2 + r1 * r2 + r2**2)
 
 
-# Composite Geometry Objects
+# Composite Volumetric Objects
 
-T = TypeVar("T", bound=GeomObject)
-K = TypeVar("K", bound=GeomObject)
+T = TypeVar("T", bound=VolumetricObject)
+K = TypeVar("K", bound=VolumetricObject)
 
 
-class GeomComposition2(GeomObject, ABC, Generic[T, K]):
-    """Composition of two geometry objects."""
+class VolComposition2(VolumetricObject, ABC, Generic[T, K]):
+    """Composition of two volumetric objects."""
 
     def __init__(self, obj1: T, obj2: K) -> None:
         super().__init__()
         self.obj1 = obj1
         self.obj2 = obj2
 
-    def union(self, obj: GeomObject) -> GeomObject:
+    def union(self, obj: VolumetricObject) -> VolumetricObject:
         return super().union(obj)
 
-    def intersect(self, obj: GeomObject) -> GeomObject:
+    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
         return super().intersect(obj)
 
     def get_union_volume(self) -> float:
@@ -204,12 +204,12 @@ class GeomComposition2(GeomObject, ABC, Generic[T, K]):
 # Composite sphere and sphere
 
 
-class GeomSphere2Composition(GeomComposition2[GeomSphere, GeomSphere]):
+class VolSphere2Composition(VolComposition2[VolSphere, VolSphere]):
     def get_intersect_volume(self) -> float:
         return self.calc_intersect_volume(self.obj1, self.obj2)
 
     @staticmethod
-    def calc_intersect_volume(obj1: GeomSphere, obj2: GeomSphere) -> float:
+    def calc_intersect_volume(obj1: VolSphere, obj2: VolSphere) -> float:
         r"""Calculate intersect volume of two spheres.
 
         \being{equation}
@@ -228,7 +228,7 @@ class GeomSphere2Composition(GeomComposition2[GeomSphere, GeomSphere]):
             return 0
 
         if d <= abs(r1 - r2):
-            return GeomSphere.calc_volume(min(r1, r2))
+            return VolSphere.calc_volume(min(r1, r2))
 
         part1 = (np.pi / (12 * d)) * (r1 + r2 - d) ** 2
         part2 = (
@@ -237,14 +237,14 @@ class GeomSphere2Composition(GeomComposition2[GeomSphere, GeomSphere]):
         return part1 * part2
 
 
-class GeomSphere2Union(GeomSphere2Composition):
+class VolSphere2Union(VolSphere2Composition):
     """Union of two spheres."""
 
     def _get_volume(self) -> float:
         return self.get_union_volume()
 
 
-class GeomSphere2Intersection(GeomSphere2Composition):
+class VolSphere2Intersection(VolSphere2Composition):
     """Intersection of two spheres."""
 
     def _get_volume(self) -> float:
@@ -254,14 +254,12 @@ class GeomSphere2Intersection(GeomSphere2Composition):
 # Composite sphere and frustum cone
 
 
-class GeomSphereFrustumConeComposite(GeomComposition2[GeomSphere, GeomFrustumCone]):
+class VolSphereFrustumConeComposite(VolComposition2[VolSphere, VolFrustumCone]):
     def get_intersect_volume(self) -> float:
         return self.calc_intersect_volume(self.obj1, self.obj2)
 
     @staticmethod
-    def calc_intersect_volume(
-        sphere: GeomSphere, frustum_cone: GeomFrustumCone
-    ) -> float:
+    def calc_intersect_volume(sphere: VolSphere, frustum_cone: VolFrustumCone) -> float:
         r"""Calculate intersect volume of sphere and frustum cone.
 
         Returns
@@ -281,13 +279,13 @@ class GeomSphereFrustumConeComposite(GeomComposition2[GeomSphere, GeomFrustumCon
         # Fast-Path: The surface of the frustum concentric with the sphere
         # is the surface with smaller radius
         if r2 - r1 >= -eps:  # r2 >= r1:
-            v_himisphere = GeomSphere.calc_volume_spherical_cap(r1, r1)
+            v_himisphere = VolSphere.calc_volume_spherical_cap(r1, r1)
             if h >= r1:
                 # The hemisphere is completely inside the frustum cone
                 return v_himisphere
 
             # The frustum cone is lower than the hemisphere
-            v_cap = GeomSphere.calc_volume_spherical_cap(r1, r1 - h)
+            v_cap = VolSphere.calc_volume_spherical_cap(r1, r1 - h)
             return v_himisphere - v_cap
 
         up = (c2 - c1) / np.linalg.norm(c2 - c1)
@@ -309,25 +307,25 @@ class GeomSphereFrustumConeComposite(GeomComposition2[GeomSphere, GeomFrustumCon
         M = project_point_on_line(c1, up, p)
         h1 = np.linalg.norm(M - c1).item()
         r3 = np.linalg.norm(M - p).item()
-        v_cap1 = GeomSphere.calc_volume_spherical_cap(r1, r1 - h1)
-        v_frustum = GeomFrustumCone.calc_volume(r1, r3, h1)
+        v_cap1 = VolSphere.calc_volume_spherical_cap(r1, r1 - h1)
+        v_frustum = VolFrustumCone.calc_volume(r1, r3, h1)
 
         # Fast-Path: The frustum cone is higher than the sphere
         if h >= r1:
             return v_cap1 + v_frustum
 
-        v_cap2 = GeomSphere.calc_volume_spherical_cap(r1, r1 - h)
+        v_cap2 = VolSphere.calc_volume_spherical_cap(r1, r1 - h)
         return v_cap1 + v_frustum - v_cap2
 
 
-class GeomSphereFrustumConeUnion(GeomSphereFrustumConeComposite):
+class VolSphereFrustumConeUnion(VolSphereFrustumConeComposite):
     """Union of sphere and frustum cone."""
 
     def _get_volume(self) -> float:
         return self.get_union_volume()
 
 
-class GeomSphereFrustumConeIntersection(GeomSphereFrustumConeComposite):
+class VolSphereFrustumConeIntersection(VolSphereFrustumConeComposite):
     """Intersection of sphere and frustum cone."""
 
     def _get_volume(self) -> float:
