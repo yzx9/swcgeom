@@ -8,7 +8,7 @@ from swcgeom.utils import VolFrustumCone, VolSphere
 __all__ = ["get_volume"]
 
 
-def get_volume(tree: Tree):
+def get_volume(tree: Tree) -> float:
     """Get the volume of the tree.
 
     Parameters
@@ -36,6 +36,7 @@ def get_volume(tree: Tree):
 
     We welcome additional representation methods through pull requests.
     """
+
     volume = 0.0
 
     def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
@@ -47,15 +48,11 @@ def get_volume(tree: Tree):
         v -= sum(sphere.intersect(fc).get_volume() for fc in cones)
         v -= sum(s.intersect(fc).get_volume() for s, fc in zip(children, cones))
         v += sum(s.intersect(sphere).get_volume() for s in children)
-
-        # TODO
-        # remove volume of intersection between frustum cones
-        # v -= sum(
-        #     fc1.get_intersect_volume(fc2)
-        #     for fc1 in frustum_cones
-        #     for fc2 in frustum_cones
-        #     if fc1 != fc2
-        # )
+        v -= sum(
+            cones[i].intersect(cones[j]).subtract(sphere).get_volume()
+            for i in range(len(cones))
+            for j in range(i + 1, len(cones))
+        )
 
         nonlocal volume
         volume += v
