@@ -8,6 +8,8 @@ from swcgeom.utils.solid_geometry import (
     find_sphere_line_intersection,
     find_unit_vector_on_plane,
     project_point_on_line,
+    project_vector_on_plane,
+    project_vector_on_vector,
 )
 
 
@@ -95,7 +97,7 @@ class TestFindUnitVectorOnPlane:
         npt.assert_almost_equal(np.dot(unit_vec, normal_vec), 0)
 
 
-class TestProjectPointOnLine:
+class TestProjectVectorOnLine:
     @pytest.mark.parametrize(
         "point_a, direction_vector, point_p, expected",
         [
@@ -107,4 +109,40 @@ class TestProjectPointOnLine:
     )
     def test_project(self, point_a, direction_vector, point_p, expected):
         projection = project_point_on_line(point_a, direction_vector, point_p)
-        assert np.allclose(projection, expected)
+        npt.assert_almost_equal(projection, expected)
+
+
+class TestProjectPointOnVec:
+    @pytest.mark.parametrize(
+        "vec, target, expected",
+        [
+            ([3, 4, 5], [1, 0, 0], [3, 0, 0]),  # porject to x-axis
+            ([3, 4, 5], [0, 1, 0], [0, 4, 0]),  # porject to y-axis
+            ([3, 4, 5], [0, 0, 1], [0, 0, 5]),  # porject to z-axis
+            ([3, 4, 5], [1, 1, 1], [4, 4, 4]),  # porject to a vector
+            ([3, 4, 5], [3, 4, 5], [3, 4, 5]),  # vector on the plene
+            ([1, 0, 0], [0, 1, 0], [0, 0, 0]),  # vector is orthogonal to the plane
+            ([0, 0, 0], [1, 1, 1], [0, 0, 0]),  # vector is zero
+        ],
+    )
+    def test_project(self, vec, target, expected):
+        projection = project_vector_on_vector(vec, target)
+        npt.assert_almost_equal(projection, expected)
+
+
+class TestProjectPointOnPlane:
+    @pytest.mark.parametrize(
+        "vec, plane_normal, expected",
+        [
+            ([3, 4, 5], [0, 0, 1], [3, 4, 0]),  # porject to xy-plane
+            ([3, 4, 5], [1, 0, 0], [0, 4, 5]),  # porject to yz-plane
+            ([3, 4, 5], [0, 1, 0], [3, 0, 5]),  # porject to xz-plane
+            ([3, 4, 5], [1, 1, 1], [-1, 0, 1]),  # porject to a plane
+            ([3, 4, 0], [0, 0, 1], [3, 4, 0]),  # vector on the plane
+            ([1, 0, 0], [1, 0, 0], [0, 0, 0]),  # vector is orthogonal to the plane
+            ([0, 0, 0], [1, 1, 1], [0, 0, 0]),  # vector is zero
+        ],
+    )
+    def test_project(self, vec, plane_normal, expected):
+        projection = project_vector_on_plane(vec, plane_normal)
+        npt.assert_almost_equal(projection, expected)

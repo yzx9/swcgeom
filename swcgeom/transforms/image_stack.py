@@ -22,7 +22,7 @@ import tifffile
 
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
-from swcgeom.utils import SDF, SDFCompose, SDFRoundCone
+from swcgeom.utils import SDF, SDFRoundCone, SDFUnion
 
 __all__ = ["ToImageStack"]
 
@@ -182,17 +182,17 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             sdfs: List[SDF] = []
             for child, sub_sdfs, last in pre:
                 sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
-                sdfs.append(SDFCompose.compose(sub_sdfs))
+                sdfs.append(SDFUnion(*sub_sdfs))
                 if last is not None:
                     sdfs.append(last)
 
-            return (n, [], SDFCompose.compose(sdfs))
+            return (n, [], SDFUnion(*sdfs))
 
         _, sdfs, last = x.traverse(leave=collect)
         if len(sdfs) != 0:
-            sdf = SDFCompose.compose(sdfs)
+            sdf = SDFUnion(*sdfs)
             if last is not None:
-                sdf = SDFCompose.compose([sdf, last])
+                sdf = SDFUnion(sdf, last)
         elif last is not None:
             sdf = last
         else:

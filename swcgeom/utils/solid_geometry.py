@@ -9,6 +9,8 @@ __all__ = [
     "find_unit_vector_on_plane",
     "find_sphere_line_intersection",
     "project_point_on_line",
+    "project_vector_on_vector",
+    "project_vector_on_plane",
 ]
 
 
@@ -68,3 +70,27 @@ def project_point_on_line(
     AP = P - A
     projection = A + np.dot(AP, n) / np.dot(n, n) * n
     return projection
+
+
+def project_vector_on_vector(vec: npt.ArrayLike, target: npt.ArrayLike) -> npt.NDArray:
+    v = np.array(vec)
+    n = np.array(target)
+
+    n_normalized = n / np.linalg.norm(n)
+    projection_on_n = np.dot(v, n_normalized) * n_normalized
+    return projection_on_n
+
+
+def project_vector_on_plane(
+    vec: npt.ArrayLike, plane_normal_vec: npt.ArrayLike
+) -> npt.NDArray:
+    v = np.array(vec)
+    n = np.array(plane_normal_vec)
+
+    # project v to n
+    projection_on_n = project_vector_on_vector(vec, n)
+
+    # project v to plane
+    projection_on_plane = v - projection_on_n
+
+    return projection_on_plane
