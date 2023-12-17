@@ -1,23 +1,46 @@
-"""Volume object."""
+"""Volumetric object.
+
+This library implements the calculation of volumes for any shape
+generated through boolean operations, employing Signed Distance
+Function (SDF) and Monte Carlo algorithms.
+
+However, this approach is computationally demanding. To address this,
+we have specialized certain operations to accelerate the computation
+process.
+
+If you wish to use these methods, please review our implementation.
+Additionally, consider specializing some subclasses that can utilize
+formula-based calculations for further optimization of your
+computations.
+"""
 
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import Generic, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
 
+from swcgeom.utils.sdf import (
+    AABB,
+    SDF,
+    SDFDifference,
+    SDFFrustumCone,
+    SDFIntersection,
+    SDFSphere,
+    SDFUnion,
+)
 from swcgeom.utils.solid_geometry import (
     find_sphere_line_intersection,
     find_unit_vector_on_plane,
     project_point_on_line,
 )
 
-__all__ = ["VolumetricObject", "VolSphere", "VolFrustumCone"]
+__all__ = ["VolObject", "VolMCObject", "VolSDFObject", "VolSphere", "VolFrustumCone"]
 
 eps = 1e-6
 
 
-class VolumetricObject(ABC):
+class VolObject(ABC):
     """Volumetric object."""
 
     volume = None
@@ -34,30 +57,166 @@ class VolumetricObject(ABC):
         raise NotImplementedError()
 
     @abstractmethod
-    def union(self, obj: "VolumetricObject") -> "VolumetricObject":
+    def union(self, obj: "VolObject") -> "VolObject":
         """Union with another volume object."""
         classname = obj.__class__.__name__
         raise NotImplementedError(f"unable to union with {classname}")
 
     @abstractmethod
-    def intersect(self, obj: "VolumetricObject") -> "VolumetricObject":
+    def intersect(self, obj: "VolObject") -> "VolObject":
         """Intersect with another volume object."""
         classname = obj.__class__.__name__
         raise NotImplementedError(f"unable to intersect with {classname}")
+
+    @abstractmethod
+    def subtract(self, obj: "VolObject") -> "VolObject":
+        """Subtract another volume object."""
+        classname = obj.__class__.__name__
+        raise NotImplementedError(f"unable to diff with {classname}")
+
+
+class VolMCObject(VolObject, ABC):
+    """Volumetric Monte Carlo Object.
+
+    The volume of the object is calculated by Monte Carlo integration.
+    """
+
+    def __init__(self, *, n_samples: int = 1000000) -> None:
+        super().__init__()
+        self.n_samples = n_samples
+
+    @abstractmethod
+    def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
+        """Sample points.
+
+        Parameters
+        ----------
+        n : int
+            Number of points to sample.
+
+        Returns
+        -------
+        points : ndarray
+            Sampled points.
+        volume : float
+            Volume of the sample range.
+        """
+        raise NotImplementedError()
+
+    @abstractmethod
+    def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
+        """Is p in the object.
+
+        Returns
+        -------
+        is_in : npt.NDArray[np.bool_]
+            Array of shape (N,), if bounding box is `None`, `True` will
+            be returned.
+        """
+        raise NotImplementedError()
+
+    def _get_volume(self) -> float:
+        p, v = self.sample(self.n_samples)
+        insides = self.is_in(p)
+        hits = np.count_nonzero(insides)
+        return hits / self.n_samples * v
+
+
+# Volumetric SDF Objects
+
+
+class VolSDFObject(VolMCObject):
+    """Volumetric SDF Object.
+
+    Notes
+    -----
+    SDF must has a bounding box.
+    """
+
+    def __init__(self, sdf: SDF, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.sdf = sdf
+        assert self.sdf.bounding_box is not None
+
+    def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
+        (min_x, min_y, min_z), (max_x, max_y, max_z) = self.get_bounding_box()
+        samples = np.random.uniform(
+            (min_x, min_y, min_z), (max_x, max_y, max_z), size=(n, 3)
+        ).astype(np.float32)
+        v = (max_x - min_x) * (max_y - min_y) * (max_z - min_z)
+        return samples, v
+
+    def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
+        return self.sdf.is_in(p)
+
+    def get_bounding_box(self) -> AABB:
+        assert self.sdf.bounding_box is not None
+        return self.sdf.bounding_box
+
+    def union(self, obj: VolObject) -> VolObject:
+        if isinstance(obj, VolSDFObject):
+            return VolSDFUnion(self, obj)
+        return super().union(obj)
+
+    def intersect(self, obj: VolObject) -> VolObject:
+        if isinstance(obj, VolSDFObject):
+            return VolSDFIntersection(self, obj)
+        return super().intersect(obj)
+
+    def subtract(self, obj: VolObject) -> VolObject:
+        if isinstance(obj, VolSDFObject):
+            return VolSDFDifference(self, obj)
+        return super().subtract(obj)
+
+
+T = TypeVar("T", bound=VolSDFObject)
+K = TypeVar("K", bound=VolSDFObject)
+
+
+class VolSDFIntersection(VolSDFObject, ABC, Generic[T, K]):
+    """Intersection of two volumetric sdf objects."""
+
+    def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
+        obj = SDFIntersection(obj1.sdf, obj2.sdf)
+        super().__init__(obj, **kwargs)
+        self.obj1 = obj1
+        self.obj2 = obj2
+
+
+class VolSDFUnion(VolSDFObject, ABC, Generic[T, K]):
+    """Union of two volumetric sdf objects."""
+
+    def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
+        obj = SDFUnion(obj1.sdf, obj2.sdf)
+        super().__init__(obj, **kwargs)
+        self.obj1 = obj1
+        self.obj2 = obj2
+
+
+class VolSDFDifference(VolSDFObject, ABC, Generic[T, K]):
+    """Difference of volumetric sdf object and another object."""
+
+    def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
+        obj = SDFDifference(obj1.sdf, obj2.sdf)
+        super().__init__(obj, **kwargs)
+        self.obj1 = obj1
+        self.obj2 = obj2
 
 
 # Primitive Volumetric Objects
 
 
-class VolSphere(VolumetricObject):
+class VolSphere(VolSDFObject):
     """Volumetric Sphere."""
 
     def __init__(self, center: npt.ArrayLike, radius: float):
-        super().__init__()
+        center = np.array(center)
+        assert len(center) == 3
 
-        self.center = np.array(center)
-        assert len(self.center) == 3
+        sdf = SDFSphere(center, radius)
+        super().__init__(sdf)
 
+        self.center = center
         self.radius = radius
 
     def _get_volume(self) -> float:
@@ -66,7 +225,7 @@ class VolSphere(VolumetricObject):
     def get_volume_spherical_cap(self, h: float) -> float:
         return self.calc_volume_spherical_cap(self.radius, h)
 
-    def union(self, obj: VolumetricObject) -> VolumetricObject:
+    def union(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSphere):
             return VolSphere2Union(self, obj)
 
@@ -75,7 +234,7 @@ class VolSphere(VolumetricObject):
 
         return super().union(obj)
 
-    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
+    def intersect(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSphere):
             return VolSphere2Intersection(self, obj)
 
@@ -122,18 +281,21 @@ class VolSphere(VolumetricObject):
         return np.pi * h**2 * (3 * r - h) / 3
 
 
-class VolFrustumCone(VolumetricObject):
+class VolFrustumCone(VolSDFObject):
     """Volumetric Frustum."""
 
     def __init__(self, c1: npt.ArrayLike, r1: float, c2: npt.ArrayLike, r2: float):
-        super().__init__()
+        c1 = np.array(c1)
+        assert len(c1) == 3
 
-        self.c1 = np.array(c1)
-        assert len(self.c1) == 3
+        c2 = np.array(c2)
+        assert len(c2) == 3
 
-        self.c2 = np.array(c2)
-        assert len(self.c2) == 3
+        sdf = SDFFrustumCone(c1, c2, r1, r2)
+        super().__init__(sdf)
 
+        self.c1 = c1
+        self.c2 = c2
         self.r1 = r1
         self.r2 = r2
 
@@ -144,13 +306,13 @@ class VolFrustumCone(VolumetricObject):
     def _get_volume(self) -> float:
         return self.calc_volume(self.r1, self.r2, self.height())
 
-    def union(self, obj: VolumetricObject) -> VolumetricObject:
+    def union(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSphere):
             return VolSphereFrustumConeUnion(obj, self)
 
         return super().union(obj)
 
-    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
+    def intersect(self, obj: VolObject) -> VolObject:
         return super().intersect(obj)
 
     @staticmethod
@@ -169,43 +331,13 @@ class VolFrustumCone(VolumetricObject):
         return (1 / 3) * np.pi * height * (r1**2 + r1 * r2 + r2**2)
 
 
-# Composite Volumetric Objects
-
-T = TypeVar("T", bound=VolumetricObject)
-K = TypeVar("K", bound=VolumetricObject)
-
-
-class VolComposition2(VolumetricObject, ABC, Generic[T, K]):
-    """Composition of two volumetric objects."""
-
-    def __init__(self, obj1: T, obj2: K) -> None:
-        super().__init__()
-        self.obj1 = obj1
-        self.obj2 = obj2
-
-    def union(self, obj: VolumetricObject) -> VolumetricObject:
-        return super().union(obj)
-
-    def intersect(self, obj: VolumetricObject) -> VolumetricObject:
-        return super().intersect(obj)
-
-    def get_union_volume(self) -> float:
-        return (
-            self.obj1.get_volume()
-            + self.obj2.get_volume()
-            - self.get_intersect_volume()
-        )
-
-    @abstractmethod
-    def get_intersect_volume(self) -> float:
-        raise NotImplementedError()
-
-
 # Composite sphere and sphere
 
 
-class VolSphere2Composition(VolComposition2[VolSphere, VolSphere]):
-    def get_intersect_volume(self) -> float:
+class VolSphere2Intersection(VolSDFIntersection[VolSphere, VolSphere]):
+    """Intersection of two spheres."""
+
+    def _get_volume(self) -> float:
         return self.calc_intersect_volume(self.obj1, self.obj2)
 
     @staticmethod
@@ -237,29 +369,39 @@ class VolSphere2Composition(VolComposition2[VolSphere, VolSphere]):
         return part1 * part2
 
 
-class VolSphere2Union(VolSphere2Composition):
+class VolSphere2Union(VolSDFUnion[VolSphere, VolSphere]):
     """Union of two spheres."""
 
     def _get_volume(self) -> float:
-        return self.get_union_volume()
-
-
-class VolSphere2Intersection(VolSphere2Composition):
-    """Intersection of two spheres."""
-
-    def _get_volume(self) -> float:
-        return self.get_intersect_volume()
+        return (
+            self.obj1.get_volume()
+            + self.obj2.get_volume()
+            - VolSphere2Intersection.calc_intersect_volume(self.obj1, self.obj2)
+        )
 
 
 # Composite sphere and frustum cone
 
 
-class VolSphereFrustumConeComposite(VolComposition2[VolSphere, VolFrustumCone]):
-    def get_intersect_volume(self) -> float:
-        return self.calc_intersect_volume(self.obj1, self.obj2)
+class VolSphereFrustumConeIntersection(VolSDFIntersection[VolSphere, VolFrustumCone]):
+    """Intersection of sphere and frustum cone."""
+
+    def _get_volume(self) -> float:
+        if (
+            np.allclose(self.obj1.center, self.obj2.c1)
+            and np.allclose(self.obj1.radius, self.obj2.r1)
+        ) or (
+            np.allclose(self.obj1.center, self.obj2.c2)
+            and np.allclose(self.obj1.radius, self.obj2.r2)
+        ):
+            return self.calc_concentric_intersect_volume(self.obj1, self.obj2)
+
+        return super()._get_volume()
 
     @staticmethod
-    def calc_intersect_volume(sphere: VolSphere, frustum_cone: VolFrustumCone) -> float:
+    def calc_concentric_intersect_volume(
+        sphere: VolSphere, frustum_cone: VolFrustumCone
+    ) -> float:
         r"""Calculate intersect volume of sphere and frustum cone.
 
         Returns
@@ -267,6 +409,7 @@ class VolSphereFrustumConeComposite(VolComposition2[VolSphere, VolFrustumCone]):
         volume : float
             Intersect volume.
         """
+
         h = frustum_cone.height()
         c1, r1 = sphere.center, sphere.radius
         if np.allclose(c1, frustum_cone.c1) and np.allclose(r1, frustum_cone.r1):
@@ -274,7 +417,7 @@ class VolSphereFrustumConeComposite(VolComposition2[VolSphere, VolFrustumCone]):
         elif np.allclose(c1, frustum_cone.c2) and np.allclose(r1, frustum_cone.r2):
             c2, r2 = frustum_cone.c1, frustum_cone.r1
         else:
-            raise NotImplementedError("unsupported to calculate intersect volume")
+            raise ValueError("sphere and frustum cone is not concentric")
 
         # Fast-Path: The surface of the frustum concentric with the sphere
         # is the surface with smaller radius
@@ -318,15 +461,14 @@ class VolSphereFrustumConeComposite(VolComposition2[VolSphere, VolFrustumCone]):
         return v_cap1 + v_frustum - v_cap2
 
 
-class VolSphereFrustumConeUnion(VolSphereFrustumConeComposite):
+class VolSphereFrustumConeUnion(VolSDFUnion[VolSphere, VolFrustumCone]):
     """Union of sphere and frustum cone."""
 
     def _get_volume(self) -> float:
-        return self.get_union_volume()
-
-
-class VolSphereFrustumConeIntersection(VolSphereFrustumConeComposite):
-    """Intersection of sphere and frustum cone."""
-
-    def _get_volume(self) -> float:
-        return self.get_intersect_volume()
+        return (
+            self.obj1.get_volume()
+            + self.obj2.get_volume()
+            - VolSphereFrustumConeIntersection.calc_concentric_intersect_volume(
+                self.obj1, self.obj2
+            )
+        )

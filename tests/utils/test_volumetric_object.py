@@ -58,9 +58,9 @@ class TestSphere2Intersection:
     def test_overlapping(self):
         sphere1 = VolSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
         sphere2 = VolSphere((3.0, 0.0, 0.0), 2)  # Center at (3,0,0), radius 2
-        volume1 = sphere1.intersect(sphere2).get_volume()
-        expected_volume1 = VolSphere.calc_volume_spherical_cap(2, 0.5) * 2
-        npt.assert_allclose(volume1, expected_volume1)
+        volume = sphere1.intersect(sphere2).get_volume()
+        expected_volume = VolSphere.calc_volume_spherical_cap(2, 0.5) * 2
+        npt.assert_allclose(volume, expected_volume)
 
     def test_contains(self):
         sphere1 = VolSphere((0.0, 0.0, 0.0), 2)  # Center at origin, radius 2
@@ -126,3 +126,13 @@ class TestSphereFrustumConeIntersection:
             (391.58, 324.97, -12.89), 0.493507, (388.07, 320.41, -13.57), 0.493506
         )
         assert sphere.intersect(frustum_cone).get_volume() > 0
+
+
+class TestFrustumCone2DiffSphere:
+    def test_contains(self):
+        sphere = VolSphere((0, 0, 0), 1)
+        frustum1 = VolFrustumCone((0, 0, 0), 1, (0, 0, 8), 1)
+        frustum2 = VolFrustumCone((0, 0, 0), 1, (0, 0, 4), 1)
+        volume = frustum1.intersect(frustum2).subtract(sphere).get_volume()
+        excepted_volume = (4 - 2 / 3) * np.pi
+        npt.assert_allclose(volume, excepted_volume, rtol=1e-3)
