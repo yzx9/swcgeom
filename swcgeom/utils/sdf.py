@@ -227,7 +227,8 @@ class SDFFrustumCone(SDF):
         baba = np.dot(b - a, b - a)
         papa = np.einsum("ij,ij->i", p - a, p - a)
         paba = np.dot(p - a, b - a) / baba
-        x = np.sqrt(papa - paba * paba * baba)
+        # maybe negative due to numerical error
+        x = np.sqrt(np.maximum(papa - paba * paba * baba, 0))
         cax = np.maximum(0.0, x - np.where(paba < 0.5, ra, rb))
         cay = np.abs(paba - 0.5) - 0.5
         k = rba * rba + baba
