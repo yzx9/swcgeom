@@ -14,8 +14,9 @@ formula-based calculations for further optimization of your
 computations.
 """
 
+import warnings
 from abc import ABC, abstractmethod
-from typing import Generic, Tuple, TypeVar
+from typing import Generic, Optional, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -45,8 +46,12 @@ class VolObject(ABC):
 
     volume = None
 
-    def get_volume(self) -> float:
+    def get_volume(self, **kwargs) -> float:
         """Get volume."""
+        if len(kwargs) != 0:
+            # not cached
+            return self._get_volume(**kwargs)
+
         if self.volume is None:
             self.volume = self._get_volume()
         return self.volume
@@ -81,9 +86,21 @@ class VolMCObject(VolObject, ABC):
     The volume of the object is calculated by Monte Carlo integration.
     """
 
-    def __init__(self, *, n_samples: int = 1000000) -> None:
+    n_samples: int | None = None
+
+    cache_volume: float | None = None
+    cache_volume_n_samples: int = 0
+
+    def __init__(self, *, n_samples: Optional[int] = None) -> None:
         super().__init__()
-        self.n_samples = n_samples
+        if n_samples is not None:
+            warnings.warn(
+                "`VolMCObject(n_samples=...)` has been move to since "
+                "v0.13.3 and will be removed in next version, use "
+                "`VolMCObject().get_volume(n_samples=...)` instead",
+                DeprecationWarning,
+            )
+            self.n_samples = n_samples
 
     @abstractmethod
     def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
@@ -115,11 +132,34 @@ class VolMCObject(VolObject, ABC):
         """
         raise NotImplementedError()
 
-    def _get_volume(self) -> float:
-        p, v = self.sample(self.n_samples)
+    def _get_volume(self, *, n_samples: Optional[int] = None) -> float:
+        """Get volume by Monte Carlo integration.
+
+        Parameters
+        ----------
+        n_samples : int, default 1_000_000
+            Number of samples
+        """
+
+        # legacy
+        DEFAULT_N_SAMPLES = 1_000_000
+        if n_samples is None:
+            n_samples = self.n_samples or DEFAULT_N_SAMPLES
+
+        # cache volume
+        if self.cache_volume is not None and n_samples <= self.cache_volume_n_samples:
+            return self.cache_volume
+
+        p, v = self.sample(n_samples)
         insides = self.is_in(p)
         hits = np.count_nonzero(insides)
-        return hits / self.n_samples * v
+        volume = hits / n_samples * v
+
+        # update cache
+        self.cache_volume = volume
+        self.cache_volume_n_samples = n_samples
+
+        return volume
 
 
 # Volumetric SDF Objects

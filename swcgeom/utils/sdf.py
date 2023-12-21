@@ -148,7 +148,7 @@ class SDFDifference(SDF):
         self.sdf_a = sdf_a
         self.sdf_b = sdf_b
 
-        self.bounding_box = sdf_a.bounding_box  # TODO: can be optimized
+        self.bounding_box = sdf_a.bounding_box
 
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         da = self.sdf_a.distance(p)
