@@ -1,20 +1,41 @@
 """Analysis of volume of a SWC tree."""
 
-from typing import List
+from typing import Dict, List, Literal
 
 from swcgeom.core import Tree
 from swcgeom.utils import VolFrustumCone, VolSphere
 
 __all__ = ["get_volume"]
 
+ACCURACY_LEVEL = Literal["low", "middle", "high"]
+ACCURACY_LEVELS: Dict[ACCURACY_LEVEL, int] = {"low": 3, "middle": 5, "high": 8}
 
-def get_volume(tree: Tree) -> float:
+
+def get_volume(
+    tree: Tree,
+    *,
+    method: Literal["frustum_cone"] = "frustum_cone",
+    accuracy: int | ACCURACY_LEVEL = "middle",
+) -> float:
     """Get the volume of the tree.
 
     Parameters
     ----------
     tree : Tree
-        SWC tree.
+        Neuronal tree.
+    method : {"frustum_cone"}, optional
+        Method for volume calculation.
+    accuracy : int or {"low", "middle", "high"}, optional
+        Accuracy level for volume calculation. The higher the accuracy,
+        the more accurate the volume calculation, but the slower the
+        calculation. The accuracy level can be specified either as an
+        integer or as a string.
+
+        The string values correspond to the following accuracy levels:
+
+        - "low": 3
+        - "middle": 5
+        - "high": 8
 
     Returns
     -------
@@ -37,6 +58,29 @@ def get_volume(tree: Tree) -> float:
     We welcome additional representation methods through pull requests.
     """
 
+    if isinstance(accuracy, str):
+        accuracy = ACCURACY_LEVELS[accuracy]
+
+    match method:
+        case "frustum_cone":
+            return _get_volume_frustum_cone(tree, accuracy=accuracy)
+        case _:
+            raise ValueError(f"Unsupported method: {method}")
+
+
+def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
+    """Get the volume of the tree using the frustum cone method.
+
+    Parameters
+    ----------
+    tree : Tree
+        Neuronal tree.
+    accuracy : int
+        1 : Sphere only
+        2 : Sphere and Frustum Cone
+        3 : Sphere, Frustum Cone, and intersection in single-branch
+        5 : Above and Sphere-Frustum Cone intersection in multi-branch
+    """
     volume = 0.0
 
     def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
@@ -44,15 +88,20 @@ def get_volume(tree: Tree) -> float:
         cones = [VolFrustumCone(n.xyz(), n.r, c.center, c.radius) for c in children]
 
         v = sphere.get_volume()
-        v += sum(fc.get_volume() for fc in cones)
-        v -= sum(sphere.intersect(fc).get_volume() for fc in cones)
-        v -= sum(s.intersect(fc).get_volume() for s, fc in zip(children, cones))
-        v += sum(s.intersect(sphere).get_volume() for s in children)
-        v -= sum(
-            cones[i].intersect(cones[j]).subtract(sphere).get_volume()
-            for i in range(len(cones))
-            for j in range(i + 1, len(cones))
-        )
+        if accuracy >= 2:
+            v += sum(fc.get_volume() for fc in cones)
+
+        if accuracy >= 3:
+            v -= sum(sphere.intersect(fc).get_volume() for fc in cones)
+            v -= sum(s.intersect(fc).get_volume() for s, fc in zip(children, cones))
+            v += sum(s.intersect(sphere).get_volume() for s in children)
+
+        if accuracy >= 5:
+            v -= sum(
+                cones[i].intersect(cones[j]).subtract(sphere).get_volume()
+                for i in range(len(cones))
+                for j in range(i + 1, len(cones))
+            )
 
         nonlocal volume
         volume += v
