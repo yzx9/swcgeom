@@ -1,7 +1,5 @@
 # SWCGEOM
 
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />
-
 [![Run tests](https://github.com/yzx9/swcgeom/actions/workflows/test.yml/badge.svg)](https://github.com/yzx9/swcgeom/actions/workflows/test.yml)
 [![Release to GitHub](https://github.com/yzx9/swcgeom/actions/workflows/github-publish.yml/badge.svg)](https://github.com/yzx9/swcgeom/releases)
 [![Release to PyPI](https://github.com/yzx9/swcgeom/actions/workflows/pypi-publish.yml/badge.svg)](https://pypi.org/project/swcgeom/)
@@ -37,4 +35,6 @@ Static analysis don't support import hook used in editable install for [PEP660](
 
 ## LICENSE
 
-This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
+This work is licensed under a <a rel="license" href="https://www.apache.org/licenses/">Apache-2.0</a>.
+
+Copyright (c) 2022-present, Zexin Yuan
