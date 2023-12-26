@@ -20,16 +20,8 @@ from typing import Generic, Optional, Tuple, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from sdflit import SDF, FrustumCone, Sphere, intersect, merge, subtract
 
-from swcgeom.utils.sdf import (
-    AABB,
-    SDF,
-    SDFDifference,
-    SDFFrustumCone,
-    SDFIntersection,
-    SDFSphere,
-    SDFUnion,
-)
 from swcgeom.utils.solid_geometry import (
     find_sphere_line_intersection,
     find_unit_vector_on_plane,
@@ -121,6 +113,10 @@ class VolMCObject(VolObject, ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    def inside(self, p: npt.NDArray[np.float32]) -> bool:
+        """Is p in the object."""
+        raise NotImplementedError()
+
     def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
         """Is p in the object.
 
@@ -130,7 +126,7 @@ class VolMCObject(VolObject, ABC):
             Array of shape (N,), if bounding box is `None`, `True` will
             be returned.
         """
-        raise NotImplementedError()
+        return np.array([self.inside(pp) for pp in p])
 
     def _get_volume(self, *, n_samples: Optional[int] = None) -> float:
         """Get volume by Monte Carlo integration.
@@ -151,8 +147,7 @@ class VolMCObject(VolObject, ABC):
             return self.cache_volume
 
         p, v = self.sample(n_samples)
-        insides = self.is_in(p)
-        hits = np.count_nonzero(insides)
+        hits = sum(self.inside(pp) for pp in p)
         volume = hits / n_samples * v
 
         # update cache
@@ -176,22 +171,17 @@ class VolSDFObject(VolMCObject):
     def __init__(self, sdf: SDF, **kwargs) -> None:
         super().__init__(**kwargs)
         self.sdf = sdf
-        assert self.sdf.bounding_box is not None
 
     def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
-        (min_x, min_y, min_z), (max_x, max_y, max_z) = self.get_bounding_box()
+        (min_x, min_y, min_z), (max_x, max_y, max_z) = self.sdf.bounding_box()
         samples = np.random.uniform(
             (min_x, min_y, min_z), (max_x, max_y, max_z), size=(n, 3)
         ).astype(np.float32)
         v = (max_x - min_x) * (max_y - min_y) * (max_z - min_z)
         return samples, v
 
-    def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
-        return self.sdf.is_in(p)
-
-    def get_bounding_box(self) -> AABB:
-        assert self.sdf.bounding_box is not None
-        return self.sdf.bounding_box
+    def inside(self, p: npt.NDArray[np.float32]) -> bool:
+        return self.sdf.inside(_tp3f(p))
 
     def union(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSDFObject):
@@ -217,7 +207,7 @@ class VolSDFIntersection(VolSDFObject, ABC, Generic[T, K]):
     """Intersection of two volumetric sdf objects."""
 
     def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
-        obj = SDFIntersection(obj1.sdf, obj2.sdf)
+        obj = intersect(obj1.sdf, obj2.sdf)
         super().__init__(obj, **kwargs)
         self.obj1 = obj1
         self.obj2 = obj2
@@ -227,7 +217,7 @@ class VolSDFUnion(VolSDFObject, ABC, Generic[T, K]):
     """Union of two volumetric sdf objects."""
 
     def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
-        obj = SDFUnion(obj1.sdf, obj2.sdf)
+        obj = merge(obj1.sdf, obj2.sdf)
         super().__init__(obj, **kwargs)
         self.obj1 = obj1
         self.obj2 = obj2
@@ -237,7 +227,7 @@ class VolSDFDifference(VolSDFObject, ABC, Generic[T, K]):
     """Difference of volumetric sdf object and another object."""
 
     def __init__(self, obj1: T, obj2: K, **kwargs) -> None:
-        obj = SDFDifference(obj1.sdf, obj2.sdf)
+        obj = subtract(obj1.sdf, obj2.sdf)
         super().__init__(obj, **kwargs)
         self.obj1 = obj1
         self.obj2 = obj2
@@ -251,10 +241,8 @@ class VolSphere(VolSDFObject):
 
     def __init__(self, center: npt.ArrayLike, radius: float):
         center = np.array(center)
-        assert len(center) == 3
-
-        sdf = SDFSphere(center, radius)
-        super().__init__(sdf)
+        sdf = Sphere(_tp3f(center), radius)
+        super().__init__(sdf.into())
 
         self.center = center
         self.radius = radius
@@ -325,14 +313,9 @@ class VolFrustumCone(VolSDFObject):
     """Volumetric Frustum."""
 
     def __init__(self, c1: npt.ArrayLike, r1: float, c2: npt.ArrayLike, r2: float):
-        c1 = np.array(c1)
-        assert len(c1) == 3
-
-        c2 = np.array(c2)
-        assert len(c2) == 3
-
-        sdf = SDFFrustumCone(c1, c2, r1, r2)
-        super().__init__(sdf)
+        c1, c2 = np.array(c1), np.array(c2)
+        sdf = FrustumCone(_tp3f(c1), _tp3f(c2), r1, r2)
+        super().__init__(sdf.into())
 
         self.c1 = c1
         self.c2 = c2
@@ -512,3 +495,10 @@ class VolSphereFrustumConeUnion(VolSDFUnion[VolSphere, VolFrustumCone]):
                 self.obj1, self.obj2
             )
         )
+
+
+def _tp3f(x: npt.NDArray) -> Tuple[float, float, float]:
+    """Convert to tuple of 3 floats."""
+
+    assert len(x) == 3
+    return (float(x[0]), float(x[1]), float(x[2]))

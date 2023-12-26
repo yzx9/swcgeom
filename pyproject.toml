@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "yzx9", email = "yuan.zx@outlook.com" }]
 keywords = ["neuronscience", "neuron", "neuroanatomy", "neuron-morphology"]
-license = { text = "CC4.0 BY-NC-SA" }
+license = { text = "Apache-2.0" }
 dependencies = [
     "imagecodecs>=2023.3.16",
     "matplotlib>=3.5.2",
@@ -18,6 +18,7 @@ dependencies = [
     "pandas>=1.4.2",
     "pynrrd>=1.0.0",
     "scipy>=1.9.1",
+    "sdflit>=0.2.1",
     "seaborn>=0.12.0",
     "tifffile>=2022.8.12",
     "typing_extensions>=4.4.0",

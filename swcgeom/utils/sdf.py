@@ -1,6 +1,11 @@
 """Signed distance functions.
 
 Refs: https://iquilezles.org/articles/distfunctions/
+
+Note
+----
+This module has been deprecated since v0.13.3, and will be removed in
+the future, use `sdflit` instead.
 """
 
 import warnings
