@@ -1,9 +1,12 @@
 """Analysis of volume of a SWC tree."""
 
-from typing import Dict, List, Literal, Tuple
+from typing import Dict, List, Literal
+
+import numpy as np
+from sdflit import ColoredMaterial, ObjectsScene, SDFObject, UniformSampler
 
 from swcgeom.core import Tree
-from swcgeom.utils import VolFrustumCone, VolObject, VolSphere
+from swcgeom.utils import VolFrustumCone, VolSphere
 
 __all__ = ["get_volume"]
 
@@ -118,20 +121,32 @@ def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
     return volume
 
 
-_R = Tuple[VolObject, VolSphere]
-
-
 def _get_volume_frustum_cone_mc_only(tree: Tree) -> float:
-    def leave(n: Tree.Node, children: List[_R]) -> _R:
+    if tree.number_of_nodes() == 0:
+        return 0
+
+    material = ColoredMaterial((1, 0, 0)).into()
+    scene = ObjectsScene()
+    scene.set_background((0, 0, 0))
+
+    def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
         sphere = VolSphere(n.xyz(), n.r)
-        obj = sphere
-        for o, c in children:
-            obj = obj.union(o)
-            obj = obj.union(VolFrustumCone(n.xyz(), n.r, c.center, c.radius))
+        scene.add_object(SDFObject(sphere.sdf, material).into())
 
-        return obj, sphere
+        for c in children:
+            fc = VolFrustumCone(n.xyz(), n.r, c.center, c.radius)
+            scene.add_object(SDFObject(fc.sdf, material).into())
 
-    obj, _ = tree.traverse(leave=leave)
+        return sphere
+
+    tree.traverse(leave=leave)
+    scene.build_bvh()
+
     # TODO: estimate the number of samples needed
-    volume = obj.get_volume(n_samples=100_000_000)
+    n_samples = 100_000_000
+
+    vmin, vmax = scene.bounding_box()
+    sampler = UniformSampler(vmin, vmax)
+    data = sampler.sample(scene.into(), n_samples)
+    volume = data.sum() / n_samples * np.subtract(vmax, vmin).prod()
     return volume
