@@ -88,7 +88,7 @@ class VolMCObject(VolObject, ABC):
         if n_samples is not None:
             warnings.warn(
                 "`VolMCObject(n_samples=...)` has been move to since "
-                "v0.13.3 and will be removed in next version, use "
+                "v0.14.0 and will be removed in next version, use "
                 "`VolMCObject().get_volume(n_samples=...)` instead",
                 DeprecationWarning,
             )

@@ -4,7 +4,7 @@ Refs: https://iquilezles.org/articles/distfunctions/
 
 Note
 ----
-This module has been deprecated since v0.13.3, and will be removed in
+This module has been deprecated since v0.14.0, and will be removed in
 the future, use `sdflit` instead.
 """
 
@@ -178,7 +178,7 @@ class SDFCompose(SDFUnion):
 
     def __init__(self, sdfs: Iterable[SDF]) -> None:
         warnings.warn(
-            "`SDFCompose` has been replace by `SDFUnion` since v0.13.3, "
+            "`SDFCompose` has been replace by `SDFUnion` since v0.14.0, "
             "and will be removed in next version",
             DeprecationWarning,
         )

@@ -1,5 +1,34 @@
 # Changelog
 
+## **0.14.0**&emsp;<sub><sup>2023-12-26 ([b9c95f5...cc22018](https://github.com/yzx9/swcgeom/compare/b9c95f58f725490f3b624233cc0be20b31605e53...cc22018ad79af18ecd812b932812a0ff40a0fe40?diff=split))</sup></sub>
+
+### Features
+
+##### `analysis`
+* add high accuracy volume calculation ([9b51b74](https://github.com/yzx9/swcgeom/commit/9b51b7401efffc1b0cfbfecbdf3eb60300e1e114))
+
+### Bug Fixes
+
+##### `analysis`
+* subtract volume between frustum cone ([dae116e](https://github.com/yzx9/swcgeom/commit/dae116e45146428f5cb61c696ff1d6804e03993c))
+
+##### `utils`
+* avoid numerical error ([a6bd4ad](https://github.com/yzx9/swcgeom/commit/a6bd4adc87e86dcaca2bcb45aee68cea51a540c0))
+
+### Performance Improvements
+
+##### `analysis`
+* use bvh scene ([7a7b988](https://github.com/yzx9/swcgeom/commit/7a7b98864fd6d0378b0b696d2963353d0592b4d3))
+
+##### `utils`
+* use \`sdflit\` instead custom impl ([a47a190](https://github.com/yzx9/swcgeom/commit/a47a19091b46a1071140a12fb20105cdf851a85a))
+
+### BREAKING CHANGES
+* `transforms` rewrite image stack ([cc22018](https://github.com/yzx9/swcgeom/commit/cc22018ad79af18ecd812b932812a0ff40a0fe40))
+
+<br>
+
+
 ## **0.13.2**&emsp;<sub><sup>2023-12-16 ([10f330d...291ae2a](https://github.com/yzx9/swcgeom/compare/10f330d13b49aba19c043b91c42c183e1f9ad4d4...291ae2afde6d29d234e8f1b3521d3f221350e01e?diff=split))</sup></sub>
 
 ### Performance Improvements
