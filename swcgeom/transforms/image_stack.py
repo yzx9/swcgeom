@@ -2,50 +2,48 @@
 
 Notes
 -----
-- This module has been deprecated, try `github.com/yzx9/swc2skeleton`
-- All denpendencies need to be installed, try:
+All denpendencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]
 ```
 """
 
-import math
 import os
 import re
 import time
-from typing import Any, Iterable, List, Tuple, cast
+from typing import Iterable, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
 import tifffile
+from sdflit import (
+    ColoredMaterial,
+    ObjectsScene,
+    RangeSampler,
+    RoundCone,
+    Scene,
+    SDFObject,
+)
 
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
-from swcgeom.utils import SDF, SDFRoundCone, SDFUnion
 
 __all__ = ["ToImageStack"]
 
 
-# TODO: migrate to github.com/yzx9/swc2skeleton
 class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     r"""Transform tree to image stack."""
 
     resolution: npt.NDArray[np.float32]
-    msaa: int
-    z_per_iter: int = 1
 
-    def __init__(
-        self, resolution: float | npt.ArrayLike = 1, msaa: int = 8, z_per_iter: int = 1
-    ) -> None:
+    def __init__(self, resolution: float | npt.ArrayLike = 1) -> None:
         """Transform tree to image stack.
 
         Parameters
         ----------
         resolution : int | (x, y, z), default `(1, 1, 1)`
             Resolution of image stack.
-        mass : int, default `8`
-            Multi-sample anti-aliasing.
         """
 
         if isinstance(resolution, float):
@@ -53,9 +51,6 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
         self.resolution = (resolution := np.array(resolution, dtype=np.float32))
         assert tuple(resolution.shape) == (3,), "resolution shoule be vector of 3d."
-
-        self.msaa = msaa
-        self.z_per_iter = z_per_iter
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.
@@ -69,40 +64,36 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         return np.concatenate(list(self.transfrom(x, verbose=False)), axis=0)
 
     def __repr__(self) -> str:
-        return (
-            "ToImageStack"
-            + f"-resolution-{'-'.join(self.resolution)}"
-            + f"-mass-{self.msaa}"
-            + f"-z-{self.z_per_iter}"
-        )
+        return "ToImageStack" + f"-resolution-{'-'.join(self.resolution)}"
 
     def transfrom(
         self, x: Tree, verbose: bool = True
     ) -> Iterable[npt.NDArray[np.uint8]]:
-        # pylint: disable=too-many-locals
         from tqdm import tqdm
 
         if verbose:
             print("To image stack: " + x.source)
             time_start = time.time()
 
-        sdf = self.get_sdf(x)
+        scene = self._get_scene(x)
 
-        xyz, r = x.xyz(), np.stack([x.r(), x.r(), x.r()], axis=1)  # TODO: perf
-        coord_min = np.floor(np.min(xyz - r, axis=0))  # TODO: snap to grid
+        xyz, r = x.xyz(), x.r().reshape(-1, 1)
+        coord_min = np.floor(np.min(xyz - r, axis=0))
         coord_max = np.ceil(np.max(xyz + r, axis=0))
-        grids, total = self.get_grids(coord_min, coord_max)
+
+        samplers = self._get_samplers(coord_min, coord_max)
+        total = (
+            ((coord_max[2] - coord_min[2]) / self.resolution[2]).astype(np.int64).item()
+        )
 
         if verbose:
             time_end = time.time()
             print("Prepare in: ", time_end - time_start, "s")  # type: ignore
 
-        for grid in tqdm(grids, total=total) if verbose else grids:
-            is_in = sdf.is_in(grid.reshape(-1, 3)).reshape(*grid.shape[:4])
-            level = np.sum(is_in, axis=3, dtype=np.uint8)
-            voxel = (255 / self.msaa * level).astype(np.uint8)
-            for i in range(voxel.shape[2]):
-                yield voxel[:, :, i]
+        for sampler in tqdm(samplers, total=total) if verbose else samplers:
+            voxel = sampler.sample(scene)  # shoule be shape of (x, y, z, 3) and z = 1
+            frame = (255 * voxel[..., 0, 0]).astype(np.uint8)
+            yield frame
 
     def transform_and_save(self, fname: str, x: Tree, verbose: bool = True) -> None:
         self.save_tif(fname, self.transfrom(x, verbose=verbose))
@@ -119,86 +110,48 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             if not os.path.isfile(tif):
                 self.transform_and_save(tif, tree, verbose=verbose)
 
-    def get_grids(
-        self, coord_min: npt.ArrayLike, coord_max: npt.ArrayLike
-    ) -> Tuple[Iterable[npt.NDArray[np.float32]], int]:
-        """Get point grid.
+    def _get_scene(self, x: Tree) -> Scene:
+        material = ColoredMaterial((1, 0, 0)).into()
+        scene = ObjectsScene()
+        scene.set_background((0, 0, 0))
+
+        def leave(n: Tree.Node, children: List[Tree.Node]) -> Tree.Node:
+            for c in children:
+                sdf = RoundCone(_tp3f(n.xyz()), _tp3f(c.xyz()), n.r, c.r).into()
+                scene.add_object(SDFObject(sdf, material).into())
+
+            return n
+
+        x.traverse(leave=leave)
+        scene.build_bvh()
+        return scene.into()
+
+    def _get_samplers(
+        self,
+        coord_min: npt.NDArray,
+        coord_max: npt.NDArray,
+        offset: Optional[npt.NDArray] = None,
+    ) -> Iterable[RangeSampler]:
+        """Get Samplers.
 
         Parameters
         ----------
         coord_min, coord_max: npt.ArrayLike
             Coordinates array of shape (3,).
-        z_per_iter : int
-            Yeild z per iter, raising this option speeds up processing,
-            but consumes more memory.
-
-        Returns
-        -------
-        grid : npt.NDArray[np.float32]
-            Array of shape (nx, ny, z_per_iter, k, 3).
         """
 
-        k = np.cbrt(self.msaa)
-        coord_min, coord_max = np.array(coord_min), np.array(coord_max)
-        assert tuple(coord_min.shape) == (3,), "coord_min shoule be vector of 3d."
-        assert tuple(coord_max.shape) == (3,), "coord_max shoule be vector of 3d."
+        eps = 1e-6
+        stride = self.resolution
+        offset = offset or (stride / 2)
 
-        point_grid = np.mgrid[
-            coord_min[0] : coord_max[0] : self.resolution[0],
-            coord_min[1] : coord_max[1] : self.resolution[1],
-            coord_min[2] : coord_max[2] : self.resolution[2],
-        ]  # (3, nx, ny, nz)
-        point_grid = np.rollaxis(point_grid, 0, 4)  # (nx, ny, nz, 3)
-
-        step = self.resolution / (k + 1)
-        ends = self.resolution - step / 2
-        inter_grid = np.mgrid[
-            step[0] : ends[0] : step[0],
-            step[1] : ends[1] : step[1],
-            step[2] : ends[2] : step[2],
-        ]  # (3, kx, ky, kz)
-        inter_grid = np.rollaxis(inter_grid, 0, 4).reshape(-1, 3)  # (k, 3)
-
-        grids = np.expand_dims(point_grid, 3).repeat(k**3, axis=3)
-        grids = cast(Any, grids + inter_grid)
-
-        return (
-            grids[:, :, i : i + self.z_per_iter]
-            for i in range(0, grids.shape[2], self.z_per_iter)
-        ), math.ceil(grids.shape[2] / self.z_per_iter)
-
-    def get_sdf(self, x: Tree) -> SDF:
-        T = Tuple[Tree.Node, List[SDF], SDF | None]
-
-        def collect(n: Tree.Node, pre: List[T]) -> T:
-            if len(pre) == 0:
-                return (n, [], None)
-
-            if len(pre) == 1:
-                child, sub_sdfs, last = pre[0]
-                sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
-                return (n, sub_sdfs, last)
-
-            sdfs: List[SDF] = []
-            for child, sub_sdfs, last in pre:
-                sub_sdfs.append(SDFRoundCone(n.xyz(), child.xyz(), n.r, child.r))
-                sdfs.append(SDFUnion(*sub_sdfs))
-                if last is not None:
-                    sdfs.append(last)
-
-            return (n, [], SDFUnion(*sdfs))
-
-        _, sdfs, last = x.traverse(leave=collect)
-        if len(sdfs) != 0:
-            sdf = SDFUnion(*sdfs)
-            if last is not None:
-                sdf = SDFUnion(sdf, last)
-        elif last is not None:
-            sdf = last
-        else:
-            raise ValueError("empty tree")
-
-        return sdf
+        xmin, ymin, zmin = _tp3f(coord_min + offset)
+        xmax, ymax, zmax = _tp3f(coord_max)
+        z = zmin
+        while z < zmax:
+            yield RangeSampler(
+                (xmin, ymin, z), (xmax, ymax, z + stride[2] - eps), _tp3f(stride)
+            )
+            z += stride[2]
 
     @staticmethod
     def save_tif(
@@ -218,3 +171,9 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
                         "axes": "ZXY",
                     },
                 )
+
+
+def _tp3f(x: npt.NDArray) -> Tuple[float, float, float]:
+    """Convert to tuple of 3 floats."""
+    assert len(x) == 3
+    return (float(x[0]), float(x[1]), float(x[2]))
