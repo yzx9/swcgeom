@@ -1,9 +1,9 @@
 """Analysis of volume of a SWC tree."""
 
-from typing import Dict, List, Literal
+from typing import Dict, List, Literal, Tuple
 
 from swcgeom.core import Tree
-from swcgeom.utils import VolFrustumCone, VolSphere
+from swcgeom.utils import VolFrustumCone, VolObject, VolSphere
 
 __all__ = ["get_volume"]
 
@@ -61,6 +61,8 @@ def get_volume(
     if isinstance(accuracy, str):
         accuracy = ACCURACY_LEVELS[accuracy]
 
+    assert 0 < accuracy <= 10
+
     match method:
         case "frustum_cone":
             return _get_volume_frustum_cone(tree, accuracy=accuracy)
@@ -80,7 +82,12 @@ def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
         2 : Sphere and Frustum Cone
         3 : Sphere, Frustum Cone, and intersection in single-branch
         5 : Above and Sphere-Frustum Cone intersection in multi-branch
+        10 : Fully calculated by Monte Carlo method
     """
+
+    if accuracy == 10:
+        return _get_volume_frustum_cone_mc_only(tree)
+
     volume = 0.0
 
     def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
@@ -108,4 +115,23 @@ def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
         return sphere
 
     tree.traverse(leave=leave)
+    return volume
+
+
+_R = Tuple[VolObject, VolSphere]
+
+
+def _get_volume_frustum_cone_mc_only(tree: Tree) -> float:
+    def leave(n: Tree.Node, children: List[_R]) -> _R:
+        sphere = VolSphere(n.xyz(), n.r)
+        obj = sphere
+        for o, c in children:
+            obj = obj.union(o)
+            obj = obj.union(VolFrustumCone(n.xyz(), n.r, c.center, c.radius))
+
+        return obj, sphere
+
+    obj, _ = tree.traverse(leave=leave)
+    # TODO: estimate the number of samples needed
+    volume = obj.get_volume(n_samples=100_000_000)
     return volume
