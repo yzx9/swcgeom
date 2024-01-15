@@ -1,6 +1,5 @@
 """Read and write image stack."""
 
-
 import os
 import re
 import warnings
@@ -9,11 +8,13 @@ from functools import cache, lru_cache
 from typing import (
     Any,
     Callable,
+    Generic,
     Iterable,
     List,
     Literal,
     Optional,
     Tuple,
+    TypeVar,
     cast,
     overload,
 )
@@ -27,6 +28,8 @@ from v3dpy.loaders import PBD, Raw
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
 Vec3i = Tuple[int, int, int]
+ScalarType = TypeVar("ScalarType", bound=np.generic, covariant=True)
+
 RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
 RE_TERAFLY_NAME = re.compile(r"^\d+(_\d+)?(_\d+)?")
 
@@ -46,30 +49,30 @@ AXES_ORDER = {
 }
 
 
-class ImageStack(ABC):
+class ImageStack(ABC, Generic[ScalarType]):
     """Image stack."""
 
     # fmt: off
     @overload
     @abstractmethod
-    def __getitem__(self, key: int) -> npt.NDArray[np.float32]: ...                     # array of shape (Y, Z, C)
+    def __getitem__(self, key: int) -> npt.NDArray[ScalarType]: ...                     # array of shape (Y, Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int]) -> npt.NDArray[np.float32]: ...         # array of shape (Z, C)
+    def __getitem__(self, key: Tuple[int, int]) -> npt.NDArray[ScalarType]: ...         # array of shape (Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int]) -> npt.NDArray[np.float32]: ...    # array of shape (C,)
+    def __getitem__(self, key: Tuple[int, int, int]) -> npt.NDArray[ScalarType]: ...    # array of shape (C,)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int, int]) -> np.float32: ...            # value
+    def __getitem__(self, key: Tuple[int, int, int, int]) -> ScalarType: ...            # value
     @overload
     @abstractmethod
     def __getitem__(
         self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice] |  Tuple[slice, slice, slice, slice],
-    ) -> npt.NDArray[np.float32]: ... # array of shape (X, Y, Z, C)
+    ) -> npt.NDArray[ScalarType]: ... # array of shape (X, Y, Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> npt.NDArray[np.float32]: ...
+    def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> npt.NDArray[ScalarType]: ...
     # fmt: on
     @abstractmethod
     def __getitem__(self, key):
@@ -82,7 +85,7 @@ class ImageStack(ABC):
         """
         raise NotImplementedError()
 
-    def get_full(self) -> npt.NDArray[np.float32]:
+    def get_full(self) -> npt.NDArray[ScalarType]:
         """Get full image stack.
 
         Notes
@@ -96,8 +99,19 @@ class ImageStack(ABC):
         raise NotImplementedError()
 
 
-def read_imgs(fname: str, **kwargs) -> ImageStack:
+# fmt:off
+@overload
+def read_imgs(fname: str, *, dtype: ScalarType, **kwargs) -> ImageStack[ScalarType]: ...
+@overload
+def read_imgs(fname: str, *, dtype: None =..., **kwargs) -> ImageStack[np.float32]: ...
+# fmt:on
+
+
+def read_imgs(fname: str, *, dtype=None, **kwargs):  # type: ignore
     """Read image stack."""
+
+    kwargs["dtype"] = dtype or np.float32
+
     ext = os.path.splitext(fname)[-1]
     if ext in [".tif", ".tiff"]:
         return TiffImageStack(fname, **kwargs)
@@ -191,7 +205,7 @@ def save_tiff(
     tifffile.imwrite(fname, data, **kwargs)
 
 
-class NDArrayImageStack(ImageStack):
+class NDArrayImageStack(ImageStack[ScalarType]):
     """NDArray image stack."""
 
     def __init__(
@@ -199,16 +213,14 @@ class NDArrayImageStack(ImageStack):
         imgs: npt.NDArray[Any],
         swap_xy: Optional[bool] = None,
         filp_xy: Optional[bool] = None,
+        *,
+        dtype: ScalarType,
     ) -> None:
         super().__init__()
 
         if imgs.ndim == 3:  # (_, _, _) -> (_, _, _, C)
             imgs = np.expand_dims(imgs, -1)
         assert imgs.ndim == 4, "Should be shape of (X, Y, Z, C)"
-
-        sclar_factor = 1.0
-        if np.issubdtype((dtype := imgs.dtype), np.unsignedinteger):
-            sclar_factor /= UINT_MAX[dtype]
 
         if swap_xy is not None:
             warnings.warn(
@@ -231,12 +243,18 @@ class NDArrayImageStack(ImageStack):
             if filp_xy is True:
                 imgs = np.flip(imgs, (0, 1))  # (X, Y, Z, C)
 
-        self.imgs = imgs.astype(np.float32) * sclar_factor
+        dtype_raw = imgs.dtype
+        self.imgs = imgs.astype(dtype)
+        if np.issubdtype(dtype, np.floating) and np.issubdtype(
+            dtype_raw, np.unsignedinteger
+        ):  # TODO: add a option to disable this
+            sclar_factor = 1.0 / UINT_MAX[imgs.dtype]
+            self.imgs *= sclar_factor
 
     def __getitem__(self, key):
         return self.imgs.__getitem__(key)
 
-    def get_full(self) -> npt.NDArray[np.float32]:
+    def get_full(self) -> npt.NDArray[ScalarType]:
         return self.imgs
 
     @property
@@ -244,7 +262,7 @@ class NDArrayImageStack(ImageStack):
         return cast(Tuple[int, int, int, int], self.imgs.shape)
 
 
-class TiffImageStack(NDArrayImageStack):
+class TiffImageStack(NDArrayImageStack[ScalarType]):
     """Tiff image stack."""
 
     def __init__(
@@ -252,6 +270,8 @@ class TiffImageStack(NDArrayImageStack):
         fname: str,
         swap_xy: Optional[bool] = None,
         filp_xy: Optional[bool] = None,
+        *,
+        dtype: ScalarType,
         **kwargs,
     ) -> None:
         with tifffile.TiffFile(fname, **kwargs) as f:
@@ -265,10 +285,10 @@ class TiffImageStack(NDArrayImageStack):
 
         orders = [AXES_ORDER[c] for c in axes]
         imgs = imgs.transpose(np.argsort(orders))
-        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
+        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy, dtype=dtype)
 
 
-class NrrdImageStack(NDArrayImageStack):
+class NrrdImageStack(NDArrayImageStack[ScalarType]):
     """Nrrd image stack."""
 
     def __init__(
@@ -276,37 +296,41 @@ class NrrdImageStack(NDArrayImageStack):
         fname: str,
         swap_xy: Optional[bool] = None,
         filp_xy: Optional[bool] = None,
+        *,
+        dtype: ScalarType,
         **kwargs,
     ) -> None:
         imgs, header = nrrd.read(fname, **kwargs)
-        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy)
+        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy, dtype=dtype)
         self.header = header
 
 
-class V3dImageStack(NDArrayImageStack):
+class V3dImageStack(NDArrayImageStack[ScalarType]):
     """v3d image stack."""
 
-    def __init__(self, fname: str, loader: Raw | PBD, **kwargs) -> None:
+    def __init__(
+        self, fname: str, loader: Raw | PBD, *, dtype: ScalarType, **kwargs
+    ) -> None:
         r = loader()
         imgs = r.load(fname)
-        super().__init__(imgs, **kwargs)
+        super().__init__(imgs, dtype=dtype, **kwargs)
 
 
-class V3drawImageStack(V3dImageStack):
+class V3drawImageStack(V3dImageStack[ScalarType]):
     """v3draw image stack."""
 
-    def __init__(self, fname: str, **kwargs) -> None:
-        super().__init__(fname, loader=Raw, **kwargs)
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
+        super().__init__(fname, loader=Raw, dtype=dtype, **kwargs)
 
 
-class V3dpbdImageStack(V3dImageStack):
+class V3dpbdImageStack(V3dImageStack[ScalarType]):
     """v3dpbd image stack."""
 
-    def __init__(self, fname: str, **kwargs) -> None:
-        super().__init__(fname, loader=PBD, **kwargs)
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
+        super().__init__(fname, loader=PBD, dtype=dtype, **kwargs)
 
 
-class TeraflyImageStack(ImageStack):
+class TeraflyImageStack(ImageStack[ScalarType]):
     """TeraFly image stack.
 
     References
@@ -328,21 +352,26 @@ class TeraflyImageStack(ImageStack):
     _listdir: Callable[[str], List[str]]
     _read_patch: Callable[[str], npt.NDArray]
 
-    def __init__(self, root: str, *, lru_maxsize: int | None = 128) -> None:
+    def __init__(
+        self, root: str, *, dtype: ScalarType, lru_maxsize: int | None = 128
+    ) -> None:
         r"""
         Parameters
         ----------
         root : str
             The root of terafly which contains directories named as
             `RES(YxXxZ)`.
+        dtype : np.dtype
         lru_maxsize : int or None, default to 128
             Forwarding to `functools.lru_cache`. A decompressed array
             size of (256, 256, 256, 1), which is the typical size of
             terafly image stack, takes about 256 * 256 * 256 * 1 *
             4B = 64MB. A cache size of 128 requires about 8GB memeory.
         """
+
         super().__init__()
         self.root = root
+        self.dtype = dtype
         self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(root)
 
         @cache
@@ -350,8 +379,8 @@ class TeraflyImageStack(ImageStack):
             return os.listdir(path)
 
         @lru_cache(maxsize=lru_maxsize)
-        def read_patch(path: str) -> npt.NDArray[np.float32]:
-            return read_imgs(path).get_full()
+        def read_patch(path: str) -> npt.NDArray[ScalarType]:
+            return read_imgs(path, dtype=dtype).get_full()
 
         self._listdir, self._read_patch = listdir, read_patch
 
@@ -382,7 +411,7 @@ class TeraflyImageStack(ImageStack):
 
     def get_patch(
         self, starts, ends, strides: int | Vec3i = 1, res_level=-1
-    ) -> npt.NDArray[np.float32]:
+    ) -> npt.NDArray[ScalarType]:
         """Get patch of image stack.
 
         Returns
@@ -397,7 +426,7 @@ class TeraflyImageStack(ImageStack):
         assert np.equal(strides, [1, 1, 1]).all()  #  TODO: support stride
 
         shape_out = np.concatenate([ends - starts, [1]])
-        out = np.zeros(shape_out, dtype=np.float32)
+        out = np.zeros(shape_out, dtype=self.dtype)
         self._get_range(starts, ends, res_level, out=out)
 
         # flip y-axis to makes it a left-handed coordinate system

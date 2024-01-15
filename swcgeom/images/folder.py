@@ -2,14 +2,25 @@
 
 import os
 import re
+import warnings
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Iterable, List, Literal, Optional, Tuple, TypeVar
+from typing import (
+    Callable,
+    Generic,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Tuple,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
 from typing_extensions import Self
 
-from swcgeom.images.io import read_imgs
+from swcgeom.images.io import ScalarType, read_imgs
 from swcgeom.transforms import Identity, Transform
 
 __all__ = [
@@ -21,20 +32,23 @@ __all__ = [
 T = TypeVar("T")
 
 
-class ImageStackFolderBase(Generic[T], ABC):
+class ImageStackFolderBase(Generic[ScalarType, T], ABC):
     """Image stack folder base."""
 
     files: List[str]
-    transform: Transform[npt.NDArray[np.float32], T]
+    transform: Transform[npt.NDArray[ScalarType], T]
 
-    def __init__(
-        self,
-        files: Iterable[str],
-        *,
-        transform: Optional[Transform[npt.NDArray[np.float32], T]] = None,
-    ) -> None:
+    # fmt: off
+    @overload
+    def __init__(self, files: Iterable[str], *, dtype: None = ..., transform: Optional[Transform[npt.NDArray[np.float32], T]] = None) -> None: ...
+    @overload
+    def __init__(self, files: Iterable[str], *, dtype: ScalarType, transform: Optional[Transform[npt.NDArray[ScalarType], T]] = None) -> None: ...
+    # fmt: on
+
+    def __init__(self, files: Iterable[str], *, dtype=None, transform=None) -> None:
         super().__init__()
         self.files = list(files)
+        self.dtype = dtype or np.float32
         self.transform = transform or Identity()  # type: ignore
 
     @abstractmethod
@@ -45,13 +59,12 @@ class ImageStackFolderBase(Generic[T], ABC):
         return len(self.files)
 
     def _get(self, fname: str) -> T:
-        imgs = self.read_imgs(fname)
+        imgs = self._read(fname)
         imgs = self.transform(imgs)
         return imgs
 
-    @staticmethod
-    def read_imgs(fname: str) -> npt.NDArray[np.float32]:
-        return read_imgs(fname).get_full()
+    def _read(self, fname: str) -> npt.NDArray[ScalarType]:
+        return read_imgs(fname, dtype=self.dtype).get_full()  # type: ignore
 
     @staticmethod
     def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
@@ -63,8 +76,20 @@ class ImageStackFolderBase(Generic[T], ABC):
 
         return fs
 
+    @staticmethod
+    def read_imgs(fname: str) -> npt.NDArray[np.float32]:
+        warnings.warn(
+            "`ImageStackFolderBase.read_imgs` serves as a "
+            "straightforward wrapper for `~swcgeom.images.io.read_imgs(fname).get_full()`. "
+            "However, as it is not utilized within our internal "
+            "processes, it is scheduled for removal in the "
+            "forthcoming version.",
+            DeprecationWarning,
+        )
+        return read_imgs(fname).get_full()
 
-class ImageStackFolder(Generic[T], ImageStackFolderBase[T]):
+
+class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     """Image stack folder."""
 
     def __getitem__(self, idx: int, /) -> T:
@@ -84,7 +109,7 @@ class ImageStackFolder(Generic[T], ImageStackFolderBase[T]):
         return cls(cls.scan(root, pattern=pattern), **kwargs)
 
 
-class LabeledImageStackFolder(Generic[T], ImageStackFolderBase[T]):
+class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     """Image stack folder with label."""
 
     labels: List[int]
@@ -115,7 +140,7 @@ class LabeledImageStackFolder(Generic[T], ImageStackFolderBase[T]):
         return cls(files, labels, **kwargs)
 
 
-class PathImageStackFolder(Generic[T], ImageStackFolder[T]):
+class PathImageStackFolder(ImageStackFolder[ScalarType, T]):
     """Image stack folder with relpath."""
 
     root: str
