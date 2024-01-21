@@ -37,7 +37,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
     resolution: npt.NDArray[np.float32]
 
-    def __init__(self, resolution: float | npt.ArrayLike = 1) -> None:
+    def __init__(self, resolution: int | float | npt.ArrayLike = 1) -> None:
         """Transform tree to image stack.
 
         Parameters
@@ -46,11 +46,11 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             Resolution of image stack.
         """
 
-        if isinstance(resolution, float):
-            resolution = [resolution, resolution, resolution]
+        if isinstance(resolution, (int, float, np.integer, np.floating)):
+            resolution = [resolution, resolution, resolution]  # type: ignore
 
-        self.resolution = (resolution := np.array(resolution, dtype=np.float32))
-        assert tuple(resolution.shape) == (3,), "resolution shoule be vector of 3d."
+        self.resolution = np.array(resolution, dtype=np.float32)
+        assert len(self.resolution) == 3, "resolution shoule be vector of 3d."
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.
@@ -58,8 +58,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         Notes
         -----
         This method loads the entire image stack into memory, so it
-        ONLY works for small image stacks, use
-        :meth`transform_and_save` for big image stack.
+        ONLY works for small image stacks, use :meth`transform_and_save`
+        for big image stack.
         """
         return np.concatenate(list(self.transfrom(x, verbose=False)), axis=0)
 
@@ -67,48 +67,68 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         return "ToImageStack" + f"-resolution-{'-'.join(self.resolution)}"
 
     def transfrom(
-        self, x: Tree, verbose: bool = True
+        self,
+        x: Tree,
+        verbose: bool = True,
+        *,
+        ranges: Optional[Tuple[npt.ArrayLike, npt.ArrayLike]] = None,
     ) -> Iterable[npt.NDArray[np.uint8]]:
-        from tqdm import tqdm
-
         if verbose:
             print("To image stack: " + x.source)
             time_start = time.time()
 
         scene = self._get_scene(x)
 
-        xyz, r = x.xyz(), x.r().reshape(-1, 1)
-        coord_min = np.floor(np.min(xyz - r, axis=0))
-        coord_max = np.ceil(np.max(xyz + r, axis=0))
+        if ranges is None:
+            xyz, r = x.xyz(), x.r().reshape(-1, 1)
+            coord_min = np.floor(np.min(xyz - r, axis=0))
+            coord_max = np.ceil(np.max(xyz + r, axis=0))
+        else:
+            assert len(ranges) == 2
+            coord_min = np.array(ranges[0])
+            coord_max = np.array(ranges[1])
+            assert len(coord_min) == len(coord_max) == 3
 
         samplers = self._get_samplers(coord_min, coord_max)
-        total = (
-            ((coord_max[2] - coord_min[2]) / self.resolution[2]).astype(np.int64).item()
-        )
 
         if verbose:
+            from tqdm import tqdm
+
+            total = (coord_max[2] - coord_min[2]) / self.resolution[2]
+            samplers = tqdm(samplers, total=total.astype(np.int64).item())
+
             time_end = time.time()
             print("Prepare in: ", time_end - time_start, "s")  # type: ignore
 
-        for sampler in tqdm(samplers, total=total) if verbose else samplers:
-            voxel = sampler.sample(scene)  # shoule be shape of (x, y, z, 3) and z = 1
+        for sampler in samplers:
+            voxel = sampler.sample(scene)  # should be shape of (x, y, z, 3) and z = 1
             frame = (255 * voxel[..., 0, 0]).astype(np.uint8)
             yield frame
 
-    def transform_and_save(self, fname: str, x: Tree, verbose: bool = True) -> None:
-        self.save_tif(fname, self.transfrom(x, verbose=verbose))
+    def transform_and_save(
+        self, fname: str, x: Tree, verbose: bool = True, **kwargs
+    ) -> None:
+        self.save_tif(fname, self.transfrom(x, verbose=verbose, **kwargs))
 
     def transform_population(
         self, population: Population | str, verbose: bool = True
     ) -> None:
-        if isinstance(population, str):
-            population = Population.from_swc(population)
+        trees = (
+            Population.from_swc(population)
+            if isinstance(population, str)
+            else population
+        )
+
+        if verbose:
+            from tqdm import tqdm
+
+            trees = tqdm(trees)
 
         # TODO: multiprocess
-        for tree in population:
+        for tree in trees:
             tif = re.sub(r".swc$", ".tif", tree.source)
             if not os.path.isfile(tif):
-                self.transform_and_save(tif, tree, verbose=verbose)
+                self.transform_and_save(tif, tree, verbose=False)
 
     def _get_scene(self, x: Tree) -> Scene:
         material = ColoredMaterial((1, 0, 0)).into()
