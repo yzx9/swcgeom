@@ -63,9 +63,6 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         """
         return np.concatenate(list(self.transfrom(x, verbose=False)), axis=0)
 
-    def __repr__(self) -> str:
-        return "ToImageStack" + f"-resolution-{'-'.join(self.resolution)}"
-
     def transfrom(
         self,
         x: Tree,
@@ -129,6 +126,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             tif = re.sub(r".swc$", ".tif", tree.source)
             if not os.path.isfile(tif):
                 self.transform_and_save(tif, tree, verbose=False)
+
+    def extra_repr(self):
+        res = ",".join(f"{a:.4f}" for a in self.resolution)
+        return f"resolution=({res})"
 
     def _get_scene(self, x: Tree) -> Scene:
         material = ColoredMaterial((1, 0, 0)).into()

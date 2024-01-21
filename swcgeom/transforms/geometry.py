@@ -72,6 +72,9 @@ class RadiusReseter(Generic[T], Transform[T, T]):
         new_tree.ndata[new_tree.names.r] = r
         return new_tree
 
+    def extra_repr(self):
+        return f"r={self.r:.4f}"
+
 
 class AffineTransform(Generic[T], Transform[T, T]):
     """Apply affine matrix."""
@@ -85,10 +88,18 @@ class AffineTransform(Generic[T], Transform[T, T]):
         tm: npt.NDArray[np.float32],
         center: Center = "origin",
         *,
-        fmt: str,
+        fmt: Optional[str] = None,
         names: Optional[SWCNames] = None,
     ) -> None:
-        self.tm, self.center, self.fmt = tm, center, fmt
+        self.tm, self.center = tm, center
+
+        if fmt is not None:
+            warnings.warn(
+                "`fmt` parameter is no longer needed, now use the "
+                "extra_repr(), you can directly remove it.",
+                DeprecationWarning,
+            )
+
         if names is not None:
             warnings.warn(
                 "`name` parameter is no longer needed, now use the "
@@ -111,9 +122,6 @@ class AffineTransform(Generic[T], Transform[T, T]):
 
         return self.apply(x, tm)
 
-    def __repr__(self) -> str:
-        return self.fmt
-
     @staticmethod
     def apply(x: T, tm: npt.NDArray[np.float32]) -> T:
         xyzw = x.xyzw().dot(tm.T).T
@@ -130,8 +138,11 @@ class Translate(Generic[T], AffineTransform[T]):
     """Translate SWC."""
 
     def __init__(self, tx: float, ty: float, tz: float, **kwargs) -> None:
-        fmt = f"Translate-{tx}-{ty}-{tz}"
-        super().__init__(translate3d(tx, ty, tz), fmt=fmt, **kwargs)
+        super().__init__(translate3d(tx, ty, tz), **kwargs)
+        self.tx, self.ty, self.tz = tx, ty, tz
+
+    def extra_repr(self):
+        return f"tx={self.tx:.4f}, ty={self.ty:.4f}, tz={self.tz:.4f}"
 
     @classmethod
     def transform(cls, x: T, tx: float, ty: float, tz: float, **kwargs) -> T:
@@ -158,8 +169,7 @@ class Scale(Generic[T], AffineTransform[T]):
     def __init__(
         self, sx: float, sy: float, sz: float, center: Center = "root", **kwargs
     ) -> None:
-        fmt = f"Scale-{sx}-{sy}-{sz}"
-        super().__init__(scale3d(sx, sy, sz), center=center, fmt=fmt, **kwargs)
+        super().__init__(scale3d(sx, sy, sz), center=center, **kwargs)
 
     @classmethod
     def transform(  # pylint: disable=too-many-arguments
@@ -180,6 +190,12 @@ class Rotate(Generic[T], AffineTransform[T]):
     ) -> None:
         fmt = f"Rotate-{n[0]}-{n[1]}-{n[2]}-{theta:.4f}"
         super().__init__(rotate3d(n, theta), center=center, fmt=fmt, **kwargs)
+        self.n = n
+        self.theta = theta
+        self.center = center
+
+    def extra_repr(self):
+        return f"n={self.n}, theta={self.theta:.4f}, center={self.center}"  # TODO: imporve format of n
 
     @classmethod
     def transform(
@@ -197,9 +213,11 @@ class RotateX(Generic[T], AffineTransform[T]):
     """Rotate SWC with x-axis."""
 
     def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
-        super().__init__(
-            rotate3d_x(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
-        )
+        super().__init__(rotate3d_x(theta), center=center, **kwargs)
+        self.theta = theta
+
+    def extra_repr(self):
+        return f"center={self.center}, theta={self.theta:.4f}"
 
     @classmethod
     def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:
@@ -210,9 +228,12 @@ class RotateY(Generic[T], AffineTransform[T]):
     """Rotate SWC with y-axis."""
 
     def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
-        super().__init__(
-            rotate3d_y(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
-        )
+        super().__init__(rotate3d_y(theta), center=center, **kwargs)
+        self.theta = theta
+        self.center = center
+
+    def extra_repr(self):
+        return f"theta={self.theta:.4f}, center={self.center}"
 
     @classmethod
     def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:
@@ -223,9 +244,12 @@ class RotateZ(Generic[T], AffineTransform[T]):
     """Rotate SWC with z-axis."""
 
     def __init__(self, theta: float, center: Center = "root", **kwargs) -> None:
-        super().__init__(
-            rotate3d_z(theta), center=center, fmt=f"RotateX-{theta}", **kwargs
-        )
+        super().__init__(rotate3d_z(theta), center=center, **kwargs)
+        self.theta = theta
+        self.center = center
+
+    def extra_repr(self):
+        return f"theta={self.theta:.4f}, center={self.center}"
 
     @classmethod
     def transform(cls, x: T, theta: float, center: Center = "root", **kwargs) -> T:

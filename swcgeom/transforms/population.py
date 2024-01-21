@@ -25,5 +25,5 @@ class PopulationTransform(Transform[Population, Population]):
 
         return Population(trees, root=population.root)
 
-    def __repr__(self) -> str:
-        return f"pop({self.transform})"
+    def extra_repr(self) -> str:
+        return f"transform={self.transform}"

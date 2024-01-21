@@ -1,7 +1,7 @@
 """Transformation in tree."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, cast, overload
+from typing import Any, Generic, TypeVar, overload
 
 __all__ = ["Transform", "Transforms", "Identity"]
 
@@ -15,26 +15,49 @@ class Transform(ABC, Generic[T, K]):
     r"""An abstract class representing a :class:`Transform`.
 
     All transforms that represent a map from `T` to `K`.
-
-    Methods
-    -------
-    __call__(x: T) -> K
-        All subclasses should overwrite :meth:`__call__`, supporting
-        applying transform in `x`.
-    __repr__() -> str
-        Subclasses could also optionally overwrite :meth:`__repr__`.
-        Avoid using the underscore `_` because it is used by
-        `Transforms`. If not provied, class name will be a default
-        value.
     """
 
     @abstractmethod
     def __call__(self, x: T) -> K:
-        """Apply transform."""
+        """Apply transform.
+
+        Notes
+        -----
+        All subclasses should overwrite :meth:`__call__`, supporting
+        applying transform in `x`.
+        """
         raise NotImplementedError()
 
     def __repr__(self) -> str:
-        return self.__class__.__name__
+        classname = self.__class__.__name__
+        repr_ = self.extra_repr()
+        return f"{classname}({repr_})"
+
+    def extra_repr(self):
+        """Provides a human-friendly representation of the module.
+
+        This method extends the basic string representation provided by
+        `__repr__` method. It is designed to display additional details
+        about the module's parameters or its specific configuration,
+        which can be particularly useful for debugging and model
+        architecture introspection.
+
+        Examples
+        --------
+        class Foo(Transform[T, K]):
+            def __init__(self, my_parameter: int = 1):
+                self.my_parameter = my_parameter
+
+            def extra_repr(self):
+                return f"my_parameter={self.my_parameter}"
+
+        Notes
+        -----
+        This method should be overridden in custom modules to provide
+        specific details relevant to the module's functionality and
+        configuration.
+        """
+        return ""
 
 
 class Transforms(Transform[T, K]):
@@ -81,16 +104,16 @@ class Transforms(Transform[T, K]):
         for transform in self.transforms:
             x = transform(x)
 
-        return cast(K, x)
+        return x  # type: ignore
 
     def __getitem__(self, idx: int) -> Transform[Any, Any]:
         return self.transforms[idx]
 
-    def __repr__(self) -> str:
-        return "_".join([str(transform) for transform in self])
-
     def __len__(self) -> int:
         return len(self.transforms)
+
+    def extra_repr(self) -> str:
+        return ", ".join([str(transform) for transform in self])
 
 
 class Identity(Transform[T, T]):
@@ -98,6 +121,3 @@ class Identity(Transform[T, T]):
 
     def __call__(self, x: T) -> T:
         return x
-
-    def __repr__(self) -> str:
-        return ""

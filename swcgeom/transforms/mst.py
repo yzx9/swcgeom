@@ -140,13 +140,8 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
             t = sort_tree(t)
         return t
 
-    def __repr__(self) -> str:
-        return (
-            f"PointsToCuntzMST"
-            f"-bf-{self.bf}"
-            f"-furcations-{self.furcations}"
-            f"-{'exclude-soma' if self.exclude_soma else 'include-soma'}"
-        )  # TODO: names, types
+    def extra_repr(self) -> str:  # TODO: names, types
+        return f"bf={self.bf:.4f}, furcations={self.furcations}, exclude_soma={self.exclude_soma}, sort={self.sort}"
 
 
 class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
@@ -173,6 +168,7 @@ class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
         names : SWCNames, optional
         types : SWCTypes, optional
         """
+
         if k_furcations is not None:
             warnings.warn(
                 "`PointsToMST(k_furcations=...)` has been renamed to "
@@ -191,9 +187,5 @@ class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
             **kwargs,
         )
 
-    def __repr__(self) -> str:
-        return (
-            f"PointsToMST"
-            f"-furcations-{self.furcations}"
-            f"-{'exclude-soma' if self.exclude_soma else 'include-soma'}"
-        )
+    def extra_repr(self) -> str:
+        return f"furcations-{self.furcations}, exclude-soma={self.exclude_soma}"

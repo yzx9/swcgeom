@@ -28,5 +28,5 @@ class Center(Transform[npt.NDArray[np.float32], npt.NDArray[np.float32]]):
         e = np.add(s, self.shape_out)
         return x[s[0] : e[0], s[1] : e[1], s[2] : e[2], :]
 
-    def __repr__(self) -> str:
-        return f"Center-{self.shape_out[0]}-{self.shape_out[1]}-{self.shape_out[2]}"
+    def extra_repr(self) -> str:
+        return f"shape_out=({','.join(str(a) for a in self.shape_out)})"

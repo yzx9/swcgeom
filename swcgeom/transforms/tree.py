@@ -64,8 +64,8 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
 
         return x
 
-    def __repr__(self) -> str:
-        return f"TreeSmoother-{self.n_nodes}"
+    def extra_repr(self):
+        return f"n_nodes={self.n_nodes}"
 
 
 class TreeNormalizer(Normalizer[Tree]):
@@ -107,8 +107,8 @@ class CutByType(Transform[Tree, Tree]):
         y = to_subtree(x, removals)
         return y
 
-    def __repr__(self) -> str:
-        return f"CutByType-{self.type}"
+    def extra_repr(self):
+        return f"type={self.type}"
 
 
 class CutAxonTree(CutByType):
@@ -118,9 +118,6 @@ class CutAxonTree(CutByType):
         types = get_types(types)
         super().__init__(type=types.axon)
 
-    def __repr__(self) -> str:
-        return "CutAxonTree"
-
 
 class CutDendriteTree(CutByType):
     """Cut dendrite tree."""
@@ -128,9 +125,6 @@ class CutDendriteTree(CutByType):
     def __init__(self, types: Optional[SWCTypes] = None) -> None:
         types = get_types(types)
         super().__init__(type=types.basal_dendrite)  # TODO: apical dendrite
-
-    def __repr__(self) -> str:
-        return "CutDenriteTree"
 
 
 class CutByBifurcationOrder(Transform[Tree, Tree]):
@@ -177,15 +171,15 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         if callback is not None:
             self.callbacks.append(callback)
 
-    def __repr__(self) -> str:
-        return f"CutShortTipBranch-{self.thre}"
-
     def __call__(self, x: Tree) -> Tree:
         removals: List[int] = []
         self.callbacks.append(lambda br: removals.append(br[1].id))
         x.traverse(leave=self._leave)
         self.callbacks.pop()
         return to_subtree(x, removals)
+
+    def extra_repr(self):
+        return f"threshold={self.thre}"
 
     def _leave(
         self, n: Tree.Node, children: List[Tuple[float, Tree.Node] | None]

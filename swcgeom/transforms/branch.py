@@ -48,9 +48,6 @@ class BranchLinearResampler(_BranchResampler):
         super().__init__()
         self.n_nodes = n_nodes
 
-    def __repr__(self) -> str:
-        return f"BranchLinearResampler-{self.n_nodes}"
-
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Resampling by linear interpolation, DO NOT keep original node.
 
@@ -74,6 +71,9 @@ class BranchLinearResampler(_BranchResampler):
         z = np.interp(xvals, xp, xyzr[:, 2])
         r = np.interp(xvals, xp, xyzr[:, 3])
         return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
+
+    def extra_repr(self):
+        return f"n_nodes={self.n_nodes}"
 
 
 class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
@@ -100,8 +100,8 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
 
         return x
 
-    def __repr__(self) -> str:
-        return f"BranchConvSmoother-{self.n_nodes}"
+    def extra_repr(self):
+        return f"n_nodes={self.n_nodes}"
 
 
 class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):

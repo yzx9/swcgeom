@@ -35,9 +35,6 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
     ):
         return self.assemble(lines, names=names)
 
-    def __repr__(self) -> str:
-        return f"LinesToTree-thre-{self.thre}-{'undirected' if self.undirected else 'directed'}"
-
     def assemble(
         self, lines: Iterable[pd.DataFrame], *, names: Optional[SWCNames] = None
     ) -> pd.DataFrame:
@@ -105,3 +102,6 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
             sort_nodes=sort_nodes,
             names=names,
         )
+
+    def extra_repr(self):
+        return f"thre={self.thre}, undirected={self.undirected}"
