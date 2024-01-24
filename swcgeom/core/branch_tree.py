@@ -5,7 +5,6 @@ from typing import Dict, List
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Self
 
 from swcgeom.core.branch import Branch
 from swcgeom.core.swc_utils import to_sub_topology
@@ -31,7 +30,7 @@ class BranchTree(Tree):
         return self.branches[idx]
 
     @classmethod
-    def from_tree(cls, tree: Tree) -> Self:
+    def from_tree(cls, tree: Tree) -> "BranchTree":
         """Generating a branch tree from tree."""
 
         branches = tree.get_branches()
@@ -56,6 +55,6 @@ class BranchTree(Tree):
         return branch_tree
 
     @classmethod
-    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> Self:
+    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> "BranchTree":
         tree = super().from_data_frame(df, *args, **kwargs)
         return cls.from_tree(tree)

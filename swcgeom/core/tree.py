@@ -20,7 +20,6 @@ from typing import (
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
-from typing_extensions import Self
 
 from swcgeom.core.branch import Branch
 from swcgeom.core.node import Node
@@ -260,11 +259,11 @@ class Tree(DictSWC):
         paths = self.traverse(enter=assign_path, leave=collect_path)
         return [self.Path(self, idx) for idx in paths]
 
-    def get_neurites(self, type_check: bool = True) -> Iterable[Self]:
+    def get_neurites(self, type_check: bool = True) -> Iterable["Tree"]:
         """Get neurites from soma."""
         return (n.subtree() for n in self.soma(type_check).children())
 
-    def get_dendrites(self, type_check: bool = True) -> Iterable[Self]:
+    def get_dendrites(self, type_check: bool = True) -> Iterable["Tree"]:
         """Get dendrites."""
         types = [self.types.apical_dendrite, self.types.basal_dendrite]
         children = self.soma(type_check).children()
@@ -312,15 +311,14 @@ class Tree(DictSWC):
         """Get length of tree."""
         return sum(s.length() for s in self.get_segments())
 
-    @classmethod
+    @staticmethod
     def from_data_frame(
-        cls,
         df: pd.DataFrame,
         source: str = "",
         *,
         comments: Optional[Iterable[str]] = None,
         names: Optional[SWCNames] = None,
-    ) -> Self:
+    ) -> "Tree":
         """Read neuron tree from data frame."""
         names = get_names(names)
         tree = Tree(
@@ -333,7 +331,7 @@ class Tree(DictSWC):
         return tree
 
     @classmethod
-    def from_swc(cls, swc_file: PathOrIO, **kwargs) -> Self:
+    def from_swc(cls, swc_file: PathOrIO, **kwargs) -> "Tree":
         """Read neuron tree from swc file.
 
         See Also
@@ -352,7 +350,7 @@ class Tree(DictSWC):
     @classmethod
     def from_eswc(
         cls, swc_file: str, extra_cols: Optional[List[str]] = None, **kwargs
-    ) -> Self:
+    ) -> "Tree":
         """Read neuron tree from eswc file.
 
         See Also

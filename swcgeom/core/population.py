@@ -17,7 +17,6 @@ from typing import (
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Self
 
 from swcgeom.core.swc import eswc_cols
 from swcgeom.core.tree import Tree
@@ -155,7 +154,7 @@ class Population:
         return f"Neuron population in '{self.root}'"
 
     @classmethod
-    def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
+    def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> "Population":
         if not os.path.exists(root):
             raise FileNotFoundError(
                 f"the root does not refers to an existing directory: {root}"
@@ -171,7 +170,7 @@ class Population:
         ext: str = ".eswc",
         extra_cols: Optional[Iterable[str]] = None,
         **kwargs,
-    ) -> Self:
+    ) -> "Population":
         extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
@@ -244,7 +243,7 @@ class Populations:
         check_same: bool = False,
         labels: Optional[Iterable[str]] = None,
         **kwargs,
-    ) -> Self:
+    ) -> "Populations":
         """Get population from dirs.
 
         Parameters
@@ -268,7 +267,7 @@ class Populations:
 
             fs = [inter for _ in roots]
         elif check_same:
-            assert reduce(lambda a, b: a == b, fs), "not the same among populations"
+            assert [fs[0] == a for a in fs[1:]], "not the same among populations"
 
         populations = [
             Population(
@@ -276,7 +275,7 @@ class Populations:
             )
             for i, d in enumerate(roots)
         ]
-        return cls(populations, labels=labels)
+        return Populations(populations, labels=labels)
 
     @classmethod
     def from_eswc(
@@ -286,7 +285,7 @@ class Populations:
         *,
         ext: str = ".eswc",
         **kwargs,
-    ) -> Self:
+    ) -> "Populations":
         extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, ext=ext, **kwargs)
