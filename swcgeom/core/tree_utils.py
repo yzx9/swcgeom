@@ -17,7 +17,7 @@ from swcgeom.core.swc_utils import (
     to_sub_topology,
 )
 from swcgeom.core.tree import Tree
-from swcgeom.core.tree_utils_impl import get_subtree_impl, to_subtree_impl
+from swcgeom.core.tree_utils_impl import Mapping, get_subtree_impl, to_subtree_impl
 
 __all__ = [
     "sort_tree",
@@ -128,7 +128,12 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     return subtree, id_map
 
 
-def to_subtree(swc_like: SWCLike, removals: Iterable[int]) -> Tree:
+def to_subtree(
+    swc_like: SWCLike,
+    removals: Iterable[int],
+    *,
+    out_mapping: Optional[Mapping] = None,
+) -> Tree:
     """Create subtree from origin tree.
 
     Parameters
@@ -136,17 +141,24 @@ def to_subtree(swc_like: SWCLike, removals: Iterable[int]) -> Tree:
     swc_like : SWCLike
     removals : List of int
         A list of id of nodes to be removed.
+    out_mapping: List of int or Dict[int, int], optional
+        Map new id to old id.
     """
+
     new_ids = swc_like.id().copy()
     for i in removals:
         new_ids[i] = REMOVAL
 
     sub = propagate_removal((new_ids, swc_like.pid()))
-    n_nodes, ndata, source, names = to_subtree_impl(swc_like, sub)
+    n_nodes, ndata, source, names = to_subtree_impl(
+        swc_like, sub, out_mapping=out_mapping
+    )
     return Tree(n_nodes, **ndata, source=source, names=names)
 
 
-def get_subtree(swc_like: SWCLike, n: int) -> Tree:
+def get_subtree(
+    swc_like: SWCLike, n: int, *, out_mapping: Optional[Mapping] = None
+) -> Tree:
     """Get subtree rooted at n.
 
     Parameters
@@ -154,8 +166,13 @@ def get_subtree(swc_like: SWCLike, n: int) -> Tree:
     swc_like : SWCLike
     n : int
         Id of the root of the subtree.
+    out_mapping: List of int or Dict[int, int], optional
+        Map new id to old id.
     """
-    n_nodes, ndata, source, names = get_subtree_impl(swc_like, n)
+
+    n_nodes, ndata, source, names = get_subtree_impl(
+        swc_like, n, out_mapping=out_mapping
+    )
     return Tree(n_nodes, **ndata, source=source, names=names)
 
 
@@ -171,6 +188,7 @@ def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
     sort : bool, default `True`
         If true, sort indices of nodes after redirect.
     """
+
     tree = tree.copy()
     path = [tree.node(new_root)]
     while (p := path[-1].parent()) is not None:

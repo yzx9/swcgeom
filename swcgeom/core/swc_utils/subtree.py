@@ -27,8 +27,8 @@ def to_sub_topology(sub: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
     Returns
     -------
     sub_topology : Topology
-    id_map : List of int
-        Map from new id to original id.
+    mapping : List of int
+        Map from new id to old id.
 
     See Also
     --------

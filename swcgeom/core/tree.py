@@ -27,7 +27,7 @@ from swcgeom.core.path import Path
 from swcgeom.core.segment import Segment, Segments
 from swcgeom.core.swc import DictSWC, eswc_cols
 from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, traverse
-from swcgeom.core.tree_utils_impl import get_subtree_impl
+from swcgeom.core.tree_utils_impl import Mapping, get_subtree_impl
 from swcgeom.utils import PathOrIO, padding1d
 
 __all__ = ["Tree"]
@@ -72,9 +72,18 @@ class Tree(DictSWC):
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
 
-        def subtree(self) -> "Tree":
-            """Get subtree from node."""
-            n_nodes, ndata, source, names = get_subtree_impl(self.attach, self.id)
+        def subtree(self, *, out_mapping: Optional[Mapping] = None) -> "Tree":
+            """Get subtree from node.
+
+            Parameters
+            ----------
+            out_mapping : List of int or Dict[int, int], optional
+                Map from new id to old id.
+            """
+
+            n_nodes, ndata, source, names = get_subtree_impl(
+                self.attach, self.id, out_mapping=out_mapping
+            )
             return Tree(n_nodes, **ndata, source=source, names=names)
 
         def is_root(self) -> bool:
