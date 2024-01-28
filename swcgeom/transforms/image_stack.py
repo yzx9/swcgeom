@@ -61,7 +61,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ONLY works for small image stacks, use :meth`transform_and_save`
         for big image stack.
         """
-        return np.concatenate(list(self.transfrom(x, verbose=False)), axis=0)
+        return np.stack(list(self.transfrom(x, verbose=False)), axis=0)
 
     def transfrom(
         self,
