@@ -1,5 +1,38 @@
 # Changelog
 
+## **0.15.0**&emsp;<sub><sup>2024-01-28 ([d300b41...8c9e0ab](https://github.com/yzx9/swcgeom/compare/d300b41689ee892fe5a23dad57f92e1054c0f9e9...8c9e0ab45c447d3d8121b0cc4178be5f65d18a56?diff=split))</sup></sub>
+
+### Features
+
+##### `core`
+
+- expose subtree id mapping ([35738a3](https://github.com/yzx9/swcgeom/commit/35738a31b2373a43ab29550335a457c51b7befce))
+
+##### `images`
+
+- add dtype support ([d300b41](https://github.com/yzx9/swcgeom/commit/d300b41689ee892fe5a23dad57f92e1054c0f9e9))
+
+##### `transforms`
+
+- generate image stack patch ([decd3a1](https://github.com/yzx9/swcgeom/commit/decd3a1ee63e1657aafa24ec5dfbf7439d25a551))
+- add \`extra\_repr\` api ([ca19361](https://github.com/yzx9/swcgeom/commit/ca1936146783ebccc2ffe25596799580e89b3432))
+
+### Bug Fixes
+
+##### `core`
+
+- fix classmethod typing annotations ([0123eeb](https://github.com/yzx9/swcgeom/commit/0123eeb46142c3c3a695a5cf2495588a2effe275))
+
+##### `transforms`
+
+- should stack images ([8c9e0ab](https://github.com/yzx9/swcgeom/commit/8c9e0ab45c447d3d8121b0cc4178be5f65d18a56))
+
+
+### BREAKING CHANGES
+- `core` remove assembler module ([414533d](https://github.com/yzx9/swcgeom/commit/414533d17238ed45972dff1909cf025a19b7fa1e))
+<br>
+
+
 ## **0.14.0**&emsp;<sub><sup>2023-12-26 ([b9c95f5...cc22018](https://github.com/yzx9/swcgeom/compare/b9c95f58f725490f3b624233cc0be20b31605e53...cc22018ad79af18ecd812b932812a0ff40a0fe40?diff=split))</sup></sub>
 
 ### Features
