@@ -235,10 +235,10 @@ def draw_circles(
 def get_fig_ax(
     fig: Figure | None = None, ax: Axes | None = None
 ) -> Tuple[Figure, Axes]:
-    if fig is None:
-        fig = plt.gcf() if ax is None else ax.get_figure()
+    if fig is None and ax is not None:
+        fig = ax.get_figure()
+        assert fig is not None, "expecting a figure from the axes"
 
-    if ax is None:
-        ax = fig.gca()
-
+    fig = fig or plt.gcf()
+    ax = ax or plt.gca()
     return fig, ax
