@@ -22,9 +22,9 @@ import numpy.typing as npt
 import pandas as pd
 
 from swcgeom.core.branch import Branch
+from swcgeom.core.compartment import Compartment, Compartments
 from swcgeom.core.node import Node
 from swcgeom.core.path import Path
-from swcgeom.core.segment import Segment, Segments
 from swcgeom.core.swc import DictSWC, eswc_cols
 from swcgeom.core.swc_utils import SWCNames, get_names, read_swc, traverse
 from swcgeom.core.tree_utils_impl import Mapping, get_subtree_impl
@@ -115,9 +115,11 @@ class Tree(DictSWC):
         # TODO: should returns `Tree.Node`
         """Neural path."""
 
-    class Segment(Segment["Tree"]):
+    class Compartment(Compartment["Tree"]):
         # TODO: should returns `Tree.Node`
-        """Neural segment."""
+        """Neural compartment."""
+
+    Segment = Compartment  # Alias
 
     class Branch(Branch["Tree"]):
         # TODO: should returns `Tree.Node`
@@ -222,8 +224,11 @@ class Tree(DictSWC):
         tip_ids = np.setdiff1d(self.id(), self.pid(), assume_unique=True)
         return [self.node(i) for i in tip_ids]
 
-    def get_segments(self) -> Segments[Segment]:
-        return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
+    def get_compartments(self) -> Compartments[Compartment]:
+        return Compartments(self.Compartment(self, n.pid, n.id) for n in self[1:])
+
+    def get_segments(self) -> Compartments[Segment]:  # Alias
+        return self.get_compartments()
 
     def get_branches(self) -> List[Branch]:
         Info = Tuple[List[Tree.Branch], List[int]]

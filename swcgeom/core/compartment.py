@@ -9,11 +9,11 @@ from swcgeom.core.path import Path
 from swcgeom.core.swc import DictSWC, SWCTypeVar
 from swcgeom.core.swc_utils import SWCNames, get_names
 
-__all__ = ["Segment", "Segments"]
+__all__ = ["Compartment", "Compartments", "Segment", "Segments"]
 
 
-class Segment(Path, Generic[SWCTypeVar]):
-    r"""Segment attached to external object."""
+class Compartment(Path, Generic[SWCTypeVar]):
+    r"""Compartment attached to external object."""
 
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
@@ -27,7 +27,7 @@ class Segment(Path, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    def detach(self) -> "Segment[DictSWC]":
+    def detach(self) -> "Compartment[DictSWC]":
         """Detach from current attached object."""
         # pylint: disable=consider-using-dict-items
         attact = DictSWC(
@@ -37,18 +37,18 @@ class Segment(Path, Generic[SWCTypeVar]):
         )
         attact.ndata[self.names.id] = self.id()
         attact.ndata[self.names.pid] = self.pid()
-        return Segment(attact, 0, 1)
+        return Compartment(attact, 0, 1)
 
 
-SegmentT = TypeVar("SegmentT", bound=Segment)
+T = TypeVar("T", bound=Compartment)
 
 
-class Segments(List[SegmentT]):
-    r"""Segments contains a set of segments."""
+class Compartments(List[T]):
+    r"""Comparments contains a set of comparment."""
 
     names: SWCNames
 
-    def __init__(self, segments: Iterable[SegmentT]) -> None:
+    def __init__(self, segments: Iterable[T]) -> None:
         super().__init__(segments)
         self.names = self[0].names if len(self) > 0 else get_names()
 
@@ -94,3 +94,8 @@ class Segments(List[SegmentT]):
         The order of axis 1 is (parent, current node).
         """
         return np.array([s.get_ndata(key) for s in self])
+
+
+# Aliases
+Segment = Compartment
+Segments = Compartments

@@ -5,8 +5,8 @@ from typing import Generic, Iterable, List
 import numpy as np
 import numpy.typing as npt
 
+from swcgeom.core.compartment import Compartment, Compartments
 from swcgeom.core.path import Path
-from swcgeom.core.segment import Segment, Segments
 from swcgeom.core.swc import DictSWC, SWCTypeVar
 
 __all__ = ["Branch"]
@@ -24,8 +24,10 @@ class Branch(Path, Generic[SWCTypeVar]):
     attach: SWCTypeVar
     idx: npt.NDArray[np.int32]
 
-    class Segment(Segment["Branch"]):
+    class Compartment(Compartment["Branch"]):
         """Segment of branch."""
+
+    Segment = Compartment  # Alias
 
     def __repr__(self) -> str:
         return f"Neuron branch with {len(self)} nodes."
@@ -36,8 +38,11 @@ class Branch(Path, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
-    def get_segments(self) -> Segments[Segment]:
-        return Segments(self.Segment(self, n.pid, n.id) for n in self[1:])
+    def get_compartments(self) -> Compartments[Compartment]:
+        return Compartments(self.Compartment(self, n.pid, n.id) for n in self[1:])
+
+    def get_segments(self) -> Compartments[Compartment]:
+        return self.get_compartments()  # Alias
 
     def detach(self) -> "Branch[DictSWC]":
         """Detach from current attached object."""
