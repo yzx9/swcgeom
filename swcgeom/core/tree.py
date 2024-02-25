@@ -130,14 +130,14 @@ class Tree(DictSWC):
         n_nodes: int,
         *,
         # pylint: disable-next=redefined-builtin
-        id: Optional[npt.NDArray[np.int32]] = None,
+        id: Optional[npt.ArrayLike] = None,
         # pylint: disable-next=redefined-builtin
-        type: Optional[npt.NDArray[np.int32]] = None,
-        x: Optional[npt.NDArray[np.float32]] = None,
-        y: Optional[npt.NDArray[np.float32]] = None,
-        z: Optional[npt.NDArray[np.float32]] = None,
-        r: Optional[npt.NDArray[np.float32]] = None,
-        pid: Optional[npt.NDArray[np.int32]] = None,
+        type: Optional[npt.ArrayLike] = None,
+        x: Optional[npt.ArrayLike] = None,
+        y: Optional[npt.ArrayLike] = None,
+        z: Optional[npt.ArrayLike] = None,
+        r: Optional[npt.ArrayLike] = None,
+        pid: Optional[npt.ArrayLike] = None,
         source: str = "",
         comments: Optional[Iterable[str]] = None,
         names: Optional[SWCNames] = None,
@@ -150,10 +150,10 @@ class Tree(DictSWC):
         ndata = {
             names.id: padding1d(n_nodes, id, dtype=np.int32),
             names.type: padding1d(n_nodes, type, dtype=np.int32),
-            names.x: padding1d(n_nodes, x),
-            names.y: padding1d(n_nodes, y),
-            names.z: padding1d(n_nodes, z),
-            names.r: padding1d(n_nodes, r, padding_value=1),
+            names.x: padding1d(n_nodes, x, dtype=np.float32),
+            names.y: padding1d(n_nodes, y, dtype=np.float32),
+            names.z: padding1d(n_nodes, z, dtype=np.float32),
+            names.r: padding1d(n_nodes, r, padding_value=1, dtype=np.float32),
             names.pid: padding1d(n_nodes, pid, dtype=np.int32),
         }
         super().__init__(

@@ -87,7 +87,13 @@ class NeurolucidaAscToSwc(Transform[str, Tree]):
         walk_ast(ast)
         tree = Tree(
             next_id,
-            **{k: np.array(ndata[k]) for k in names.cols()},
+            id=ndata["id"],
+            type=ndata["type"],
+            x=ndata["x"],
+            y=ndata["y"],
+            z=ndata["z"],
+            r=ndata["r"],
+            pid=ndata["pid"],
             source=ast.source,
             names=names,
         )
