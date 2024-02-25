@@ -129,33 +129,31 @@ class Tree(DictSWC):
         self,
         n_nodes: int,
         *,
-        # pylint: disable-next=redefined-builtin
-        id: Optional[npt.ArrayLike] = None,
-        # pylint: disable-next=redefined-builtin
-        type: Optional[npt.ArrayLike] = None,
-        x: Optional[npt.ArrayLike] = None,
-        y: Optional[npt.ArrayLike] = None,
-        z: Optional[npt.ArrayLike] = None,
-        r: Optional[npt.ArrayLike] = None,
-        pid: Optional[npt.ArrayLike] = None,
         source: str = "",
         comments: Optional[Iterable[str]] = None,
         names: Optional[SWCNames] = None,
         **kwargs: npt.NDArray,
     ) -> None:
         names = get_names(names)
-        id = np.arange(0, n_nodes, step=1, dtype=np.int32) if id is None else id
-        pid = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32) if pid is None else pid
+
+        if names.id not in kwargs:
+            kwargs[names.id] = np.arange(0, n_nodes, step=1, dtype=np.int32)
+
+        if names.pid not in kwargs:
+            kwargs[names.pid] = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
 
         ndata = {
-            names.id: padding1d(n_nodes, id, dtype=np.int32),
-            names.type: padding1d(n_nodes, type, dtype=np.int32),
-            names.x: padding1d(n_nodes, x, dtype=np.float32),
-            names.y: padding1d(n_nodes, y, dtype=np.float32),
-            names.z: padding1d(n_nodes, z, dtype=np.float32),
-            names.r: padding1d(n_nodes, r, padding_value=1, dtype=np.float32),
-            names.pid: padding1d(n_nodes, pid, dtype=np.int32),
+            names.id: padding1d(n_nodes, kwargs[names.id], dtype=np.int32),
+            names.type: padding1d(n_nodes, kwargs[names.type], dtype=np.int32),
+            names.x: padding1d(n_nodes, kwargs[names.x], dtype=np.float32),
+            names.y: padding1d(n_nodes, kwargs[names.y], dtype=np.float32),
+            names.z: padding1d(n_nodes, kwargs[names.z], dtype=np.float32),
+            names.r: padding1d(
+                n_nodes, kwargs[names.r], dtype=np.float32, padding_value=1
+            ),
+            names.pid: padding1d(n_nodes, kwargs[names.pid], dtype=np.int32),
         }
+        # ? padding other columns
         super().__init__(
             **ndata, **kwargs, source=source, comments=comments, names=names
         )
