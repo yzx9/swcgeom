@@ -1,7 +1,16 @@
 """Base SWC format utils."""
 
 from dataclasses import dataclass
-from typing import Callable, List, Literal, Optional, Tuple, TypeVar, overload
+from typing import (
+    Callable,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Tuple,
+    TypeVar,
+    overload,
+)
 
 import numpy as np
 import numpy.typing as npt
@@ -23,8 +32,7 @@ T, K = TypeVar("T"), TypeVar("K")
 Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
 
 
-@dataclass
-class SWCNames:
+class SWCNames(NamedTuple):
     """SWC format column names."""
 
     id: str = "id"
@@ -46,8 +54,7 @@ def get_names(names: Optional[SWCNames] = None) -> SWCNames:
     return names or swc_names
 
 
-@dataclass
-class SWCTypes:
+class SWCTypes(NamedTuple):
     """SWC format types.
 
     See Also
