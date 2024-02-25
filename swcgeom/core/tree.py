@@ -231,9 +231,9 @@ class Tree(DictSWC):
         return self.get_compartments()
 
     def get_branches(self) -> List[Branch]:
-        Info = Tuple[List[Tree.Branch], List[int]]
-
-        def collect_branches(node: "Tree.Node", pre: List[Info]) -> Info:
+        def collect_branches(
+            node: "Tree.Node", pre: List[Tuple[List[Tree.Branch], List[int]]]
+        ) -> Tuple[List[Tree.Branch], List[int]]:
             if len(pre) == 1:
                 branches, child = pre[0]
                 child.append(node.id)
@@ -256,7 +256,6 @@ class Tree(DictSWC):
     def get_paths(self) -> List[Path]:
         """Get all path from soma to tips."""
         path_dic: Dict[int, List[int]] = {}
-        Paths = List[List[int]]
 
         def assign_path(n: Tree.Node, pre_path: List[int] | None) -> List[int]:
             path = [] if pre_path is None else pre_path.copy()
@@ -264,7 +263,9 @@ class Tree(DictSWC):
             path_dic[n.id] = path
             return path
 
-        def collect_path(n: Tree.Node, children: List[Paths]) -> Paths:
+        def collect_path(
+            n: Tree.Node, children: List[List[List[int]]]
+        ) -> List[List[int]]:
             if len(children) == 0:
                 return [path_dic[n.id]]
 
