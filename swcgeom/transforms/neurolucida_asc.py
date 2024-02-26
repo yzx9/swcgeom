@@ -73,13 +73,13 @@ class NeurolucidaAscToSwc(Transform[str, Tree]):
                     idx = next_id
                     next_id += 1
 
-                    ndata["id"].append(idx)
-                    ndata["type"].append(typee[-1])
-                    ndata["x"].append(x)
-                    ndata["y"].append(y)
-                    ndata["z"].append(z)
-                    ndata["r"].append(r)
-                    ndata["pid"].append(pid)
+                    ndata[names.id].append(idx)
+                    ndata[names.type].append(typee[-1])
+                    ndata[names.x].append(x)
+                    ndata[names.y].append(y)
+                    ndata[names.z].append(z)
+                    ndata[names.r].append(r)
+                    ndata[names.pid].append(pid)
 
                     for n in root.children:
                         walk_ast(n, pid=idx)
@@ -87,15 +87,9 @@ class NeurolucidaAscToSwc(Transform[str, Tree]):
         walk_ast(ast)
         tree = Tree(
             next_id,
-            id=ndata["id"],
-            type=ndata["type"],
-            x=ndata["x"],
-            y=ndata["y"],
-            z=ndata["z"],
-            r=ndata["r"],
-            pid=ndata["pid"],
             source=ast.source,
             names=names,
+            **ndata,  # type: ignore
         )
         return tree
 

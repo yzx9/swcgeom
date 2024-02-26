@@ -143,15 +143,17 @@ class Tree(DictSWC):
             kwargs[names.pid] = np.arange(-1, n_nodes - 1, step=1, dtype=np.int32)
 
         ndata = {
-            names.id: padding1d(n_nodes, kwargs[names.id], dtype=np.int32),
-            names.type: padding1d(n_nodes, kwargs[names.type], dtype=np.int32),
-            names.x: padding1d(n_nodes, kwargs[names.x], dtype=np.float32),
-            names.y: padding1d(n_nodes, kwargs[names.y], dtype=np.float32),
-            names.z: padding1d(n_nodes, kwargs[names.z], dtype=np.float32),
-            names.r: padding1d(
-                n_nodes, kwargs[names.r], dtype=np.float32, padding_value=1
+            names.id: padding1d(n_nodes, kwargs.pop(names.id, None), dtype=np.int32),
+            names.type: padding1d(
+                n_nodes, kwargs.pop(names.type, None), dtype=np.int32
             ),
-            names.pid: padding1d(n_nodes, kwargs[names.pid], dtype=np.int32),
+            names.x: padding1d(n_nodes, kwargs.pop(names.x, None), dtype=np.float32),
+            names.y: padding1d(n_nodes, kwargs.pop(names.y, None), dtype=np.float32),
+            names.z: padding1d(n_nodes, kwargs.pop(names.z, None), dtype=np.float32),
+            names.r: padding1d(
+                n_nodes, kwargs.pop(names.r, None), dtype=np.float32, padding_value=1
+            ),
+            names.pid: padding1d(n_nodes, kwargs.pop(names.pid, None), dtype=np.int32),
         }
         # ? padding other columns
         super().__init__(
