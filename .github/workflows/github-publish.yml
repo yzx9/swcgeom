@@ -12,24 +12,24 @@ jobs:
   build:
     uses: ./.github/workflows/build.yml
 
-  release:
+  publish:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Get version
-      id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-    - name: Download release
-      uses: actions/download-artifact@v3
-      with:
-        name: release
+      - name: Download release
+        uses: actions/download-artifact@v3
+        with:
+          name: release
 
-    - name: Pack release
-      run: tar czf swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz dist/
+      - name: Pack release
+        run: tar czf swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz dist/
 
-    - name: Create release
-      uses: softprops/action-gh-release@v1
-      with:
-        token: ${{ secrets.GH_TOKEN }}
-        files: swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          files: swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz
