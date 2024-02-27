@@ -48,15 +48,6 @@ class Tree(DictSWC):
             children = self.attach.id()[self.attach.pid() == self.id]
             return [Tree.Node(self.attach, idx) for idx in children]
 
-        def get_branch(self) -> "Tree.Branch":
-            warnings.warn(
-                "`Tree.Node.get_branch` has been renamed to "
-                "`Tree.Node.branch` since v0.3.1 and will be removed "
-                "in next version",
-                DeprecationWarning,
-            )
-            return self.branch()
-
         def branch(self) -> "Tree.Branch":
             ns: List["Tree.Node"] = [self]
             while not ns[-1].is_bifurcation() and (p := ns[-1].parent()) is not None:

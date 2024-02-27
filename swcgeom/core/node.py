@@ -95,14 +95,6 @@ class Node(Generic[SWCTypeVar]):
         items = [self.id, self.type, x, y, z, r, self.pid]
         return " ".join(map(str, items))
 
-    def child_ids(self) -> npt.NDArray[np.int32]:
-        warnings.warn(
-            "`Node.child_ids` has been deprecated since v0.3.1 and "
-            "will be removed in next version",
-            DeprecationWarning,
-        )
-        return self.attach.id()[self.attach.pid() == self.id]
-
     def is_bifurcation(self) -> bool:
         return np.count_nonzero(self.attach.pid() == self.id) > 1
 
