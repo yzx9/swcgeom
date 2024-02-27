@@ -1,5 +1,6 @@
-"""Nueron node."""
+"""Nueron path."""
 
+import warnings
 from typing import Generic, Iterable, Iterator, List, overload
 
 import numpy as np
@@ -12,7 +13,7 @@ __all__ = ["Path"]
 
 
 class Path(SWCLike, Generic[SWCTypeVar]):
-    """Neural path.
+    """Neuron path.
 
     A path is a linear set of points without bifurcations.
     """
@@ -31,7 +32,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         self.source = self.attach.source
 
     def __iter__(self) -> Iterator[Node]:
-        return (self.get_node(i) for i in range(len(self)))
+        return (self.node(i) for i in range(len(self)))
 
     def __len__(self) -> int:
         return self.id().shape[0]
@@ -50,7 +51,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
 
     def __getitem__(self, key):
         if isinstance(key, slice):
-            return [self.get_node(i) for i in range(*key.indices(len(self)))]
+            return [self.node(i) for i in range(*key.indices(len(self)))]
 
         if isinstance(key, (int, np.integer)):
             length = len(self)
@@ -60,7 +61,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
             if key < 0:  # Handle negative indices
                 key += length
 
-            return self.get_node(key)
+            return self.node(key)
 
         if isinstance(key, str):
             return self.get_ndata(key)
@@ -74,6 +75,14 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         return self.attach.get_ndata(key)[self.idx]
 
     def get_node(self, idx: int | np.integer) -> Node:
+        warnings.warn(
+            "`Path.get_node` has been deprecated since v0.16.0 and "
+            "will be removed in future version",
+            DeprecationWarning,
+        )
+        return self.node(idx)
+
+    def node(self, idx: int | np.integer) -> Node:
         return self.Node(self, idx)
 
     def detach(self) -> "Path[DictSWC]":
@@ -129,7 +138,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         The end-to-end straight-line distance between start point and
         end point.
         """
-        return np.linalg.norm(self.get_node(-1).xyz() - self.get_node(0).xyz()).item()
+        return np.linalg.norm(self.node(-1).xyz() - self.node(0).xyz()).item()
 
     def tortuosity(self) -> float:
         """Tortuosity of path.
