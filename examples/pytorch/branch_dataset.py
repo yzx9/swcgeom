@@ -8,7 +8,7 @@ import torch
 import torch.utils.data
 from tree_folder_dataset import TreeFolderDataset
 
-from swcgeom import Branch
+from swcgeom.core import Branch
 from swcgeom.transforms import Identity, Transform
 from swcgeom.utils import numpy_err
 

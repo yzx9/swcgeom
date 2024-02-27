@@ -218,7 +218,7 @@ class Tree(DictSWC):
     def get_compartments(self) -> Compartments[Compartment]:
         return Compartments(self.Compartment(self, n.pid, n.id) for n in self[1:])
 
-    def get_segments(self) -> Compartments[Segment]:  # Alias
+    def get_segments(self) -> Compartments[Compartment]:  # Alias
         return self.get_compartments()
 
     def get_branches(self) -> List[Branch]:

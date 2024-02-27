@@ -6,10 +6,7 @@ from typing import Literal, Tuple
 import numpy as np
 import numpy.typing as npt
 
-from swcgeom.core import Tree
-from swcgeom.core.branch import Branch
-from swcgeom.core.compartment import Compartment
-from swcgeom.core.node import Node
+from swcgeom.core import Branch, Compartment, Node, Tree
 from swcgeom.utils import angle
 
 __all__ = ["LMeasure"]
@@ -454,8 +451,8 @@ class LMeasure:
 
         parent = bif.parent()
         assert parent is not None, "Bifurcation torque is not defined for root"
-        idx = parent.get_branch().origin_id()[0]
-        n = parent.get_branch().attach.node(idx)
+        idx = parent.branch().origin_id()[0]
+        n = parent.branch().attach.node(idx)
 
         v1, v2 = self._bif_vector_local(n)
         u1, u2 = self._bif_vector_local(bif)
@@ -492,8 +489,8 @@ class LMeasure:
 
         parent = bif.parent()
         assert parent is not None, "Bifurcation torque is not defined for root"
-        idx = parent.get_branch().origin_id()[0]
-        n = parent.get_branch().attach.node(idx)
+        idx = parent.branch().origin_id()[0]
+        n = parent.branch().attach.node(idx)
 
         v1, v2 = self._bif_vector_remote(n)
         u1, u2 = self._bif_vector_remote(bif)
@@ -518,8 +515,8 @@ class LMeasure:
         children = bif.children()
         assert len(children) == 2, "Only defined for bifurcations"
 
-        v1 = children[0].get_branch()[-1].xyz() - bif.xyz()
-        v2 = children[1].get_branch()[-1].xyz() - bif.xyz()
+        v1 = children[0].branch()[-1].xyz() - bif.xyz()
+        v2 = children[1].branch()[-1].xyz() - bif.xyz()
         return v1, v2
 
     def last_parent_diam(self, branch: Branch) -> float:
