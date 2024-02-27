@@ -174,7 +174,11 @@ class SDFDifference(SDF):
 
 
 class SDFCompose(SDFUnion):
-    """Compose multiple SDFs."""
+    """Compose multiple SDFs.
+
+    .. deprecated:: 0.14.0
+        Use :cls:`SDFUnion` instead.
+    """
 
     def __init__(self, sdfs: Iterable[SDF]) -> None:
         warnings.warn(

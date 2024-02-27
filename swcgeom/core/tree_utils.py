@@ -101,11 +101,15 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     but if the node you remove is not a leaf node, you need to use
     `propagate_remove` to remove all children.
 
+    .. deprecated:: 0.6.0
+        Use :meth:`to_subtree` instead.
+
     Returns
     -------
     tree : Tree
     id_map : Dict[int, int]
     """
+
     warnings.warn(
         "`to_sub_tree` will be removed in v0.6.0, it is replaced by "
         "`to_subtree` beacuse it is easy to use, and this will be "

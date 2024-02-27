@@ -161,6 +161,12 @@ class Sholl:
         return self.get_rs(self.rmax, steps)
 
     def get_count(self) -> npt.NDArray[np.int32]:
+        """Get the count of intersection.
+
+        .. deprecated:: 0.5.0
+            Use :meth:`Sholl.get` instead.
+        """
+
         warnings.warn(
             "`Sholl.get_count` has been renamed to `get` since v0.5.0, "
             "and will be removed in next version",
@@ -169,6 +175,12 @@ class Sholl:
         return self.get().astype(np.int32)
 
     def avg(self) -> float:
+        """Get the average of the count of intersection.
+
+        .. deprecated:: 0.6.0
+            Use :meth:`Shool(x).get().mean()` instead.
+        """
+
         warnings.warn(
             "`Sholl.avg` has been deprecated since v0.6.0 and will be "
             "removed in next version, use `Shool(x).get().mean()` "
@@ -178,6 +190,12 @@ class Sholl:
         return self.get().mean()
 
     def std(self) -> float:
+        """Get the std of the count of intersection.
+
+        .. deprecated:: 0.6.0
+            Use :meth:`Shool(x).get().std()` instead.
+        """
+
         warnings.warn(
             "`Sholl.std` has been deprecate since v0.6.0 and will be "
             "removed in next version, use `Shool(x).get().std()` "
@@ -187,6 +205,12 @@ class Sholl:
         return self.get().std()
 
     def sum(self) -> int:
+        """Get the sum of the count of intersection.
+
+        .. deprecated:: 0.6.0
+            Use :meth:`Shool(x).get().sum()` instead.
+        """
+
         warnings.warn(
             "`Sholl.sum` has been deprecate since v0.6.0 and will be "
             "removed in next version, use `Shool(x).get().sum()` "

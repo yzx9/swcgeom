@@ -69,7 +69,11 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
 
 
 class TreeNormalizer(Normalizer[Tree]):
-    """Noramlize coordinates and radius to 0-1."""
+    """Noramlize coordinates and radius to 0-1.
+
+    .. deprecated:: 0.6.0
+        Use :cls:`Normalizer` instead.
+    """
 
     def __init__(self, *args, **kwargs) -> None:
         warnings.warn(

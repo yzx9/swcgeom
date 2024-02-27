@@ -78,6 +78,12 @@ class ImageStackFolderBase(Generic[ScalarType, T], ABC):
 
     @staticmethod
     def read_imgs(fname: str) -> npt.NDArray[np.float32]:
+        """Read images.
+
+        .. deprecated:: 0.16.0
+            Use :meth:`~swcgeom.images.io.read_imgs(fname).get_full()` instead.
+        """
+
         warnings.warn(
             "`ImageStackFolderBase.read_imgs` serves as a "
             "straightforward wrapper for `~swcgeom.images.io.read_imgs(fname).get_full()`. "

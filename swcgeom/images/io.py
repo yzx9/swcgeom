@@ -637,6 +637,12 @@ class GrayImageStack:
 
 
 def read_images(*args, **kwargs) -> GrayImageStack:
+    """Read images.
+
+    .. deprecated:: 0.16.0
+        Use :meth:`read_imgs` instead.
+    """
+
     warnings.warn(
         "`read_images` has been replaced by `read_imgs` because it"
         "provide rgb support, and this will be removed in next version",

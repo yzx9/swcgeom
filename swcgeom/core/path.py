@@ -75,6 +75,12 @@ class Path(SWCLike, Generic[SWCTypeVar]):
         return self.attach.get_ndata(key)[self.idx]
 
     def get_node(self, idx: int | np.integer) -> Node:
+        """Get the count of intersection.
+
+        .. deprecated:: 0.16.0
+            Use :meth:`path.node` instead.
+        """
+
         warnings.warn(
             "`Path.get_node` has been deprecated since v0.16.0 and "
             "will be removed in future version",

@@ -10,7 +10,6 @@ import pandas as pd
 from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names, traverse
 from swcgeom.utils import DisjointSetUnion
 
-
 __all__ = [
     "is_single_root",
     "is_bifurcate",
@@ -83,6 +82,12 @@ def has_cyclic(topology: Topology) -> bool:
 
 
 def check_single_root(*args, **kwargs) -> bool:
+    """Check if the tree is single root.
+
+    .. deprecated:: 0.5.0
+        Use :meth:`is_single_root` instead.
+    """
+
     warnings.warn(
         "`check_single_root` has been renamed to `is_single_root` since"
         "v0.5.0, and will be removed in next version",
@@ -94,7 +99,12 @@ def check_single_root(*args, **kwargs) -> bool:
 def is_binary_tree(
     df: pd.DataFrame, exclude_root: bool = True, *, names: Optional[SWCNames] = None
 ) -> bool:
-    """Check is it a binary tree."""
+    """Check is it a binary tree.
+
+    .. deprecated:: 0.8.0
+        Use :meth:`is_bifurcate` instead.
+    """
+
     warnings.warn(
         "`is_binary_tree` has been replaced by to `is_bifurcate` since"
         "v0.8.0, and will be removed in next version",
