@@ -23,11 +23,11 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
 
     References
     ----------
-    [1] Cuntz, H., Forstner, F., Borst, A. & Häusser, M. One Rule to
-    Grow Them Al: A General Theory of Neuronal Branching and Its
-    Practical Application. PLOS Comput Biol 6, e1000877 (2010).
-    [2] Cuntz, H., Borst, A. & Segev, I. Optimization principles of
-    dendritic structure. Theor Biol Med Model 4, 21 (2007).
+    .. [1] Cuntz, H., Forstner, F., Borst, A. & Häusser, M. One Rule to
+       Grow Them Al: A General Theory of Neuronal Branching and Its
+       Practical Application. PLOS Comput Biol 6, e1000877 (2010).
+    .. [2] Cuntz, H., Borst, A. & Segev, I. Optimization principles of
+       dendritic structure. Theor Biol Med Model 4, 21 (2007).
     """
 
     def __init__(

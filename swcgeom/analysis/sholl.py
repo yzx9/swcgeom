@@ -23,10 +23,15 @@ YLABLE = "Count of Intersections"
 class Sholl:
     """Sholl analysis.
 
+    Implementation of original Sholl analysis as described in [1]_. The
+    Sholl analysis is a method to quantify the spatial distribution of
+    neuronal processes. It is based on the number of intersections of
+    concentric circles with the neuronal processes.
+
     References
     ----------
-    [1] Dendritic organization in the neurons of the visual and motor
-    cortices of the cat J. Anat., 87 (1953), pp. 387-406
+    .. [1] Dendritic organization in the neurons of the visual and
+       motor cortices of the cat J. Anat., 87 (1953), pp. 387-406
     """
 
     tree: Tree

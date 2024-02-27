@@ -182,7 +182,7 @@ class LMeasure:
         log-log plot of Path distance vs Euclidean distance.
 
         This method of measuring the fractal follows the reference
-        given below by Marks & Burke, J Comp Neurol. 2007.
+        given below by Marks & Burke, J Comp Neurol. 2007. [1]_
         - When D = 1, the particle moves in a straight line.
         - When D = 2, the motion is a space-filling random walk
         - When D is only slightly larger than 1, the particle
@@ -190,11 +190,10 @@ class LMeasure:
 
         References
         ----------
-
-        Marks WB, Burke RE. Simulation of motoneuron morphology in
-        three dimensions. I. Building individual dendritic trees.
-        J Comp Neurol. 2007 Aug 10;503(5):685-700.
-        doi: 10.1002/cne.21418. PMID: 17559104.
+        .. [1] Marks WB, Burke RE. Simulation of motoneuron morphology
+           in three dimensions. I. Building individual dendritic trees.
+           J Comp Neurol. 2007 Aug 10;503(5):685-700.
+           doi: 10.1002/cne.21418. PMID: 17559104.
 
         See Also
         --------

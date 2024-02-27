@@ -333,12 +333,16 @@ class V3dpbdImageStack(V3dImageStack[ScalarType]):
 class TeraflyImageStack(ImageStack[ScalarType]):
     """TeraFly image stack.
 
+    TeraFly is a terabytes of multidimensional volumetric images file
+    format as described in [1]_.
+
     References
     ----------
-    [1] Bria, Alessandro, Giulio Iannello, Leonardo Onofri, and
-    Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional Visualization
-    and Annotation of Terabytes of Multidimensional Volumetric Images.”
-    Nature Methods 13, no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
+    .. [1] Bria, Alessandro, Giulio Iannello, Leonardo Onofri, and
+       Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional
+       Visualization and Annotation of Terabytes of Multidimensional
+       Volumetric Images.” Nature Methods 13,
+       no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
 
     Notes
     -----
