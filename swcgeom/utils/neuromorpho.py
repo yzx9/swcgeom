@@ -83,6 +83,8 @@ import os
 import urllib.parse
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
+from tqdm import tqdm
+
 from swcgeom.utils import FileReader
 
 __all__ = [
@@ -179,7 +181,6 @@ def neuromorpho_convert_lmdb_to_swc(
         Recommended filter function, try `where=neuromorpho_is_valid`
     """
     import lmdb
-    from tqdm import tqdm
 
     assert os.path.exists(root)
 
@@ -299,9 +300,9 @@ def download_metadata(
     err_pages : list of int
         Failed pages.
     """
+
     # TODO: how to cache between versions?
     import lmdb
-    from tqdm import tqdm
 
     env = lmdb.Environment(path, map_size=SIZE_METADATA)
     page_size = API_NEURON_MAX_SIZE
@@ -359,8 +360,8 @@ def download_cng_version(
     err_keys : list of str
         Failed keys.
     """
+
     import lmdb
-    from tqdm import tqdm
 
     env_m = lmdb.Environment(path_metadata, map_size=SIZE_METADATA, readonly=True)
     env_c = lmdb.Environment(path, map_size=SIZE_DATA)

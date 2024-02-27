@@ -25,6 +25,7 @@ from sdflit import (
     Scene,
     SDFObject,
 )
+from tqdm import tqdm
 
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
@@ -89,8 +90,6 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         samplers = self._get_samplers(coord_min, coord_max)
 
         if verbose:
-            from tqdm import tqdm
-
             total = (coord_max[2] - coord_min[2]) / self.resolution[2]
             samplers = tqdm(samplers, total=total.astype(np.int64).item())
 
@@ -117,8 +116,6 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         )
 
         if verbose:
-            from tqdm import tqdm
-
             trees = tqdm(trees)
 
         # TODO: multiprocess
