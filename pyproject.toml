@@ -32,7 +32,7 @@ all = [
     "certifi>=2023.5.7",
     "chardet>=5.2.0",
     "lmdb>=1.4.1",
-    "pycurl>=7.0.0",
+    "requests>=2.0.0",
     "urllib3>=1.26.0",
 ]
 

@@ -332,7 +332,7 @@ class NeuroMorpho:
                             FileReader(bs, encoding="detect") as fr,
                         ):
                             fw.writelines(fr.readlines())
-                except Exception as e:  # pylint: disable=broad-exception-caught
+                except (IOError, lmdb.Error) as e:
                     self._warning("fails to convert of %s, err: %s", kk, e)
 
         env_c.close()
@@ -384,7 +384,7 @@ class NeuroMorpho:
                         k = str(neuron["neuron_id"]).encode("utf-8")
                         v = json.dumps(neuron).encode("utf-8")
                         tx.put(key=k, value=v)
-            except Exception as e:  # pylint: disable=broad-exception-caught
+            except IOError as e:
                 err_pages.append(page)
                 self._warning("fails to get metadata of page %s, err: %s", page, e)
 
@@ -492,29 +492,51 @@ class NeuroMorpho:
     def _get(
         self, url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None
     ) -> bytes:
-        # pylint: disable=c-extension-no-member
-        import certifi
-        import pycurl
-
         if not url.startswith("http://") and not url.startswith("https://"):
             url = urllib.parse.urljoin(self.url_base, url)
 
-        buffer = io.BytesIO()
-        c = pycurl.Curl()
-        c.setopt(pycurl.URL, url)
-        c.setopt(pycurl.WRITEDATA, buffer)
-        c.setopt(pycurl.CAINFO, certifi.where())
-        c.setopt(pycurl.TIMEOUT, timeout)
+        proxies = None
         if proxy is not None:
-            c.setopt(pycurl.PROXY, proxy)
-        c.perform()
+            proxies = {"http": proxy, "https": proxy}
 
-        code = c.getinfo(pycurl.RESPONSE_CODE)
-        if code != 200:
-            raise IOError(f"fails to fetch data, status: {code}")
+        response = self._session().get(url, timeout=timeout, proxies=proxies)
+        response.raise_for_status()
+        return response.content
 
-        c.close()
-        return buffer.getvalue()
+    def _session(self) -> Any:
+        if hasattr(self, "session"):
+            return self.session
+
+        import requests
+        import requests.adapters
+        import urllib3
+        import urllib3.util
+
+        class CustomSSLContextHTTPAdapter(requests.adapters.HTTPAdapter):
+            def __init__(self, ssl_context=None, **kwargs):
+                self.ssl_context = ssl_context
+                super().__init__(**kwargs)
+
+            def init_poolmanager(self, connections, maxsize, block=False):
+                super().init_poolmanager(
+                    connections, maxsize, block, ssl_context=self.ssl_context
+                )
+
+            def proxy_manager_for(self, proxy, **proxy_kwargs):
+                return super().proxy_manager_for(
+                    proxy, **proxy_kwargs, ssl_context=self.ssl_context
+                )
+
+        ctx = urllib3.util.create_urllib3_context()
+        ctx.load_default_certs()
+        ctx.set_ciphers("DEFAULT@SECLEVEL=1")
+
+        session = requests.session()
+        session.adapters.pop("https://", None)
+        session.mount("https://", CustomSSLContextHTTPAdapter(ssl_context=ctx))
+
+        self.session = session
+        return session
 
     # format
     def _guess_ext(self, metadata) -> str:
