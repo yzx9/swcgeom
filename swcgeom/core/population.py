@@ -2,26 +2,34 @@
 
 import os
 import warnings
+from concurrent.futures import ProcessPoolExecutor
 from functools import reduce
 from typing import (
     Any,
+    Callable,
     Dict,
     Iterable,
     Iterator,
     List,
     Optional,
     Protocol,
+    TypeVar,
     cast,
     overload,
 )
 
 import numpy as np
 import numpy.typing as npt
+from tqdm.contrib.concurrent import process_map
+from typing_extensions import Self
 
 from swcgeom.core.swc import eswc_cols
 from swcgeom.core.tree import Tree
 
 __all__ = ["LazyLoadingTrees", "ChainTrees", "Population", "Populations"]
+
+
+T = TypeVar("T")
 
 
 class Trees(Protocol):
@@ -48,6 +56,7 @@ class LazyLoadingTrees:
         kwargs : Dict[str, Any]
             Forwarding to `Tree.from_swc`
         """
+
         super().__init__()
         self.swcs = list(swcs)
         self.trees = [None for _ in swcs]
@@ -60,6 +69,9 @@ class LazyLoadingTrees:
 
     def __len__(self) -> int:
         return len(self.swcs)
+
+    def __iter__(self) -> Iterator[Tree]:
+        return (self[i] for i in range(self.__len__()))
 
     def load(self, key: int) -> None:
         if self.trees[key] is None:
@@ -91,6 +103,9 @@ class ChainTrees:
 
     def __len__(self) -> int:
         return self.cumsum[-1].item()
+
+    def __iter__(self) -> Iterator[Tree]:
+        return (self[i] for i in range(self.__len__()))
 
 
 class Population:
@@ -153,15 +168,40 @@ class Population:
     def __repr__(self) -> str:
         return f"Neuron population in '{self.root}'"
 
+    def map(
+        self,
+        fn: Callable[[Tree], T],
+        *,
+        max_worker: Optional[int] = None,
+        verbose: bool = False,
+    ) -> Iterator[T]:
+        """Map a function to all trees in the population.
+
+        This is a straightforward interface for parallelizing
+        computations. The parameters are intentionally kept simple and
+        user-friendly. For more advanced control, consider using
+        `concurrent.futures` directly.
+        """
+
+        trees = (t for t in self.trees)
+
+        if verbose:
+            results = process_map(fn, trees, max_workers=max_worker)
+        else:
+            with ProcessPoolExecutor(max_worker) as p:
+                results = p.map(fn, trees)
+
+        return results
+
     @classmethod
-    def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> "Population":
+    def from_swc(cls, root: str, ext: str = ".swc", **kwargs) -> Self:
         if not os.path.exists(root):
             raise FileNotFoundError(
                 f"the root does not refers to an existing directory: {root}"
             )
 
         swcs = cls.find_swcs(root, ext)
-        return Population(LazyLoadingTrees(swcs, **kwargs), root=root)
+        return cls(LazyLoadingTrees(swcs, **kwargs), root=root)
 
     @classmethod
     def from_eswc(
@@ -170,7 +210,7 @@ class Population:
         ext: str = ".eswc",
         extra_cols: Optional[Iterable[str]] = None,
         **kwargs,
-    ) -> "Population":
+    ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
@@ -235,7 +275,7 @@ class Populations:
         return Population(ChainTrees(p.trees for p in self.populations))
 
     @classmethod
-    def from_swc(  # pylint: disable=too-many-arguments
+    def from_swc(
         cls,
         roots: Iterable[str],
         ext: str = ".swc",
@@ -243,7 +283,7 @@ class Populations:
         check_same: bool = False,
         labels: Optional[Iterable[str]] = None,
         **kwargs,
-    ) -> "Populations":
+    ) -> Self:
         """Get population from dirs.
 
         Parameters
@@ -275,7 +315,7 @@ class Populations:
             )
             for i, d in enumerate(roots)
         ]
-        return Populations(populations, labels=labels)
+        return cls(populations, labels=labels)
 
     @classmethod
     def from_eswc(
@@ -285,7 +325,7 @@ class Populations:
         *,
         ext: str = ".eswc",
         **kwargs,
-    ) -> "Populations":
+    ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
         extra_cols.extend(k for k, t in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, ext=ext, **kwargs)
