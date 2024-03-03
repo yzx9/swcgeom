@@ -1,4 +1,9 @@
-"""Play augment in image stack."""
+"""Play augment in image stack.
+
+Notes
+-----
+This is expremental code, and the API is subject to change.
+"""
 
 import random
 from typing import List, Literal, Optional
