@@ -3,7 +3,6 @@
 import os
 import re
 import warnings
-from abc import ABC, abstractmethod
 from typing import (
     Callable,
     Generic,
@@ -32,7 +31,7 @@ __all__ = [
 T = TypeVar("T")
 
 
-class ImageStackFolderBase(Generic[ScalarType, T], ABC):
+class ImageStackFolderBase(Generic[ScalarType, T]):
     """Image stack folder base."""
 
     files: List[str]
@@ -50,10 +49,6 @@ class ImageStackFolderBase(Generic[ScalarType, T], ABC):
         self.files = list(files)
         self.dtype = dtype or np.float32
         self.transform = transform or Identity()  # type: ignore
-
-    @abstractmethod
-    def __getitem__(self, key: str, /) -> T:
-        raise NotImplementedError()
 
     def __len__(self) -> int:
         return len(self.files)
@@ -124,8 +119,8 @@ class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         super().__init__(files, **kwargs)
         self.labels = list(labels)
 
-    def __getitem__(self, idx: int) -> Tuple[npt.NDArray[np.float32], int]:
-        return self.read_imgs(self.files[idx]), self.labels[idx]
+    def __getitem__(self, idx: int) -> Tuple[T, int]:
+        return self._get(self.files[idx]), self.labels[idx]
 
     @classmethod
     def from_dir(
@@ -146,7 +141,7 @@ class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         return cls(files, labels, **kwargs)
 
 
-class PathImageStackFolder(ImageStackFolder[ScalarType, T]):
+class PathImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     """Image stack folder with relpath."""
 
     root: str
