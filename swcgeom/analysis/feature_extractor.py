@@ -17,13 +17,13 @@ import numpy.typing as npt
 import seaborn as sns
 from matplotlib.axes import Axes
 
-from swcgeom.analysis.branch_features import BranchFeatures
-from swcgeom.analysis.node_features import (
+from swcgeom.analysis.features import (
     BifurcationFeatures,
+    BranchFeatures,
     NodeFeatures,
+    PathFeatures,
     TipFeatures,
 )
-from swcgeom.analysis.path_features import PathFeatures
 from swcgeom.analysis.sholl import Sholl
 from swcgeom.analysis.volume import get_volume
 from swcgeom.core import Population, Populations, Tree
