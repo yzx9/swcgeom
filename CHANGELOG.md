@@ -1,5 +1,54 @@
 # Changelog
 
+## **0.16.0**&emsp;<sub><sup>2024-03-16 ([bf2bf95...7029483](https://github.com/yzx9/swcgeom/compare/bf2bf95ee9fbfb7eba871db7303292f1dfcc7b8f...70294836643e51ca43d039887bbd71de3a9b561b?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`analysis`
+
+- add l\-measure support \(close \#13\) ([15ddc33](https://github.com/yzx9/swcgeom/commit/15ddc333c4cdce42fe99fb2383fa0768bc2e35b2))
+
+##### &ensp;`core`
+
+- \`Tree\` accpet values with custom names ([722f84f](https://github.com/yzx9/swcgeom/commit/722f84fdd71133d07e74b5f90171b3671a4fe4c9))
+- add \`Population\.map\` parallel processing support ([a1ee5bb](https://github.com/yzx9/swcgeom/commit/a1ee5bb6344ad5ab7b6572962f3b84caedf1351f))
+
+##### &ensp;`images`
+
+- add image contrast functions ([85b881e](https://github.com/yzx9/swcgeom/commit/85b881e91e878daf6fb3aa2862b5cd62eaa3488b))
+- stat image stack folder ([ffc5e3a](https://github.com/yzx9/swcgeom/commit/ffc5e3a649a4d8203c2530b6351a7b509b262cf3))
+
+##### &ensp;`transforms`
+
+- add basic neuronlucida asc format support \(close \#12\) ([619a275](https://github.com/yzx9/swcgeom/commit/619a275aaa5a311c66e1a2438e6251ee4b9bd703))
+- add \`SGuoImPreProcess\` ([dab7481](https://github.com/yzx9/swcgeom/commit/dab74818e5ea82d27450758f868bdc633b8992bf))
+- add image stack related transforms ([7029483](https://github.com/yzx9/swcgeom/commit/70294836643e51ca43d039887bbd71de3a9b561b))
+
+##### &ensp;`utils`
+
+- \`Tree\` support array like inputs ([1f228d0](https://github.com/yzx9/swcgeom/commit/1f228d055b99c8545ba51da5af2bca8d7b760f3f))
+- download source swc and log from neuromorpho ([d4fbfb6](https://github.com/yzx9/swcgeom/commit/d4fbfb6f0b89990bf63b481333d6c3c3cb16705c))
+
+### Bug Fixes
+
+##### &ensp;`utils`
+
+- expecting a figure from the axes ([bf2bf95](https://github.com/yzx9/swcgeom/commit/bf2bf95ee9fbfb7eba871db7303292f1dfcc7b8f))
+
+### Performance Improvements
+
+##### &ensp;`core`
+
+- use NamedTuple for SWCNames and SWCTypes ([300bfea](https://github.com/yzx9/swcgeom/commit/300bfeac92b90e09f262a850ecc226257c2af2e5))
+
+
+### BREAKING CHANGES
+
+- `core` \`Tree\` accpet values with custom names ([722f84f](https://github.com/yzx9/swcgeom/commit/722f84fdd71133d07e74b5f90171b3671a4fe4c9))
+- `core` remove deprecated \`Tree\.Node\.get\_branch\` and \`Node\.child\_ids\` method ([1de86af](https://github.com/yzx9/swcgeom/commit/1de86afc21451be4c6bde5084688170d901eb625))
+
+<br>
+
 ## **0.15.0**&emsp;<sub><sup>2024-01-28 ([d300b41...8c9e0ab](https://github.com/yzx9/swcgeom/compare/d300b41689ee892fe5a23dad57f92e1054c0f9e9...8c9e0ab45c447d3d8121b0cc4178be5f65d18a56?diff=split))</sup></sub>
 
 ### Features
