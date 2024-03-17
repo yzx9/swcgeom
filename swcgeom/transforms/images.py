@@ -45,7 +45,7 @@ class ImagesCenterCrop(Transform[NDArrayf32, NDArrayf32]):
 class Center(ImagesCenterCrop):
     """Get image stack center.
 
-    .. deprecated:: 0.5.0
+    .. deprecated:: 0.16.0
         Use :class:`ImagesCenterCrop` instead.
     """
 
@@ -100,3 +100,6 @@ class ImagesMeanVarianceAdjustment(Transform[NDArrayf32, NDArrayf32]):
 
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return (x - self.mean) / self.variance
+
+    def extra_repr(self):
+        return f"mean={self.mean}, variance={self.variance}"
