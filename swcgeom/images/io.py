@@ -107,27 +107,29 @@ def read_imgs(fname: str, *, dtype: None =..., **kwargs) -> ImageStack[np.float3
 # fmt:on
 
 
-def read_imgs(fname: str, *, dtype=None, **kwargs):  # type: ignore
+def read_imgs(fname: str, **kwargs):  # type: ignore
     """Read image stack."""
 
-    kwargs["dtype"] = dtype or np.float32
-
-    ext = os.path.splitext(fname)[-1]
-    if ext in [".tif", ".tiff"]:
-        return TiffImageStack(fname, **kwargs)
-    if ext in [".nrrd"]:
-        return NrrdImageStack(fname, **kwargs)
-    if ext in [".v3dpbd"]:
-        return V3dpbdImageStack(fname, **kwargs)
-    if ext in [".v3draw"]:
-        return V3drawImageStack(fname, **kwargs)
-    if ext in [".npy"]:
-        return NDArrayImageStack(np.load(fname), **kwargs)
-    if TeraflyImageStack.is_root(fname):
-        return TeraflyImageStack(fname, **kwargs)
+    kwargs.setdefault("dtype", np.float32)
     if not os.path.exists(fname):
         raise ValueError("image stack not exists")
-    raise ValueError("unsupported image stack")
+
+    match os.path.splitext(fname)[-1]:
+        case ".tif" | ".tiff":
+            return TiffImageStack(fname, **kwargs)
+        case ".nrrd":
+            return NrrdImageStack(fname, **kwargs)
+        case ".v3dpbd":
+            return V3dpbdImageStack(fname, **kwargs)
+        case ".v3draw":
+            return V3drawImageStack(fname, **kwargs)
+        case ".npy":
+            return NDArrayImageStack(np.load(fname), **kwargs)
+        case _:
+            if TeraflyImageStack.is_root(fname):
+                return TeraflyImageStack(fname, **kwargs)
+
+            raise ValueError("unsupported image stack")
 
 
 def save_tiff(
