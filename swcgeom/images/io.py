@@ -121,7 +121,7 @@ def read_imgs(fname: str, *, dtype=None, **kwargs):  # type: ignore
         return V3dpbdImageStack(fname, **kwargs)
     if ext in [".v3draw"]:
         return V3drawImageStack(fname, **kwargs)
-    if ext in [".npy", ".npz"]:
+    if ext in [".npy"]:
         return NDArrayImageStack(np.load(fname), **kwargs)
     if TeraflyImageStack.is_root(fname):
         return TeraflyImageStack(fname, **kwargs)
