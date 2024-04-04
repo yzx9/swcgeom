@@ -151,7 +151,6 @@ def save_tiff(
     fname: str,
     *,
     dtype: Optional[np.unsignedinteger | np.floating] = None,
-    swap_xy: Optional[bool] = None,
     compression: str | Literal[False] = "zlib",
     **kwargs,
 ) -> None:
@@ -180,17 +179,6 @@ def save_tiff(
         data = np.expand_dims(data, -1)  # (_, _, _)  -> (_, _, _, C), C === 1
 
     axes = "ZXYC"
-    if swap_xy is not None:
-        warnings.warn(
-            "flag `swap_xy` is easy to implement in user space and "
-            "is more flexiable. Since this flag is rarely used, we "
-            "decided to remove it in the next version",
-            DeprecationWarning,
-        )
-        if swap_xy is True:
-            axes = "ZYXC"
-            data = data.swapaxes(0, 1)  # (X, Y, _, _) -> (Y, X, _, _)
-
     assert data.ndim == 4, "should be an array of shape (X, Y, Z, C)"
     assert data.shape[-1] in [1, 3], "support 'miniblack' or 'rgb'"
 
@@ -225,39 +213,13 @@ class NDArrayImageStack(ImageStack[ScalarType]):
     """NDArray image stack."""
 
     def __init__(
-        self,
-        imgs: npt.NDArray[Any],
-        swap_xy: Optional[bool] = None,
-        filp_xy: Optional[bool] = None,
-        *,
-        dtype: Optional[ScalarType] = None,
+        self, imgs: npt.NDArray[Any], *, dtype: Optional[ScalarType] = None
     ) -> None:
         super().__init__()
 
         if imgs.ndim == 3:  # (_, _, _) -> (_, _, _, C)
             imgs = np.expand_dims(imgs, -1)
         assert imgs.ndim == 4, "Should be shape of (X, Y, Z, C)"
-
-        if swap_xy is not None:
-            warnings.warn(
-                "flag `swap_xy` now is unnecessary, tifffile will "
-                "automatically adjust dimensions according to "
-                "`tags.axes`, so this flag will be removed in the next "
-                " version",
-                DeprecationWarning,
-            )
-            if swap_xy is True:
-                imgs = imgs.swapaxes(0, 1)  # (Y, X, _, _) -> (X, Y, _, _)
-
-        if filp_xy is not None:
-            warnings.warn(
-                "flag `filp_xy` is easy to implement in user space and "
-                "is more flexiable. Since this flag is rarely used, we "
-                "decided to remove it in the next version",
-                DeprecationWarning,
-            )
-            if filp_xy is True:
-                imgs = np.flip(imgs, (0, 1))  # (X, Y, Z, C)
 
         if dtype is not None:
             dtype_raw = imgs.dtype
@@ -290,15 +252,7 @@ class NDArrayImageStack(ImageStack[ScalarType]):
 class TiffImageStack(NDArrayImageStack[ScalarType]):
     """Tiff image stack."""
 
-    def __init__(
-        self,
-        fname: str,
-        swap_xy: Optional[bool] = None,
-        filp_xy: Optional[bool] = None,
-        *,
-        dtype: ScalarType,
-        **kwargs,
-    ) -> None:
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
         with tifffile.TiffFile(fname, **kwargs) as f:
             s = f.series[0]
             imgs, axes = s.asarray(), s.axes
@@ -310,23 +264,15 @@ class TiffImageStack(NDArrayImageStack[ScalarType]):
 
         orders = [AXES_ORDER[c] for c in axes]
         imgs = imgs.transpose(np.argsort(orders))
-        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy, dtype=dtype)
+        super().__init__(imgs, dtype=dtype)
 
 
 class NrrdImageStack(NDArrayImageStack[ScalarType]):
     """Nrrd image stack."""
 
-    def __init__(
-        self,
-        fname: str,
-        swap_xy: Optional[bool] = None,
-        filp_xy: Optional[bool] = None,
-        *,
-        dtype: ScalarType,
-        **kwargs,
-    ) -> None:
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
         imgs, header = nrrd.read(fname, **kwargs)
-        super().__init__(imgs, swap_xy=swap_xy, filp_xy=filp_xy, dtype=dtype)
+        super().__init__(imgs, dtype=dtype)
         self.header = header
 
 
