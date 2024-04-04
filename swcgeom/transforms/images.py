@@ -12,6 +12,8 @@ __all__ = [
     "ImagesCenterCrop",
     "ImagesScale",
     "ImagesClip",
+    "ImagesFlip",
+    "ImagesFlipY",
     "ImagesNormalizer",
     "ImagesMeanVarianceAdjustment",
     "ImagesScaleToUnitRange",
@@ -82,6 +84,38 @@ class ImagesClip(Transform[NDArrayf32, NDArrayf32]):
 
     def extra_repr(self) -> str:
         return f"vmin={self.vmin}, vmax={self.vmax}"
+
+
+class ImagesFlip(Transform[NDArrayf32, NDArrayf32]):
+    """Flip image stack along axis."""
+
+    def __init__(self, axis: int, /) -> None:
+        super().__init__()
+        self.axis = axis
+
+    def __call__(self, x: NDArrayf32) -> NDArrayf32:
+        return np.flip(x, axis=self.axis)
+
+    def extra_repr(self) -> str:
+        return f"axis={self.axis}"
+
+
+class ImagesFlipY(ImagesFlip):
+    """Flip image stack along Y-axis.
+
+    See Also
+    --------
+    ~.images.io.TeraflyImageStack:
+        Terafly and Vaa3d use a especial right-handed coordinate system
+        (with origin point in the left-top and z-axis points front),
+        but we flip y-axis to makes it a left-handed coordinate system
+        (with orgin point in the left-bottom and z-axis points front).
+        If you need to use its coordinate system, remember to FLIP
+        Y-AXIS BACK.
+    """
+
+    def __init__(self, axis: int = 1, /) -> None:
+        super().__init__(axis)  # (X, Y, Z, C)
 
 
 class ImagesNormalizer(Transform[NDArrayf32, NDArrayf32]):
