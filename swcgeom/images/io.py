@@ -386,7 +386,12 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         @lru_cache(maxsize=lru_maxsize)
         def read_patch(path: str) -> npt.NDArray[ScalarType]:
-            return read_imgs(path, dtype=dtype).get_full()
+            match os.path.splitext(path)[-1]:
+                case "raw":
+                    # Treat it as a v3draw file
+                    return V3drawImageStack(path, dtype=dtype).get_full()
+                case _:
+                    return read_imgs(path, dtype=dtype).get_full()
 
         self._listdir, self._read_patch = listdir, read_patch
 
