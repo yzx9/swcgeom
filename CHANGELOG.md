@@ -1,5 +1,25 @@
 # Changelog
 
+## **0.17.0**&emsp;<sub><sup>2024-04-04 ([59257cb...2072139](https://github.com/yzx9/swcgeom/compare/59257cbfb6264afd3ca31fcba002f692bbb69ed0...20721393086e5a890b097b3ae32aaa1e4ad6b898?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`images`
+
+- handle raw file in terafly ([67ecd63](https://github.com/yzx9/swcgeom/commit/67ecd63bf4124d49b00e779c2702a7b939ef710b))
+- add image stack dtype support ([7313ead](https://github.com/yzx9/swcgeom/commit/7313ead09ec61970f221b9e0c3691d31c269b591))
+
+##### &ensp;`transforms`
+
+- add new image transformation classes ([7b5d805](https://github.com/yzx9/swcgeom/commit/7b5d805a1aa0deac3f9d7576a9aecab36b59774b))
+- add image flip and notes ([5f2a4d1](https://github.com/yzx9/swcgeom/commit/5f2a4d1a9c2b5fb68e8221c7b024a411b247ab6d))
+
+
+### BREAKING CHANGES
+- `images` remove deprecated \`swap\_xy\` and \`filp\_xy\` flag ([2072139](https://github.com/yzx9/swcgeom/commit/20721393086e5a890b097b3ae32aaa1e4ad6b898))
+<br>
+
+
 ## **0.16.0**&emsp;<sub><sup>2024-03-16 ([bf2bf95...7029483](https://github.com/yzx9/swcgeom/compare/bf2bf95ee9fbfb7eba871db7303292f1dfcc7b8f...70294836643e51ca43d039887bbd71de3a9b561b?diff=split))</sup></sub>
 
 ### Features
