@@ -108,12 +108,25 @@ def read_imgs(fname: str, *, dtype: None =..., **kwargs) -> ImageStack[np.float3
 
 
 def read_imgs(fname: str, **kwargs):  # type: ignore
-    """Read image stack."""
+    """Read image stack.
+
+    Parameters
+    ----------
+    fname : str
+        The path of image stack.
+    dtype : np.dtype, default to `np.float32`
+        Casting data to specified dtype. If integer and float
+        conversions occur, they will be scaled (assuming floats are
+        between 0 and 1).
+    **kwargs : Dict[str, Any]
+        Forwarding to the corresponding reader.
+    """
 
     kwargs.setdefault("dtype", np.float32)
     if not os.path.exists(fname):
-        raise ValueError("image stack not exists")
+        raise ValueError(f"image stack not exists: {fname}")
 
+    # match file extension
     match os.path.splitext(fname)[-1]:
         case ".tif" | ".tiff":
             return TiffImageStack(fname, **kwargs)
@@ -125,11 +138,12 @@ def read_imgs(fname: str, **kwargs):  # type: ignore
             return V3drawImageStack(fname, **kwargs)
         case ".npy":
             return NDArrayImageStack(np.load(fname), **kwargs)
-        case _:
-            if TeraflyImageStack.is_root(fname):
-                return TeraflyImageStack(fname, **kwargs)
 
-            raise ValueError("unsupported image stack")
+    # try to read as terafly
+    if TeraflyImageStack.is_root(fname):
+        return TeraflyImageStack(fname, **kwargs)
+
+    raise ValueError("unsupported image stack")
 
 
 def save_tiff(
@@ -216,7 +230,7 @@ class NDArrayImageStack(ImageStack[ScalarType]):
         swap_xy: Optional[bool] = None,
         filp_xy: Optional[bool] = None,
         *,
-        dtype: ScalarType,
+        dtype: Optional[ScalarType] = None,
     ) -> None:
         super().__init__()
 
@@ -245,13 +259,22 @@ class NDArrayImageStack(ImageStack[ScalarType]):
             if filp_xy is True:
                 imgs = np.flip(imgs, (0, 1))  # (X, Y, Z, C)
 
-        dtype_raw = imgs.dtype
-        self.imgs = imgs.astype(dtype)
-        if np.issubdtype(dtype, np.floating) and np.issubdtype(
-            dtype_raw, np.unsignedinteger
-        ):  # TODO: add a option to disable this
-            sclar_factor = 1.0 / UINT_MAX[imgs.dtype]
-            self.imgs *= sclar_factor
+        if dtype is not None:
+            dtype_raw = imgs.dtype
+            if np.issubdtype(dtype, np.floating) and np.issubdtype(
+                dtype_raw, np.unsignedinteger
+            ):
+                sclar_factor = 1.0 / UINT_MAX[dtype_raw]
+                imgs = sclar_factor * imgs.astype(dtype)
+            elif np.issubdtype(dtype, np.unsignedinteger) and np.issubdtype(
+                dtype_raw, np.floating
+            ):
+                sclar_factor = UINT_MAX[dtype]  # type: ignore
+                imgs *= (sclar_factor * imgs).astype(dtype)
+            else:
+                imgs = imgs.astype(dtype)
+
+        self.imgs = imgs
 
     def __getitem__(self, key):
         return self.imgs.__getitem__(key)
