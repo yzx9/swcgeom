@@ -2,7 +2,8 @@
 
 import os
 import warnings
-from typing import Generic, Iterable, TypeVar, cast
+from collections.abc import Iterable
+from typing import Generic, TypeVar, cast
 
 import torch
 import torch.utils.data

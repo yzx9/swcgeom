@@ -81,7 +81,8 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Tuple
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, Optional
 
 from tqdm import tqdm
 
@@ -116,7 +117,7 @@ SIZE_METADATA = 2 * GB
 SIZE_DATA = 20 * GB
 
 RESOURCES = Literal["morpho_cng", "morpho_source", "log_cng", "log_source"]
-DOWNLOAD_CONFIGS: Dict[RESOURCES, Tuple[str, int]] = {
+DOWNLOAD_CONFIGS: dict[RESOURCES, tuple[str, int]] = {
     # name/path: (url, size)
     "morpho_cng": (URL_MORPHO_CNG, 20 * GB),
     "morpho_source": (URL_LOG_CNG, 512 * GB),
@@ -145,7 +146,7 @@ invalid_ids = [
 # fmt: on
 
 
-def neuromorpho_is_valid(metadata: Dict[str, Any]) -> bool:
+def neuromorpho_is_valid(metadata: dict[str, Any]) -> bool:
     return metadata["neuron_id"] not in invalid_ids
 
 
@@ -209,7 +210,7 @@ class NeuroMorpho:
             self._info("skip download metadata")
 
         # file
-        def dumps(keys: List[bytes]) -> str:
+        def dumps(keys: list[bytes]) -> str:
             return json.dumps([i.decode("utf-8") for i in keys])
 
         for name in resources:
@@ -238,8 +239,8 @@ class NeuroMorpho:
         self,
         dest: Optional[str] = None,
         *,
-        group_by: Optional[str | Callable[[Dict[str, Any]], str | None]] = None,
-        where: Optional[Callable[[Dict[str, Any]], bool]] = None,
+        group_by: Optional[str | Callable[[dict[str, Any]], str | None]] = None,
+        where: Optional[Callable[[dict[str, Any]], bool]] = None,
         encoding: str | None = "utf-8",
     ) -> None:
         r"""Convert lmdb format to SWCs.
@@ -249,11 +250,11 @@ class NeuroMorpho:
         path : str
         dest : str, optional
             If None, use `path/swc`.
-        group_by : str | (metadata: Dict[str, Any]) -> str | None, optional
+        group_by : str | (metadata: dict[str, Any]) -> str | None, optional
             Group neurons by metadata. If a None is returned then no
             grouping. If a string is entered, use it as a metadata
             attribute name for grouping, e.g.: `archive`, `species`.
-        where : (metadata: Dict[str, Any]) -> bool, optional
+        where : (metadata: dict[str, Any]) -> bool, optional
             Filter neurons by metadata.
         encoding : str | None, default to `utf-8`
             Change swc encoding, part of the original data is not utf-8
@@ -346,14 +347,14 @@ class NeuroMorpho:
         pages: Optional[Iterable[int]] = None,
         page_size: int = API_PAGE_SIZE_MAX,
         **kwargs,
-    ) -> List[int]:
+    ) -> list[int]:
         r"""Download all neuron metadata.
 
         Parameters
         ----------
         path : str
             Path to save data.
-        pages : list of int, optional
+        pages : List of int, optional
             If is None, download all pages.
         verbose : bool, default False
             Show verbose log.
@@ -362,7 +363,7 @@ class NeuroMorpho:
 
         Returns
         -------
-        err_pages : list of int
+        err_pages : List of int
             Failed pages.
         """
 
@@ -402,7 +403,7 @@ class NeuroMorpho:
         override: bool = False,
         map_size: int = 512 * GB,
         **kwargs,
-    ) -> List[bytes]:
+    ) -> list[bytes]:
         """Download files.
 
         Parameters
@@ -412,7 +413,7 @@ class NeuroMorpho:
             Path to save data.
         path_metadata : str
             Path to lmdb of metadata.
-        keys : list of bytes, optional
+        keys : List of bytes, optional
             If exist, ignore `override` option. If None, download all key.
         override : bool, default False
             Override even exists.
@@ -422,7 +423,7 @@ class NeuroMorpho:
 
         Returns
         -------
-        err_keys : list of str
+        err_keys : List of str
             Failed keys.
         """
 
@@ -459,7 +460,7 @@ class NeuroMorpho:
 
     def _get_metadata(
         self, page: int, page_size: int = API_PAGE_SIZE_MAX, **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         params = {
             "page": page,
             "size": page_size,
@@ -470,7 +471,7 @@ class NeuroMorpho:
         resp = self._get(url, **kwargs)
         return json.loads(resp)
 
-    def _get_file(self, url: str, metadata: Dict[str, Any], **kwargs) -> bytes:
+    def _get_file(self, url: str, metadata: dict[str, Any], **kwargs) -> bytes:
         """Get file.
 
         Returns

@@ -1,7 +1,7 @@
 """Nueron node."""
 
-import warnings
-from typing import Any, Generic, Iterable
+from collections.abc import Iterable
+from typing import Any, Generic
 
 import numpy as np
 import numpy.typing as npt

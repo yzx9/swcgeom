@@ -1,6 +1,7 @@
 """The segment is a branch with two nodes."""
 
-from typing import Generic, Iterable, List, TypeVar
+from collections.abc import Iterable
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -43,7 +44,7 @@ class Compartment(Path, Generic[SWCTypeVar]):
 T = TypeVar("T", bound=Compartment)
 
 
-class Compartments(List[T]):
+class Compartments(list[T]):
     r"""Comparments contains a set of comparment."""
 
     names: SWCNames

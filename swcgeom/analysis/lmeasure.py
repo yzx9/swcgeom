@@ -1,7 +1,7 @@
 """L-Measure analysis."""
 
 import math
-from typing import Literal, Tuple
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -274,7 +274,7 @@ class LMeasure:
         rall_power, _, _, _ = self._rall_power(bif)
         return rall_power
 
-    def _rall_power_d(self, bif: Tree.Node) -> Tuple[float, float, float]:
+    def _rall_power_d(self, bif: Tree.Node) -> tuple[float, float, float]:
         children = bif.children()
         assert len(children) == 2, "Rall Power is only defined for bifurcations"
         parent = bif.parent()
@@ -284,7 +284,7 @@ class LMeasure:
         da, db = 2 * children[0].r, 2 * children[1].r
         return dp, da, db
 
-    def _rall_power(self, bif: Tree.Node) -> Tuple[float, float, float, float]:
+    def _rall_power(self, bif: Tree.Node) -> tuple[float, float, float, float]:
         dp, da, db = self._rall_power_d(bif)
         start, stop, step = 0, 5, 5 / 1000
         xs = np.arange(start, stop, step)
@@ -501,7 +501,7 @@ class LMeasure:
 
     def _bif_vector_local(
         self, bif: Tree.Node
-    ) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         children = bif.children()
         assert len(children) == 2, "Only defined for bifurcations"
 
@@ -511,7 +511,7 @@ class LMeasure:
 
     def _bif_vector_remote(
         self, bif: Tree.Node
-    ) -> Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
+    ) -> tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]:
         children = bif.children()
         assert len(children) == 2, "Only defined for bifurcations"
 

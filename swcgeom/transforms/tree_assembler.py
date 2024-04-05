@@ -1,7 +1,8 @@
 """Assemble a tree."""
 
+from collections.abc import Iterable
 from copy import copy
-from typing import Iterable, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -18,7 +19,7 @@ from swcgeom.transforms.base import Transform
 EPS = 1e-5
 
 
-class LinesToTree(Transform[List[pd.DataFrame], Tree]):
+class LinesToTree(Transform[list[pd.DataFrame], Tree]):
     """Assemble lines to swc."""
 
     def __init__(self, *, thre: float = 0.2, undirected: bool = True):
@@ -97,7 +98,7 @@ class LinesToTree(Transform[List[pd.DataFrame], Tree]):
         undirected: bool = True,
         sort_nodes: bool = True,
         names: Optional[SWCNames] = None,
-    ) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
+    ) -> tuple[pd.DataFrame, list[pd.DataFrame]]:
         """Trying assemble lines to a tree.
 
         Treat the first line as a tree, find a line whose shortest distance

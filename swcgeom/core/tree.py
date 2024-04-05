@@ -2,20 +2,8 @@
 
 import itertools
 import os
-import warnings
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-    overload,
-)
+from collections.abc import Callable, Iterable, Iterator
+from typing import Literal, Optional, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -44,12 +32,12 @@ class Tree(DictSWC):
         def parent(self) -> Union["Tree.Node", None]:
             return Tree.Node(self.attach, self.pid) if self.pid != -1 else None
 
-        def children(self) -> List["Tree.Node"]:
+        def children(self) -> list["Tree.Node"]:
             children = self.attach.id()[self.attach.pid() == self.id]
             return [Tree.Node(self.attach, idx) for idx in children]
 
         def branch(self) -> "Tree.Branch":
-            ns: List["Tree.Node"] = [self]
+            ns: list["Tree.Node"] = [self]
             while not ns[-1].is_bifurcation() and (p := ns[-1].parent()) is not None:
                 ns.append(p)
 
@@ -68,7 +56,7 @@ class Tree(DictSWC):
 
             Parameters
             ----------
-            out_mapping : List of int or Dict[int, int], optional
+            out_mapping : List of int or dict[int, int], optional
                 Map from new id to old id.
             """
 
@@ -160,7 +148,7 @@ class Tree(DictSWC):
 
     # fmt:off
     @overload
-    def __getitem__(self, key: slice) -> List[Node]: ...
+    def __getitem__(self, key: slice) -> list[Node]: ...
     @overload
     def __getitem__(self, key: int) -> Node: ...
     @overload
@@ -199,18 +187,18 @@ class Tree(DictSWC):
             raise ValueError(f"no soma found in: {self.source}")
         return n
 
-    def get_bifurcations(self) -> List[Node]:
+    def get_bifurcations(self) -> list[Node]:
         """Get all node of bifurcations."""
-        bifurcations: List[int] = []
+        bifurcations: list[int] = []
 
-        def collect_bifurcations(n: Tree.Node, children: List[None]) -> None:
+        def collect_bifurcations(n: Tree.Node, children: list[None]) -> None:
             if len(children) > 1:
                 bifurcations.append(n.id)
 
         self.traverse(leave=collect_bifurcations)
         return [self.node(i) for i in bifurcations]
 
-    def get_tips(self) -> List[Node]:
+    def get_tips(self) -> list[Node]:
         """Get all node of tips."""
         tip_ids = np.setdiff1d(self.id(), self.pid(), assume_unique=True)
         return [self.node(i) for i in tip_ids]
@@ -221,16 +209,16 @@ class Tree(DictSWC):
     def get_segments(self) -> Compartments[Compartment]:  # Alias
         return self.get_compartments()
 
-    def get_branches(self) -> List[Branch]:
+    def get_branches(self) -> list[Branch]:
         def collect_branches(
-            node: "Tree.Node", pre: List[Tuple[List[Tree.Branch], List[int]]]
-        ) -> Tuple[List[Tree.Branch], List[int]]:
+            node: "Tree.Node", pre: list[tuple[list[Tree.Branch], list[int]]]
+        ) -> tuple[list[Tree.Branch], list[int]]:
             if len(pre) == 1:
                 branches, child = pre[0]
                 child.append(node.id)
                 return branches, child
 
-            branches: List[Tree.Branch] = []
+            branches: list[Tree.Branch] = []
 
             for sub_branches, child in pre:
                 child.append(node.id)
@@ -244,19 +232,19 @@ class Tree(DictSWC):
         branches, _ = self.traverse(leave=collect_branches)
         return branches
 
-    def get_paths(self) -> List[Path]:
+    def get_paths(self) -> list[Path]:
         """Get all path from soma to tips."""
-        path_dic: Dict[int, List[int]] = {}
+        path_dic: dict[int, list[int]] = {}
 
-        def assign_path(n: Tree.Node, pre_path: List[int] | None) -> List[int]:
+        def assign_path(n: Tree.Node, pre_path: list[int] | None) -> list[int]:
             path = [] if pre_path is None else pre_path.copy()
             path.append(n.id)
             path_dic[n.id] = path
             return path
 
         def collect_path(
-            n: Tree.Node, children: List[List[List[int]]]
-        ) -> List[List[int]]:
+            n: Tree.Node, children: list[list[list[int]]]
+        ) -> list[list[int]]:
             if len(children) == 0:
                 return [path_dic[n.id]]
 
@@ -283,7 +271,7 @@ class Tree(DictSWC):
     @overload
     def traverse(self, *,
                  enter: Optional[Callable[[Node, T | None], T]] = ...,
-                 leave: Callable[[Node, List[K]], K],
+                 leave: Callable[[Node, list[K]], K],
                  root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
     # fmt: on
 
@@ -293,7 +281,7 @@ class Tree(DictSWC):
         Parameters
         ----------
         enter : (n: Node, parent: T | None) => T, optional
-        leave : (n: Node, children: List[T]) => T, optional
+        leave : (n: Node, children: list[T]) => T, optional
 
         See Also
         --------
@@ -355,7 +343,7 @@ class Tree(DictSWC):
 
     @classmethod
     def from_eswc(
-        cls, swc_file: str, extra_cols: Optional[List[str]] = None, **kwargs
+        cls, swc_file: str, extra_cols: Optional[list[str]] = None, **kwargs
     ) -> "Tree":
         """Read neuron tree from eswc file.
 

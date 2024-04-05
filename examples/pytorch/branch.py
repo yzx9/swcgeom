@@ -1,6 +1,7 @@
 """Transformations in branch requires pytorch."""
 
-from typing import Callable, Literal
+from collections.abc import Callable
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt

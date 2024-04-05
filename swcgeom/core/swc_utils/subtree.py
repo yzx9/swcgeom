@@ -6,7 +6,7 @@ but in more cases, you can use the high-level methods provided in
 high-level API.
 """
 
-from typing import Tuple, cast
+from typing import cast
 
 import numpy as np
 import numpy.typing as npt
@@ -18,7 +18,7 @@ __all__ = ["REMOVAL", "to_sub_topology", "propagate_removal"]
 REMOVAL = -2  # A marker in utils, place in the ids to mark it removal
 
 
-def to_sub_topology(sub: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
+def to_sub_topology(sub: Topology) -> tuple[Topology, npt.NDArray[np.int32]]:
     """Create sub tree from origin tree.
 
     Mark the node to be removed, then use this method to get a child

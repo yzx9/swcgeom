@@ -4,9 +4,7 @@ import os
 import re
 from enum import Enum, auto
 from io import TextIOBase
-from typing import Any, List, NamedTuple, Optional, cast
-
-import numpy as np
+from typing import Any, NamedTuple, Optional, cast
 
 from swcgeom.core import Tree
 from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
@@ -116,8 +114,8 @@ class ASTNode:
         self,
         type: ASTType,
         value: Any = None,
-        tokens: Optional[List["Token"]] = None,
-        children: Optional[List["ASTNode"]] = None,
+        tokens: Optional[list["Token"]] = None,
+        children: Optional[list["ASTNode"]] = None,
     ):
         self.type = type
         self.value = value
@@ -149,7 +147,7 @@ class ASTNode:
 
 
 class AST(ASTNode):
-    def __init__(self, children: Optional[List[ASTNode]] = None, source: str = ""):
+    def __init__(self, children: Optional[list[ASTNode]] = None, source: str = ""):
         super().__init__(ASTType.ROOT, children=children)
         self.source = source
 

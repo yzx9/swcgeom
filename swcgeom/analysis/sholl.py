@@ -1,7 +1,7 @@
 """Sholl analysis."""
 
 import warnings
-from typing import List, Literal, Optional, Tuple
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -84,18 +84,18 @@ class Sholl:
 
     def plot(  # pylint: disable=too-many-arguments
         self,
-        steps: List[float] | int = 20,
+        steps: list[float] | int = 20,
         plot_type: str | None = None,
         kind: Literal["bar", "linechart", "circles"] = "circles",
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
-    ) -> Tuple[Figure, Axes]:
+    ) -> tuple[Figure, Axes]:
         """Plot Sholl analysis.
 
         Parameters
         ----------
-        steps : int or List[float], default to 20
+        steps : int or list[float], default to 20
             Steps of raius of circle. If steps is int, then it will be
             evenly divided into n radii.
         kind : "bar" | "linechart" | "circles", default `circles`

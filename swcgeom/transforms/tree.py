@@ -1,7 +1,8 @@
 """Transformation in tree."""
 
 import warnings
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Optional
 
 import numpy as np
 
@@ -102,7 +103,7 @@ class CutByType(Transform[Tree, Tree]):
     def __call__(self, x: Tree) -> Tree:
         removals = set(x.id()[x.type() != self.type])
 
-        def leave(n: Tree.Node, keep_children: List[bool]) -> bool:
+        def leave(n: Tree.Node, keep_children: list[bool]) -> bool:
             if n.id in removals and any(keep_children):
                 removals.remove(n.id)
             return n.id not in removals
@@ -145,7 +146,7 @@ class CutByBifurcationOrder(Transform[Tree, Tree]):
     def __repr__(self) -> str:
         return f"CutByBifurcationOrder-{self.max_bifurcation_order}"
 
-    def _enter(self, n: Tree.Node, parent_level: int | None) -> Tuple[int, bool]:
+    def _enter(self, n: Tree.Node, parent_level: int | None) -> tuple[int, bool]:
         if parent_level is None:
             level = 0
         elif n.is_bifurcation():
@@ -164,7 +165,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
     """
 
     thre: float
-    callbacks: List[Callable[[Tree.Branch], None]]
+    callbacks: list[Callable[[Tree.Branch], None]]
 
     def __init__(
         self, thre: float = 5, callback: Optional[Callable[[Tree.Branch], None]] = None
@@ -176,7 +177,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
             self.callbacks.append(callback)
 
     def __call__(self, x: Tree) -> Tree:
-        removals: List[int] = []
+        removals: list[int] = []
         self.callbacks.append(lambda br: removals.append(br[1].id))
         x.traverse(leave=self._leave)
         self.callbacks.pop()
@@ -186,8 +187,8 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         return f"threshold={self.thre}"
 
     def _leave(
-        self, n: Tree.Node, children: List[Tuple[float, Tree.Node] | None]
-    ) -> Tuple[float, Tree.Node] | None:
+        self, n: Tree.Node, children: list[tuple[float, Tree.Node] | None]
+    ) -> tuple[float, Tree.Node] | None:
         if len(children) == 0:  # tip
             return 0, n
 

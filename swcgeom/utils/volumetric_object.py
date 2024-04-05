@@ -16,7 +16,7 @@ computations.
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, Optional, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -95,7 +95,7 @@ class VolMCObject(VolObject, ABC):
             self.n_samples = n_samples
 
     @abstractmethod
-    def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
+    def sample(self, n: int) -> tuple[npt.NDArray[np.float32], float]:
         """Sample points.
 
         Parameters
@@ -172,7 +172,7 @@ class VolSDFObject(VolMCObject):
         super().__init__(**kwargs)
         self.sdf = sdf
 
-    def sample(self, n: int) -> Tuple[npt.NDArray[np.float32], float]:
+    def sample(self, n: int) -> tuple[npt.NDArray[np.float32], float]:
         (min_x, min_y, min_z), (max_x, max_y, max_z) = self.sdf.bounding_box()
         samples = np.random.uniform(
             (min_x, min_y, min_z), (max_x, max_y, max_z), size=(n, 3)
@@ -186,17 +186,17 @@ class VolSDFObject(VolMCObject):
     def union(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSDFObject):
             return VolSDFUnion(self, obj)
-        return super().union(obj)
+        raise NotImplementedError()
 
     def intersect(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSDFObject):
             return VolSDFIntersection(self, obj)
-        return super().intersect(obj)
+        raise NotImplementedError()
 
     def subtract(self, obj: VolObject) -> VolObject:
         if isinstance(obj, VolSDFObject):
             return VolSDFDifference(self, obj)
-        return super().subtract(obj)
+        raise NotImplementedError()
 
 
 T = TypeVar("T", bound=VolSDFObject)
@@ -386,9 +386,7 @@ class VolSphere2Intersection(VolSDFIntersection[VolSphere, VolSphere]):
             return VolSphere.calc_volume(min(r1, r2))
 
         part1 = (np.pi / (12 * d)) * (r1 + r2 - d) ** 2
-        part2 = (
-            d**2 + 2 * d * r1 - 3 * r1**2 + 2 * d * r2 - 3 * r2**2 + 6 * r1 * r2
-        )
+        part2 = d**2 + 2 * d * r1 - 3 * r1**2 + 2 * d * r2 - 3 * r2**2 + 6 * r1 * r2
         return part1 * part2
 
 
@@ -497,7 +495,7 @@ class VolSphereFrustumConeUnion(VolSDFUnion[VolSphere, VolFrustumCone]):
         )
 
 
-def _tp3f(x: npt.NDArray) -> Tuple[float, float, float]:
+def _tp3f(x: npt.NDArray) -> tuple[float, float, float]:
     """Convert to tuple of 3 floats."""
 
     assert len(x) == 3

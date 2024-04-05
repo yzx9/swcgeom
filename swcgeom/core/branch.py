@@ -1,6 +1,7 @@
 """Branch is a set of node points."""
 
-from typing import Generic, Iterable, List
+from collections.abc import Iterable
+from typing import Generic
 
 import numpy as np
 import numpy.typing as npt
@@ -92,7 +93,7 @@ class Branch(Path, Generic[SWCTypeVar]):
     @classmethod
     def from_xyzr_batch(
         cls, xyzr_batch: npt.NDArray[np.float32]
-    ) -> List["Branch[DictSWC]"]:
+    ) -> list["Branch[DictSWC]"]:
         r"""Create list of branch form ~numpy.ndarray.
 
         Parameters
@@ -112,7 +113,7 @@ class Branch(Path, Generic[SWCTypeVar]):
             )
             xyzr_batch = np.concatenate([xyzr_batch, ones], axis=2)
 
-        branches: List[Branch[DictSWC]] = []
+        branches: list[Branch[DictSWC]] = []
         for xyzr in xyzr_batch:
             n_nodes = xyzr.shape[0]
             idx = np.arange(0, n_nodes, step=1, dtype=np.int32)

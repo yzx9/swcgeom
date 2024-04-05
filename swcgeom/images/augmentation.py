@@ -6,7 +6,7 @@ This is expremental code, and the API is subject to change.
 """
 
 import random
-from typing import List, Literal, Optional
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -54,7 +54,7 @@ class Augmentation:
 
     def swapaxes(self, x, mode: Optional[Literal["xy", "xz", "yz"]] = None) -> NDArrf32:
         if mode is None:
-            modes: List[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
+            modes: list[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
             mode = modes[self.rand.randint(0, 2)]
 
         match mode:
@@ -69,7 +69,7 @@ class Augmentation:
 
     def flip(self, x, mode: Optional[Literal["xy", "xz", "yz"]] = None) -> NDArrf32:
         if mode is None:
-            modes: List[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
+            modes: list[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
             mode = modes[random.randint(0, 2)]
 
         match mode:

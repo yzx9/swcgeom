@@ -1,7 +1,5 @@
 """3D geometry transformations."""
 
-from typing import Tuple
-
 import numpy as np
 import numpy.typing as npt
 
@@ -19,7 +17,7 @@ __all__ = [
     "orthographic_projection_simple",
 ]
 
-Vec3f = Tuple[float, float, float]
+Vec3f = tuple[float, float, float]
 
 
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:

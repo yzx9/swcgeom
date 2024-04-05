@@ -1,7 +1,8 @@
 """Nueron path."""
 
 import warnings
-from typing import Generic, Iterable, Iterator, List, overload
+from collections.abc import Iterable, Iterator
+from typing import Generic, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -44,7 +45,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     @overload
     def __getitem__(self, key: int) -> Node: ...
     @overload
-    def __getitem__(self, key: slice) -> List[Node]: ...
+    def __getitem__(self, key: slice) -> list[Node]: ...
     @overload
     def __getitem__(self, key: str) -> npt.NDArray: ...
     # fmt:on

@@ -3,7 +3,6 @@
 # pylint: disable=invalid-name
 
 from functools import cached_property
-from typing import Tuple
 
 import numpy as np
 import numpy.linalg as la
@@ -22,7 +21,7 @@ class Ellipse:
         self.centroid = centroid
 
     @property
-    def radii(self) -> Tuple[float, float]:
+    def radii(self) -> tuple[float, float]:
         # x, y radii.
         _U, D, _V = self.svd
         rx, ry = 1.0 / np.sqrt(D)
@@ -39,7 +38,7 @@ class Ellipse:
         return b
 
     @property
-    def axes(self) -> Tuple[float, float]:
+    def axes(self) -> tuple[float, float]:
         # Major and minor semi-axis of the ellipse.
         rx, ry = self.radii
         dx, dy = 2 * rx, 2 * ry
@@ -77,7 +76,7 @@ def mvee(points: npt.NDArray[np.floating], tol: float = 1e-3) -> Ellipse:
 
 def _mvee(
     points: npt.NDArray[np.floating], tol: float = 1e-3
-) -> Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Finds the Minimum Volume Enclosing Ellipsoid.
 
     Returns

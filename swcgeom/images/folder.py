@@ -4,18 +4,9 @@ import math
 import os
 import re
 import warnings
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import (
-    Callable,
-    Generic,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    overload,
-)
+from typing import Generic, Literal, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -33,7 +24,7 @@ T = TypeVar("T")
 class ImageStackFolderBase(Generic[ScalarType, T]):
     """Image stack folder base."""
 
-    files: List[str]
+    files: list[str]
     transform: Transform[npt.NDArray[ScalarType], T]
 
     # fmt: off
@@ -61,7 +52,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         return read_imgs(fname, dtype=self.dtype).get_full()  # type: ignore
 
     @staticmethod
-    def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
+    def scan(root: str, *, pattern: Optional[str] = None) -> list[str]:
         if not os.path.isdir(root):
             raise NotADirectoryError(f"not a directory: {root}")
 
@@ -171,13 +162,13 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
 class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     """Image stack folder with label."""
 
-    labels: List[int]
+    labels: list[int]
 
     def __init__(self, files: Iterable[str], labels: Iterable[int], **kwargs):
         super().__init__(files, **kwargs)
         self.labels = list(labels)
 
-    def __getitem__(self, idx: int) -> Tuple[T, int]:
+    def __getitem__(self, idx: int) -> tuple[T, int]:
         return self._get(self.files[idx]), self.labels[idx]
 
     @classmethod
@@ -208,7 +199,7 @@ class PathImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         super().__init__(files, **kwargs)
         self.root = root
 
-    def __getitem__(self, idx: int) -> Tuple[T, str]:
+    def __getitem__(self, idx: int) -> tuple[T, str]:
         relpath = os.path.relpath(self.files[idx], self.root)
         return self._get(self.files[idx]), relpath
 

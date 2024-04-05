@@ -3,7 +3,8 @@
 Methods ending with a underline imply an in-place transformation.
 """
 
-from typing import Callable, List, Literal, Optional, Tuple
+from collections.abc import Callable
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -111,7 +112,7 @@ def sort_nodes_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
     df[names.id], df[names.pid] = new_ids, new_pids
 
 
-def sort_nodes_impl(topology: Topology) -> Tuple[Topology, npt.NDArray[np.int32]]:
+def sort_nodes_impl(topology: Topology) -> tuple[Topology, npt.NDArray[np.int32]]:
     """Sort the indices of neuron tree.
 
     Returns
@@ -127,7 +128,7 @@ def sort_nodes_impl(topology: Topology) -> Tuple[Topology, npt.NDArray[np.int32]
     new_pids = np.full_like(old_ids, fill_value=-3)
     new_id = 0
     first_root = old_ids[(old_pids == -1).argmax()]
-    s: List[Tuple[npt.NDArray[np.int32], int]] = [(first_root, -1)]
+    s: list[tuple[npt.NDArray[np.int32], int]] = [(first_root, -1)]
     while len(s) != 0:
         old_id, new_pid = s.pop()
         id_map[new_id] = old_id

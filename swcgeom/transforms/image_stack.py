@@ -12,7 +12,8 @@ pip install swcgeom[all]
 import os
 import re
 import time
-from typing import Iterable, List, Optional, Tuple
+from collections.abc import Iterable
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -69,7 +70,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         x: Tree,
         verbose: bool = True,
         *,
-        ranges: Optional[Tuple[npt.ArrayLike, npt.ArrayLike]] = None,
+        ranges: Optional[tuple[npt.ArrayLike, npt.ArrayLike]] = None,
     ) -> Iterable[npt.NDArray[np.uint8]]:
         if verbose:
             print("To image stack: " + x.source)
@@ -133,7 +134,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         scene = ObjectsScene()
         scene.set_background((0, 0, 0))
 
-        def leave(n: Tree.Node, children: List[Tree.Node]) -> Tree.Node:
+        def leave(n: Tree.Node, children: list[Tree.Node]) -> Tree.Node:
             for c in children:
                 sdf = RoundCone(_tp3f(n.xyz()), _tp3f(c.xyz()), n.r, c.r).into()
                 scene.add_object(SDFObject(sdf, material).into())
@@ -175,7 +176,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     def save_tif(
         fname: str,
         frames: Iterable[npt.NDArray[np.uint8]],
-        resolution: Tuple[float, float] = (1, 1),
+        resolution: tuple[float, float] = (1, 1),
     ) -> None:
         with tifffile.TiffWriter(fname) as tif:
             for frame in frames:
@@ -191,7 +192,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
                 )
 
 
-def _tp3f(x: npt.NDArray) -> Tuple[float, float, float]:
+def _tp3f(x: npt.NDArray) -> tuple[float, float, float]:
     """Convert to tuple of 3 floats."""
     assert len(x) == 3
     return (float(x[0]), float(x[1]), float(x[2]))

@@ -4,20 +4,9 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable
 from functools import cache, lru_cache
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    List,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Generic, Literal, Optional, TypeVar, cast, overload
 
 import nrrd
 import numpy as np
@@ -27,7 +16,7 @@ from v3dpy.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
-Vec3i = Tuple[int, int, int]
+Vec3i = tuple[int, int, int]
 ScalarType = TypeVar("ScalarType", bound=np.generic, covariant=True)
 
 RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
@@ -58,17 +47,17 @@ class ImageStack(ABC, Generic[ScalarType]):
     def __getitem__(self, key: int) -> npt.NDArray[ScalarType]: ...                     # array of shape (Y, Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int]) -> npt.NDArray[ScalarType]: ...         # array of shape (Z, C)
+    def __getitem__(self, key: tuple[int, int]) -> npt.NDArray[ScalarType]: ...         # array of shape (Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int]) -> npt.NDArray[ScalarType]: ...    # array of shape (C,)
+    def __getitem__(self, key: tuple[int, int, int]) -> npt.NDArray[ScalarType]: ...    # array of shape (C,)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int, int]) -> ScalarType: ...            # value
+    def __getitem__(self, key: tuple[int, int, int, int]) -> ScalarType: ...            # value
     @overload
     @abstractmethod
     def __getitem__(
-        self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice] |  Tuple[slice, slice, slice, slice],
+        self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice] |  tuple[slice, slice, slice, slice],
     ) -> npt.NDArray[ScalarType]: ... # array of shape (X, Y, Z, C)
     @overload
     @abstractmethod
@@ -95,7 +84,7 @@ class ImageStack(ABC, Generic[ScalarType]):
         return self[:, :, :, :]
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(self) -> tuple[int, int, int, int]:
         raise NotImplementedError()
 
 
@@ -118,7 +107,7 @@ def read_imgs(fname: str, **kwargs):  # type: ignore
         Casting data to specified dtype. If integer and float
         conversions occur, they will be scaled (assuming floats are
         between 0 and 1).
-    **kwargs : Dict[str, Any]
+    **kwargs : dict[str, Any]
         Forwarding to the corresponding reader.
     """
 
@@ -169,7 +158,7 @@ def save_tiff(
         Compression algorithm, forwarding to `tifffile.imwrite`. If no
         algorithnm is specify specified, we will use the zlib algorithm
         with compression level 6 by default.
-    **kwargs : Dict[str, Any]
+    **kwargs : dict[str, Any]
         Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):
@@ -245,8 +234,8 @@ class NDArrayImageStack(ImageStack[ScalarType]):
         return self.imgs
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
-        return cast(Tuple[int, int, int, int], self.imgs.shape)
+    def shape(self) -> tuple[int, int, int, int]:
+        return cast(tuple[int, int, int, int], self.imgs.shape)
 
 
 class TiffImageStack(NDArrayImageStack[ScalarType]):
@@ -324,7 +313,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     use its coordinate system, remember to FLIP Y-AXIS BACK.
     """
 
-    _listdir: Callable[[str], List[str]]
+    _listdir: Callable[[str], list[str]]
     _read_patch: Callable[[str], npt.NDArray]
 
     def __init__(
@@ -350,7 +339,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(root)
 
         @cache
-        def listdir(path: str) -> List[str]:
+        def listdir(path: str) -> list[str]:
             return os.listdir(path)
 
         @lru_cache(maxsize=lru_maxsize)
@@ -429,19 +418,19 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         raise NotImplementedError()  # TODO
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(self) -> tuple[int, int, int, int]:
         res_max = self.res[-1]
         return res_max[0], res_max[1], res_max[2], 1
 
     @classmethod
-    def get_resolutions(cls, root: str) -> Tuple[List[Vec3i], List[str], List[Vec3i]]:
+    def get_resolutions(cls, root: str) -> tuple[list[Vec3i], list[str], list[Vec3i]]:
         """Get all resolutions.
 
         Returns
         -------
         resolutions : List of (int, int, int)
             Sequence of sorted resolutions (from small to large).
-        roots : List[str]
+        roots : list[str]
             Sequence of root of resolutions respectively.
         patch_sizes : List of (int, int, int)
             Sequence of patch size of resolutions respectively.
@@ -581,7 +570,7 @@ class GrayImageStack:
     @overload
     def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> np.float32: ...
     @overload
-    def __getitem__(self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
+    def __getitem__(self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
     # fmt: on
     def __getitem__(self, key):
         """Get pixel/patch of image stack."""
@@ -608,7 +597,7 @@ class GrayImageStack:
         return self.imgs.get_full()[:, :, :, 0]
 
     @property
-    def shape(self) -> Tuple[int, int, int]:
+    def shape(self) -> tuple[int, int, int]:
         return self.imgs.shape[:-1]
 
 

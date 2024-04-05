@@ -1,16 +1,7 @@
 """Base SWC format utils."""
 
-from dataclasses import dataclass
-from typing import (
-    Callable,
-    List,
-    Literal,
-    NamedTuple,
-    Optional,
-    Tuple,
-    TypeVar,
-    overload,
-)
+from collections.abc import Callable
+from typing import Literal, NamedTuple, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +20,7 @@ __all__ = [
 ]
 
 T, K = TypeVar("T"), TypeVar("K")
-Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
+Topology = tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
 
 
 class SWCNames(NamedTuple):
@@ -43,7 +34,7 @@ class SWCNames(NamedTuple):
     r: str = "r"
     pid: str = "pid"
 
-    def cols(self) -> List[str]:
+    def cols(self) -> list[str]:
         return [self.id, self.type, self.x, self.y, self.z, self.r, self.pid]
 
 
@@ -114,10 +105,10 @@ def get_dsu(
 @overload
 def traverse(topology: Topology, *, enter: Callable[[int, T | None], T], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> None: ...
 @overload
-def traverse(topology: Topology, *, leave: Callable[[int, List[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
+def traverse(topology: Topology, *, leave: Callable[[int, list[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
 @overload
 def traverse(
-    topology: Topology, *, enter: Callable[[int, T | None], T], leave: Callable[[int, List[K]], K],
+    topology: Topology, *, enter: Callable[[int, T | None], T], leave: Callable[[int, list[K]], K],
     root: int | np.integer = ..., mode: Literal["dfs"] = ...,
 ) -> K: ...
 # fmt: on
@@ -130,7 +121,7 @@ def traverse(topology: Topology, *, mode="dfs", **kwargs):
         The callback when entering node, which accepts two parameters,
         the current node id and the return value of it parent node. In
         particular, the root node receives an `None`.
-    leave : (id: int, children: List[T]) => T, optional
+    leave : (id: int, children: list[T]) => T, optional
         The callback when leaving node. When leaving a node, subtree
         has already been traversed. Callback accepts two parameters,
         the current node id and list of the return value of children,
@@ -155,7 +146,7 @@ def _traverse_dfs(topology: Topology, *, enter=None, leave=None, root=0):
         children_map[pid].append(idx)
 
     # manual dfs to avoid stack overflow in long branch
-    stack: List[Tuple[int, bool]] = [(root, True)]  # (idx, is_enter)
+    stack: list[tuple[int, bool]] = [(root, True)]  # (idx, is_enter)
     params = {root: None}
     vals = {}
 

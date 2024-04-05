@@ -1,7 +1,5 @@
 """Solid Geometry."""
 
-from typing import List, Tuple
-
 import numpy as np
 import numpy.typing as npt
 
@@ -31,7 +29,7 @@ def find_sphere_line_intersection(
     sphere_radius: float,
     line_point_a: npt.NDArray,
     line_point_b: npt.NDArray,
-) -> List[Tuple[float, npt.NDArray[np.float64]]]:
+) -> list[tuple[float, npt.NDArray[np.float64]]]:
     A = np.array(line_point_a)
     B = np.array(line_point_b)
     C = np.array(sphere_center)

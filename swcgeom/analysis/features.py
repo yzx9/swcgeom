@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import List, TypeVar
+from typing import TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -163,7 +163,7 @@ class PathFeatures:
         return np.array([path.tortuosity() for path in self._paths], dtype=np.float32)
 
     @cached_property
-    def _paths(self) -> List[Tree.Path]:
+    def _paths(self) -> list[Tree.Path]:
         return self.tree.get_paths()
 
 
@@ -201,7 +201,7 @@ class BranchFeatures:
         return self.calc_angle(self._branches, eps=eps)
 
     @staticmethod
-    def calc_angle(branches: List[T], eps: float = 1e-7) -> npt.NDArray[np.float32]:
+    def calc_angle(branches: list[T], eps: float = 1e-7) -> npt.NDArray[np.float32]:
         """Calc agnle between branches.
 
         Returns
@@ -219,5 +219,5 @@ class BranchFeatures:
         return angle
 
     @cached_property
-    def _branches(self) -> List[Tree.Branch]:
+    def _branches(self) -> list[Tree.Branch]:
         return self.tree.get_branches()

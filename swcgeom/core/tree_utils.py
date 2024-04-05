@@ -1,7 +1,8 @@
 """SWC util wrapper for tree."""
 
 import warnings
-from typing import Callable, Dict, Iterable, List, Optional, Tuple, TypeVar, overload
+from collections.abc import Callable, Iterable
+from typing import Optional, TypeVar, overload
 
 import numpy as np
 
@@ -50,9 +51,9 @@ def sort_tree(tree: Tree) -> Tree:
 
 # fmt:off
 @overload
-def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool]]) -> Tree: ...
+def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], tuple[T, bool]]) -> Tree: ...
 @overload
-def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, List[K]], Tuple[K, bool]]) -> Tree: ...
+def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, list[K]], tuple[K, bool]]) -> Tree: ...
 # fmt:on
 def cut_tree(tree: Tree, *, enter=None, leave=None):
     """Traverse and cut the tree.
@@ -60,11 +61,11 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     Returning a `True` can delete the current node and its children.
     """
 
-    removals: List[int] = []
+    removals: list[int] = []
 
     if enter:
 
-        def _enter(n: Tree.Node, parent: Tuple[T, bool] | None) -> Tuple[T, bool]:
+        def _enter(n: Tree.Node, parent: tuple[T, bool] | None) -> tuple[T, bool]:
             if parent is not None and parent[1]:
                 removals.append(n.id)
                 return parent
@@ -79,7 +80,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
 
     elif leave:
 
-        def _leave(n: Tree.Node, children: List[K]) -> K:
+        def _leave(n: Tree.Node, children: list[K]) -> K:
             res, removal = leave(n, children)
             if removal:
                 removals.append(n.id)
@@ -94,7 +95,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     return to_subtree(tree, removals)
 
 
-def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]:
+def to_sub_tree(swc_like: SWCLike, sub: Topology) -> tuple[Tree, dict[int, int]]:
     """Create subtree from origin tree.
 
     You can directly mark the node for removal, and we will remove it,
@@ -107,7 +108,7 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> Tuple[Tree, Dict[int, int]]
     Returns
     -------
     tree : Tree
-    id_map : Dict[int, int]
+    id_map : dict[int, int]
     """
 
     warnings.warn(
@@ -145,7 +146,7 @@ def to_subtree(
     swc_like : SWCLike
     removals : List of int
         A list of id of nodes to be removed.
-    out_mapping: List of int or Dict[int, int], optional
+    out_mapping: List of int or dict[int, int], optional
         Map new id to old id.
     """
 
@@ -170,7 +171,7 @@ def get_subtree(
     swc_like : SWCLike
     n : int
         Id of the root of the subtree.
-    out_mapping: List of int or Dict[int, int], optional
+    out_mapping: List of int or dict[int, int], optional
         Map new id to old id.
     """
 
