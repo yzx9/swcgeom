@@ -62,6 +62,9 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
 
     @staticmethod
     def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
+        if not os.path.isdir(root):
+            raise NotADirectoryError(f"not a directory: {root}")
+
         is_valid = re.compile(pattern).match if pattern is not None else truthly
 
         fs = []
