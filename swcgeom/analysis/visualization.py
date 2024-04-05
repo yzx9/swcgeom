@@ -2,7 +2,7 @@
 
 import os
 import weakref
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, List, Literal, Optional, Tuple
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -22,14 +22,14 @@ from swcgeom.utils import (
 __all__ = ["draw"]
 
 Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
-locations: Dict[Literal["lt", "lb", "rt", "rb"], Tuple[float, float]] = {
+locations: dict[Literal["lt", "lb", "rt", "rb"], Tuple[float, float]] = {
     "lt": (0.10, 0.90),
     "lb": (0.10, 0.10),
     "rt": (0.90, 0.90),
     "rb": (0.90, 0.10),
 }
 
-ax_weak_memo = weakref.WeakKeyDictionary[Axes, Dict[str, Any]]({})
+ax_weak_memo = weakref.WeakKeyDictionary[Axes, dict[str, Any]]({})
 
 
 def draw(
@@ -39,7 +39,7 @@ def draw(
     ax: Optional[Axes] = None,
     show: bool | None = None,
     camera: CameraOptions = "xy",
-    color: Optional[Dict[int, str] | str] = None,
+    color: Optional[dict[int, str] | str] = None,
     label: str | bool = True,
     direction_indicator: Positions | Literal[False] = "rb",
     unit: Optional[str] = None,
@@ -64,7 +64,7 @@ def draw(
         vector, then then threat it as (look-at, up), so camera is
         ((0, 0, 0), look-at, up). An easy way is to use the presets
         "xy", "yz" and "zx".
-    color : Dict[int, str] | "vaa3d" | str, optional
+    color : dict[int, str] | "vaa3d" | str, optional
         Color map. If is dict, segments will be colored by the type of
         parent node.If is string, the value will be use for any type.
     label : str | bool, default True
@@ -126,7 +126,7 @@ def get_ax_swc(ax: Axes) -> List[SWCLike]:
 
 
 def get_ax_color(
-    ax: Axes, swc: SWCLike, color: Optional[Dict[int, str] | str] = None
+    ax: Axes, swc: SWCLike, color: Optional[dict[int, str] | str] = None
 ) -> str | List[str]:
     if color == "vaa3d":
         color = palette.vaa3d

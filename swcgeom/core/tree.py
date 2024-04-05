@@ -2,10 +2,8 @@
 
 import itertools
 import os
-import warnings
 from typing import (
     Callable,
-    Dict,
     Iterable,
     Iterator,
     List,
@@ -68,7 +66,7 @@ class Tree(DictSWC):
 
             Parameters
             ----------
-            out_mapping : List of int or Dict[int, int], optional
+            out_mapping : List of int or dict[int, int], optional
                 Map from new id to old id.
             """
 
@@ -246,7 +244,7 @@ class Tree(DictSWC):
 
     def get_paths(self) -> List[Path]:
         """Get all path from soma to tips."""
-        path_dic: Dict[int, List[int]] = {}
+        path_dic: dict[int, List[int]] = {}
 
         def assign_path(n: Tree.Node, pre_path: List[int] | None) -> List[int]:
             path = [] if pre_path is None else pre_path.copy()

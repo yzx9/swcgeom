@@ -5,7 +5,7 @@ Notes
 Do not import `Tree` and keep this file minimized.
 """
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -15,8 +15,8 @@ from swcgeom.core.swc_utils import Topology, to_sub_topology, traverse
 
 __all__ = ["get_subtree_impl", "to_subtree_impl"]
 
-Mapping = Dict[int, int] | List[int]
-TreeArgs = Tuple[int, Dict[str, npt.NDArray[Any]], str, SWCNames]
+Mapping = dict[int, int] | List[int]
+TreeArgs = Tuple[int, dict[str, npt.NDArray[Any]], str, SWCNames]
 
 
 def get_subtree_impl(

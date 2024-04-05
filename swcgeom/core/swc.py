@@ -3,7 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, overload
+from typing import Any, Iterable, List, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -199,7 +199,7 @@ SWCTypeVar = TypeVar("SWCTypeVar", bound=SWCLike)
 class DictSWC(SWCLike):
     """SWC implementation on dict."""
 
-    ndata: Dict[str, npt.NDArray]
+    ndata: dict[str, npt.NDArray]
 
     def __init__(
         self,

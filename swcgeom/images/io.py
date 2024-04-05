@@ -118,7 +118,7 @@ def read_imgs(fname: str, **kwargs):  # type: ignore
         Casting data to specified dtype. If integer and float
         conversions occur, they will be scaled (assuming floats are
         between 0 and 1).
-    **kwargs : Dict[str, Any]
+    **kwargs : dict[str, Any]
         Forwarding to the corresponding reader.
     """
 
@@ -169,7 +169,7 @@ def save_tiff(
         Compression algorithm, forwarding to `tifffile.imwrite`. If no
         algorithnm is specify specified, we will use the zlib algorithm
         with compression level 6 by default.
-    **kwargs : Dict[str, Any]
+    **kwargs : dict[str, Any]
         Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):

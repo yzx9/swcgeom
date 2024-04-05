@@ -5,7 +5,7 @@ Notes
 This is a experimental function, it may be changed in the future.
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -30,7 +30,7 @@ def draw3d(
     *,
     ax: Axes,
     show: bool | None = None,
-    color: Optional[Dict[int, str] | str] = None,
+    color: Optional[dict[int, str] | str] = None,
     label: str | bool = True,
     **kwargs,
 ) -> tuple[Figure, Axes]:
@@ -46,7 +46,7 @@ def draw3d(
         Wheather to call `plt.show()`. If not specified, it will depend
         on if ax is passed in, it will not be called, otherwise it will
         be called by default.
-    color : Dict[int, str] | "vaa3d" | str, optional
+    color : dict[int, str] | "vaa3d" | str, optional
         Color map. If is dict, segments will be colored by the type of
         parent node.If is string, the value will be use for any type.
     label : str | bool, default True

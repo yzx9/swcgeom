@@ -1,6 +1,6 @@
 """Analysis of volume of a SWC tree."""
 
-from typing import Dict, List, Literal
+from typing import List, Literal
 
 import numpy as np
 from sdflit import ColoredMaterial, ObjectsScene, SDFObject, UniformSampler
@@ -11,7 +11,7 @@ from swcgeom.utils import VolFrustumCone, VolSphere
 __all__ = ["get_volume"]
 
 ACCURACY_LEVEL = Literal["low", "middle", "high"]
-ACCURACY_LEVELS: Dict[ACCURACY_LEVEL, int] = {"low": 3, "middle": 5, "high": 8}
+ACCURACY_LEVELS: dict[ACCURACY_LEVEL, int] = {"low": 3, "middle": 5, "high": 8}
 
 
 def get_volume(

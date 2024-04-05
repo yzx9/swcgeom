@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from itertools import chain
 from os.path import basename
-from typing import Any, Callable, Dict, List, Literal, Tuple, overload
+from typing import Any, Callable, List, Literal, Tuple, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -54,7 +54,7 @@ Feature = Literal[
 ]
 
 NDArrayf32 = npt.NDArray[np.float32]
-FeatAndKwargs = Feature | Tuple[Feature, Dict[str, Any]]
+FeatAndKwargs = Feature | Tuple[Feature, dict[str, Any]]
 
 Feature1D = set(["length", "volume", "node_count", "bifurcation_count", "tip_count"])
 
@@ -123,7 +123,7 @@ class FeatureExtractor(ABC):
     @overload
     def get(self, feature: List[FeatAndKwargs]) -> List[NDArrayf32]: ...
     @overload
-    def get(self, feature: Dict[Feature, Dict[str, Any]]) -> Dict[str, NDArrayf32]: ...
+    def get(self, feature: dict[Feature, dict[str, Any]]) -> dict[str, NDArrayf32]: ...
     # fmt:on
     def get(self, feature, **kwargs):
         """Get feature.
@@ -168,7 +168,7 @@ class FeatureExtractor(ABC):
 
     # Custom Plots
 
-    def plot_node_branch_order(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+    def plot_node_branch_order(self, feature_kwargs: dict[str, Any], **kwargs) -> Axes:
         vals = self._get("node_branch_order", **feature_kwargs)
         bin_edges = np.arange(int(np.ceil(vals.max() + 1))) + 0.5
         return self._plot_histogram_impl(vals, bin_edges, **kwargs)
@@ -234,7 +234,7 @@ class TreeFeatureExtractor(FeatureExtractor):
 
     def plot_sholl(
         self,
-        feature_kwargs: Dict[str, Any],  # pylint: disable=unused-argument
+        feature_kwargs: dict[str, Any],  # pylint: disable=unused-argument
         **kwargs,
     ) -> Axes:
         _, ax = self._features.sholl.plot(**kwargs)
@@ -279,7 +279,7 @@ class PopulationFeatureExtractor(FeatureExtractor):
 
     # Custom Plots
 
-    def plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+    def plot_sholl(self, feature_kwargs: dict[str, Any], **kwargs) -> Axes:
         vals, rs = self._get_sholl_impl(**feature_kwargs)
         ax = self._lineplot(xs=rs, ys=vals.flatten(), **kwargs)
         ax.set_ylabel("Count of Intersections")
@@ -348,7 +348,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
     # Custom Plots
 
-    def plot_sholl(self, feature_kwargs: Dict[str, Any], **kwargs) -> Axes:
+    def plot_sholl(self, feature_kwargs: dict[str, Any], **kwargs) -> Axes:
         vals, rs = self._get_sholl_impl(**feature_kwargs)
         ax = self._lineplot(xs=rs, ys=vals, **kwargs)
         ax.set_ylabel("Count of Intersections")

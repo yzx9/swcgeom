@@ -1,7 +1,7 @@
 """Branch tree is a simplified neuron tree."""
 
 import itertools
-from typing import Dict, List
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -19,7 +19,7 @@ class BranchTree(Tree):
     A branch tree that contains only soma, branch, and tip nodes.
     """
 
-    branches: Dict[int, List[Branch]]
+    branches: dict[int, List[Branch]]
 
     def get_origin_branches(self) -> List[Branch]:
         """Get branches of original tree."""

@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name
 
 from itertools import chain
-from typing import Any, Dict, Iterable, List, Literal, Optional, Tuple, cast
+from typing import Any, Iterable, List, Literal, Optional, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -28,8 +28,8 @@ def draw_trunk(
     *,
     fig: Optional[Figure] = None,
     ax: Optional[Axes] = None,
-    bound: Bounds | Tuple[Bounds, Dict[str, Any]] | None = "ellipse",
-    point: bool | Dict[str, Any] = True,
+    bound: Bounds | Tuple[Bounds, dict[str, Any]] | None = "ellipse",
+    point: bool | dict[str, Any] = True,
     projection: Projection = "2d",
     cmap: Any = "viridis",
     **kwargs,
@@ -45,11 +45,11 @@ def draw_trunk(
         subtrees), each number is the id of a tree node.
     fig : ~matplotlib.figure.Figure, optional
     ax : ~matplotlib.axes.Axes, optional
-    bound : Bounds | (Bounds, Dict[str, Any]) | None, default 'ellipse'
+    bound : Bounds | (Bounds, dict[str, Any]) | None, default 'ellipse'
         Kind of bound, support 'aabb', 'ellipse'. If bound is None, no
         bound will be drawn. If bound is a tuple, the second item will
         used as kwargs and forward to draw function.
-    point : bool | Dict[str, Any], default True
+    point : bool | dict[str, Any], default True
         Draw point at the start of a subtree. If point is False, no
         point will be drawn. If point is a dict, this will used a
         kwargs and forward to draw function.
@@ -57,7 +57,7 @@ def draw_trunk(
         Colormap, any value supported by ~matplotlib.cm.Colormap. We
         will use the ratio of the length of the subtree to the total
         length of the tree to determine the color.
-    **kwargs : Dict[str, Any]
+    **kwargs : dict[str, Any]
         Forward to ~swcgeom.analysis.draw.
     """
     # pylint: disable=too-many-locals
@@ -101,7 +101,7 @@ def get_length_ratio(t: Tree, tss: List[List[Tree]]) -> Any:
 def draw_bound(
     ts: Iterable[Tree],
     ax: Axes,
-    bound: Bounds | Tuple[Bounds, Dict[str, Any]],
+    bound: Bounds | Tuple[Bounds, dict[str, Any]],
     projection: Projection,
     **kwargs,
 ) -> None:

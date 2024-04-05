@@ -1,7 +1,7 @@
 """Rendering related utils."""
 
 from functools import cached_property
-from typing import Dict, Literal, Tuple, cast
+from typing import Literal, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -17,7 +17,7 @@ __all__ = ["CameraOptions", "Camera", "SimpleCamera", "palette"]
 
 CameraOption = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
 CameraPreset = Literal["xy", "yz", "zx", "yx", "zy", "xz"]
-CameraPresets: Dict[CameraPreset, Tuple[Vec3f, Vec3f, Vec3f]] = {
+CameraPresets: dict[CameraPreset, Tuple[Vec3f, Vec3f, Vec3f]] = {
     "xy": ((0.0, 0.0, 0.0), (+0.0, +0.0, -1.0), (+0.0, +1.0, +0.0)),
     "yz": ((0.0, 0.0, 0.0), (-1.0, +0.0, +0.0), (+0.0, +0.0, +1.0)),
     "zx": ((0.0, 0.0, 0.0), (+0.0, -1.0, +0.0), (+1.0, +0.0, +0.0)),
@@ -85,8 +85,8 @@ class Palette:
 
     # pylint: disable=too-few-public-methods
 
-    default: Dict[int, str]
-    vaa3d: Dict[int, str]
+    default: dict[int, str]
+    vaa3d: dict[int, str]
 
     def __init__(self):
         default = [

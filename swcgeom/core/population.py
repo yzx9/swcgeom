@@ -7,7 +7,6 @@ from functools import reduce
 from typing import (
     Any,
     Callable,
-    Dict,
     Iterable,
     Iterator,
     List,
@@ -46,14 +45,14 @@ class LazyLoadingTrees:
 
     swcs: List[str]
     trees: List[Tree | None]
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
 
     def __init__(self, swcs: Iterable[str], **kwargs) -> None:
         """
         Paramters
         ---------
         swcs : List of str
-        kwargs : Dict[str, Any]
+        kwargs : dict[str, Any]
             Forwarding to `Tree.from_swc`
         """
 
