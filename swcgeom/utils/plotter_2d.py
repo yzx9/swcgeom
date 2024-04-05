@@ -1,4 +1,4 @@
-"""Rendering related utils."""
+"""2D Plotting utils."""
 
 from typing import Optional, Tuple
 
@@ -19,7 +19,12 @@ __all__ = ["draw_lines", "draw_direction_indicator", "draw_circles", "get_fig_ax
 
 
 def draw_lines(
-    ax: Axes, lines: npt.NDArray[np.floating], camera: Camera, **kwargs
+    ax: Axes,
+    lines: npt.NDArray[np.floating],
+    camera: Camera,
+    joinstyle="round",
+    capstyle="round",
+    **kwargs,
 ) -> LineCollection:
     """Draw lines.
 
@@ -43,7 +48,8 @@ def draw_lines(
     starts, ends = np.dot(T, starts.T).T[:, 0:2], np.dot(T, ends.T).T[:, 0:2]
 
     edges = np.stack([starts, ends], axis=1)
-    return ax.add_collection(LineCollection(edges, **kwargs))  # type: ignore
+    collection = LineCollection(edges, joinstyle=joinstyle, capstyle=capstyle, **kwargs)  # type: ignore
+    return ax.add_collection(collection)  # type: ignore
 
 
 def draw_direction_indicator(
