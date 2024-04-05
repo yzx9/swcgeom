@@ -2,7 +2,8 @@
 
 import re
 import warnings
-from typing import Callable, Iterable, Literal, Optional
+from collections.abc import Callable, Iterable
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt

@@ -1,6 +1,7 @@
 """Branch is a set of node points."""
 
-from typing import Generic, Iterable
+from collections.abc import Iterable
+from typing import Generic
 
 import numpy as np
 import numpy.typing as npt

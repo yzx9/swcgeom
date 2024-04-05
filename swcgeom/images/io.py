@@ -4,18 +4,9 @@ import os
 import re
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable
 from functools import cache, lru_cache
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    Iterable,
-    Literal,
-    Optional,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Generic, Literal, Optional, TypeVar, cast, overload
 
 import nrrd
 import numpy as np

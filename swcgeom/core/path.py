@@ -1,7 +1,8 @@
 """Nueron path."""
 
 import warnings
-from typing import Generic, Iterable, Iterator, overload
+from collections.abc import Iterable, Iterator
+from typing import Generic, overload
 
 import numpy as np
 import numpy.typing as npt

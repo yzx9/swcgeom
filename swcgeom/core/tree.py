@@ -2,16 +2,8 @@
 
 import itertools
 import os
-from typing import (
-    Callable,
-    Iterable,
-    Iterator,
-    Literal,
-    Optional,
-    TypeVar,
-    Union,
-    overload,
-)
+from collections.abc import Callable, Iterable, Iterator
+from typing import Literal, Optional, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt

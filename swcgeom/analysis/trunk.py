@@ -2,8 +2,9 @@
 
 # pylint: disable=invalid-name
 
+from collections.abc import Iterable
 from itertools import chain
-from typing import Any, Iterable, Literal, Optional, cast
+from typing import Any, Literal, Optional, cast
 
 import numpy as np
 import numpy.typing as npt

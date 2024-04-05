@@ -3,7 +3,8 @@
 Methods ending with a underline imply an in-place transformation.
 """
 
-from typing import Callable, Literal, Optional
+from collections.abc import Callable
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt

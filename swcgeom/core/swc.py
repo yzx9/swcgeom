@@ -2,8 +2,9 @@
 
 import warnings
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Iterable, Optional, TypeVar, overload
+from typing import Any, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt

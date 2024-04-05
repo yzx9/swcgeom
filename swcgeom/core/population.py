@@ -2,19 +2,10 @@
 
 import os
 import warnings
+from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor
 from functools import reduce
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    Optional,
-    Protocol,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Optional, Protocol, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt

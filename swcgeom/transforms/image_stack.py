@@ -12,7 +12,8 @@ pip install swcgeom[all]
 import os
 import re
 import time
-from typing import Iterable, Optional
+from collections.abc import Iterable
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt

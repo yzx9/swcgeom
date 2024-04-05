@@ -1,7 +1,8 @@
 """Assemble a tree."""
 
+from collections.abc import Iterable
 from copy import copy
-from typing import Iterable, Optional
+from typing import Optional
 
 import numpy as np
 import pandas as pd

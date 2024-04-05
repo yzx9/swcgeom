@@ -7,10 +7,11 @@ naming specification.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from functools import cached_property
 from itertools import chain
 from os.path import basename
-from typing import Any, Callable, Literal, overload
+from typing import Any, Literal, overload
 
 import numpy as np
 import numpy.typing as npt

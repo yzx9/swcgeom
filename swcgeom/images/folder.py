@@ -4,8 +4,9 @@ import math
 import os
 import re
 import warnings
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Callable, Generic, Iterable, Literal, Optional, TypeVar, overload
+from typing import Generic, Literal, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt

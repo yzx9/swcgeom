@@ -1,6 +1,7 @@
 """Base SWC format utils."""
 
-from typing import Callable, Literal, NamedTuple, Optional, TypeVar, overload
+from collections.abc import Callable
+from typing import Literal, NamedTuple, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt

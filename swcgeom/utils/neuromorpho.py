@@ -81,7 +81,8 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Callable, Iterable, Literal, Optional
+from collections.abc import Callable, Iterable
+from typing import Any, Literal, Optional
 
 from tqdm import tqdm
 

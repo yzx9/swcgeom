@@ -10,7 +10,7 @@ the future, use `sdflit` instead.
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt

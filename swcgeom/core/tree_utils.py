@@ -1,7 +1,8 @@
 """SWC util wrapper for tree."""
 
 import warnings
-from typing import Callable, Iterable, Optional, TypeVar, overload
+from collections.abc import Callable, Iterable
+from typing import Optional, TypeVar, overload
 
 import numpy as np
 
