@@ -8,7 +8,6 @@ from typing import (
     Iterator,
     Literal,
     Optional,
-    Tuple,
     TypeVar,
     Union,
     overload,
@@ -220,8 +219,8 @@ class Tree(DictSWC):
 
     def get_branches(self) -> list[Branch]:
         def collect_branches(
-            node: "Tree.Node", pre: list[Tuple[list[Tree.Branch], list[int]]]
-        ) -> Tuple[list[Tree.Branch], list[int]]:
+            node: "Tree.Node", pre: list[tuple[list[Tree.Branch], list[int]]]
+        ) -> tuple[list[Tree.Branch], list[int]]:
             if len(pre) == 1:
                 branches, child = pre[0]
                 child.append(node.id)

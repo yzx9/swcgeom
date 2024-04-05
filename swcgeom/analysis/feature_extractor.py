@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from itertools import chain
 from os.path import basename
-from typing import Any, Callable, Literal, Tuple, overload
+from typing import Any, Callable, Literal, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -54,7 +54,7 @@ Feature = Literal[
 ]
 
 NDArrayf32 = npt.NDArray[np.float32]
-FeatAndKwargs = Feature | Tuple[Feature, dict[str, Any]]
+FeatAndKwargs = Feature | tuple[Feature, dict[str, Any]]
 
 Feature1D = set(["length", "volume", "node_count", "bifurcation_count", "tip_count"])
 
@@ -295,7 +295,7 @@ class PopulationFeatureExtractor(FeatureExtractor):
 
     def _get_sholl_impl(
         self, steps: int = 20, **kwargs
-    ) -> Tuple[NDArrayf32, NDArrayf32]:
+    ) -> tuple[NDArrayf32, NDArrayf32]:
         rmax = max(t.sholl.rmax for t in self._features)
         rs = Sholl.get_rs(rmax=rmax, steps=steps)
         vals = self._get_impl("sholl", steps=rs, **kwargs)
@@ -369,7 +369,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
 
     def _get_sholl_impl(
         self, steps: int = 20, **kwargs
-    ) -> Tuple[NDArrayf32, NDArrayf32]:
+    ) -> tuple[NDArrayf32, NDArrayf32]:
         rmaxs = chain.from_iterable((t.sholl.rmax for t in p) for p in self._features)
         rmax = max(rmaxs)
         rs = Sholl.get_rs(rmax=rmax, steps=steps)

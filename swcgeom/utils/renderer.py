@@ -1,7 +1,7 @@
 """Rendering related utils."""
 
 from functools import cached_property
-from typing import Literal, Tuple, cast
+from typing import Literal, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -15,9 +15,9 @@ from swcgeom.utils.transforms import (
 
 __all__ = ["CameraOptions", "Camera", "SimpleCamera", "palette"]
 
-CameraOption = Vec3f | Tuple[Vec3f, Vec3f] | Tuple[Vec3f, Vec3f, Vec3f]
+CameraOption = Vec3f | tuple[Vec3f, Vec3f] | tuple[Vec3f, Vec3f, Vec3f]
 CameraPreset = Literal["xy", "yz", "zx", "yx", "zy", "xz"]
-CameraPresets: dict[CameraPreset, Tuple[Vec3f, Vec3f, Vec3f]] = {
+CameraPresets: dict[CameraPreset, tuple[Vec3f, Vec3f, Vec3f]] = {
     "xy": ((0.0, 0.0, 0.0), (+0.0, +0.0, -1.0), (+0.0, +1.0, +0.0)),
     "yz": ((0.0, 0.0, 0.0), (-1.0, +0.0, +0.0), (+0.0, +0.0, +1.0)),
     "zx": ((0.0, 0.0, 0.0), (+0.0, -1.0, +0.0), (+1.0, +0.0, +0.0)),
@@ -77,7 +77,7 @@ class SimpleCamera(Camera):
         if isinstance(camera[0], tuple):
             return cls((0, 0, 0), cast(Vec3f, camera), (0, 1, 0))
 
-        return cls(*cast(Tuple[Vec3f, Vec3f, Vec3f], camera))
+        return cls(*cast(tuple[Vec3f, Vec3f, Vec3f], camera))
 
 
 class Palette:

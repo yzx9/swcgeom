@@ -1,7 +1,6 @@
 """Image stack related transform."""
 
 import warnings
-from typing import Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -28,7 +27,7 @@ NDArrayf32 = npt.NDArray[np.float32]
 class ImagesCenterCrop(Transform[NDArrayf32, NDArrayf32]):
     """Get image stack center."""
 
-    def __init__(self, shape_out: int | Tuple[int, int, int]):
+    def __init__(self, shape_out: int | tuple[int, int, int]):
         super().__init__()
         self.shape_out = (
             shape_out
@@ -53,7 +52,7 @@ class Center(ImagesCenterCrop):
         Use :class:`ImagesCenterCrop` instead.
     """
 
-    def __init__(self, shape_out: int | Tuple[int, int, int]):
+    def __init__(self, shape_out: int | tuple[int, int, int]):
         warnings.warn(
             "`Center` is deprecated, use `ImagesCenterCrop` instead",
             DeprecationWarning,

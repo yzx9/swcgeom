@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name
 
 from itertools import chain
-from typing import Any, Iterable, Literal, Optional, Tuple, cast
+from typing import Any, Iterable, Literal, Optional, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -28,12 +28,12 @@ def draw_trunk(
     *,
     fig: Optional[Figure] = None,
     ax: Optional[Axes] = None,
-    bound: Bounds | Tuple[Bounds, dict[str, Any]] | None = "ellipse",
+    bound: Bounds | tuple[Bounds, dict[str, Any]] | None = "ellipse",
     point: bool | dict[str, Any] = True,
     projection: Projection = "2d",
     cmap: Any = "viridis",
     **kwargs,
-) -> Tuple[Figure, Axes]:
+) -> tuple[Figure, Axes]:
     """Draw trunk tree.
 
     Parameters
@@ -83,7 +83,7 @@ def draw_trunk(
 
 def split_florets(
     t: Tree, florets: Iterable[int | Iterable[int]]
-) -> Tuple[Tree, list[list[Tree]]]:
+) -> tuple[Tree, list[list[Tree]]]:
     florets = [[i] if isinstance(i, (int, np.integer)) else i for i in florets]
     subtrees = [[get_subtree(t, ff) for ff in f] for f in florets]
     trunk = to_subtree(t, chain(*florets))
@@ -101,7 +101,7 @@ def get_length_ratio(t: Tree, tss: list[list[Tree]]) -> Any:
 def draw_bound(
     ts: Iterable[Tree],
     ax: Axes,
-    bound: Bounds | Tuple[Bounds, dict[str, Any]],
+    bound: Bounds | tuple[Bounds, dict[str, Any]],
     projection: Projection,
     **kwargs,
 ) -> None:

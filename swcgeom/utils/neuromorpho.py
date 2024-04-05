@@ -81,7 +81,7 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Callable, Iterable, Literal, Optional, Tuple
+from typing import Any, Callable, Iterable, Literal, Optional
 
 from tqdm import tqdm
 
@@ -116,7 +116,7 @@ SIZE_METADATA = 2 * GB
 SIZE_DATA = 20 * GB
 
 RESOURCES = Literal["morpho_cng", "morpho_source", "log_cng", "log_source"]
-DOWNLOAD_CONFIGS: dict[RESOURCES, Tuple[str, int]] = {
+DOWNLOAD_CONFIGS: dict[RESOURCES, tuple[str, int]] = {
     # name/path: (url, size)
     "morpho_cng": (URL_MORPHO_CNG, 20 * GB),
     "morpho_source": (URL_LOG_CNG, 512 * GB),

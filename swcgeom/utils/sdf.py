@@ -10,7 +10,7 @@ the future, use `sdflit` instead.
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Iterable, Tuple
+from typing import Iterable
 
 import numpy as np
 import numpy.typing as npt
@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 # Axis-aligned bounding box, tuple of array of shape (3,)
-AABB = Tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
+AABB = tuple[npt.NDArray[np.float32], npt.NDArray[np.float32]]
 
 
 class SDF(ABC):

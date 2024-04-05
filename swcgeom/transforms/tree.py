@@ -1,7 +1,7 @@
 """Transformation in tree."""
 
 import warnings
-from typing import Callable, Optional, Tuple
+from typing import Callable, Optional
 
 import numpy as np
 
@@ -145,7 +145,7 @@ class CutByBifurcationOrder(Transform[Tree, Tree]):
     def __repr__(self) -> str:
         return f"CutByBifurcationOrder-{self.max_bifurcation_order}"
 
-    def _enter(self, n: Tree.Node, parent_level: int | None) -> Tuple[int, bool]:
+    def _enter(self, n: Tree.Node, parent_level: int | None) -> tuple[int, bool]:
         if parent_level is None:
             level = 0
         elif n.is_bifurcation():
@@ -186,8 +186,8 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         return f"threshold={self.thre}"
 
     def _leave(
-        self, n: Tree.Node, children: list[Tuple[float, Tree.Node] | None]
-    ) -> Tuple[float, Tree.Node] | None:
+        self, n: Tree.Node, children: list[tuple[float, Tree.Node] | None]
+    ) -> tuple[float, Tree.Node] | None:
         if len(children) == 0:  # tip
             return 0, n
 

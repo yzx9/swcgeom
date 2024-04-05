@@ -5,16 +5,7 @@ import os
 import re
 import warnings
 from dataclasses import dataclass
-from typing import (
-    Callable,
-    Generic,
-    Iterable,
-    Literal,
-    Optional,
-    Tuple,
-    TypeVar,
-    overload,
-)
+from typing import Callable, Generic, Iterable, Literal, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -176,7 +167,7 @@ class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         super().__init__(files, **kwargs)
         self.labels = list(labels)
 
-    def __getitem__(self, idx: int) -> Tuple[T, int]:
+    def __getitem__(self, idx: int) -> tuple[T, int]:
         return self._get(self.files[idx]), self.labels[idx]
 
     @classmethod
@@ -207,7 +198,7 @@ class PathImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         super().__init__(files, **kwargs)
         self.root = root
 
-    def __getitem__(self, idx: int) -> Tuple[T, str]:
+    def __getitem__(self, idx: int) -> tuple[T, str]:
         relpath = os.path.relpath(self.files[idx], self.root)
         return self._get(self.files[idx]), relpath
 

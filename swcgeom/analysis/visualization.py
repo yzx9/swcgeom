@@ -2,7 +2,7 @@
 
 import os
 import weakref
-from typing import Any, Literal, Optional, Tuple
+from typing import Any, Literal, Optional
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -21,8 +21,8 @@ from swcgeom.utils import (
 
 __all__ = ["draw"]
 
-Positions = Literal["lt", "lb", "rt", "rb"] | Tuple[float, float]
-locations: dict[Literal["lt", "lb", "rt", "rb"], Tuple[float, float]] = {
+Positions = Literal["lt", "lb", "rt", "rb"] | tuple[float, float]
+locations: dict[Literal["lt", "lb", "rt", "rb"], tuple[float, float]] = {
     "lt": (0.10, 0.90),
     "lb": (0.10, 0.10),
     "rt": (0.90, 0.90),

@@ -1,6 +1,6 @@
 """2D Plotting utils."""
 
-from typing import Optional, Tuple
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -53,7 +53,7 @@ def draw_lines(
 
 
 def draw_direction_indicator(
-    ax: Axes, camera: Camera, loc: Tuple[float, float]
+    ax: Axes, camera: Camera, loc: tuple[float, float]
 ) -> None:
     x, y = loc
     direction = camera.MV.dot(
@@ -126,7 +126,7 @@ def draw_circles(
 
 def get_fig_ax(
     fig: Optional[Figure] = None, ax: Optional[Axes] = None
-) -> Tuple[Figure, Axes]:
+) -> tuple[Figure, Axes]:
     if fig is None and ax is not None:
         fig = ax.get_figure()
         assert fig is not None, "expecting a figure from the axes"

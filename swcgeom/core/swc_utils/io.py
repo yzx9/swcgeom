@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import Callable, Iterable, Literal, Optional, Tuple
+from typing import Callable, Iterable, Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -30,7 +30,7 @@ def read_swc(
     *,
     encoding: Literal["detect"] | str = "utf-8",
     names: Optional[SWCNames] = None,
-) -> Tuple[pd.DataFrame, list[str]]:
+) -> tuple[pd.DataFrame, list[str]]:
     """Read swc file.
 
     Parameters
@@ -137,7 +137,7 @@ def parse_swc(
     names: SWCNames,
     extra_cols: Iterable[str] | None = None,
     encoding: Literal["detect"] | str = "utf-8",
-) -> Tuple[pd.DataFrame, list[str]]:
+) -> tuple[pd.DataFrame, list[str]]:
     """Parse swc file.
 
     Parameters

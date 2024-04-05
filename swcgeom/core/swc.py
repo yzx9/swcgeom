@@ -3,7 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Iterable, Optional, Tuple, TypeVar, overload
+from typing import Any, Iterable, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -32,7 +32,7 @@ __all__ = [
 
 
 swc_names_default = get_names()
-swc_cols: list[Tuple[str, npt.DTypeLike]] = [
+swc_cols: list[tuple[str, npt.DTypeLike]] = [
     (swc_names_default.id, np.int32),
     (swc_names_default.type, np.int32),
     (swc_names_default.x, np.float32),
@@ -42,7 +42,7 @@ swc_cols: list[Tuple[str, npt.DTypeLike]] = [
     (swc_names_default.pid, np.int32),
 ]
 
-eswc_cols: list[Tuple[str, npt.DTypeLike]] = [
+eswc_cols: list[tuple[str, npt.DTypeLike]] = [
     ("level", np.int32),
     ("mode", np.int32),
     ("timestamp", np.int32),
@@ -221,7 +221,7 @@ class DictSWC(SWCLike):
     def values(self) -> Iterable[npt.NDArray[Any]]:
         return self.ndata.values()
 
-    def items(self) -> Iterable[Tuple[str, npt.NDArray[Any]]]:
+    def items(self) -> Iterable[tuple[str, npt.NDArray[Any]]]:
         return self.ndata.items()
 
     def get_ndata(self, key: str) -> npt.NDArray[Any]:

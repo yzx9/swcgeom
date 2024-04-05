@@ -12,7 +12,6 @@ from typing import (
     Iterable,
     Literal,
     Optional,
-    Tuple,
     TypeVar,
     cast,
     overload,
@@ -26,7 +25,7 @@ from v3dpy.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
-Vec3i = Tuple[int, int, int]
+Vec3i = tuple[int, int, int]
 ScalarType = TypeVar("ScalarType", bound=np.generic, covariant=True)
 
 RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
@@ -57,17 +56,17 @@ class ImageStack(ABC, Generic[ScalarType]):
     def __getitem__(self, key: int) -> npt.NDArray[ScalarType]: ...                     # array of shape (Y, Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int]) -> npt.NDArray[ScalarType]: ...         # array of shape (Z, C)
+    def __getitem__(self, key: tuple[int, int]) -> npt.NDArray[ScalarType]: ...         # array of shape (Z, C)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int]) -> npt.NDArray[ScalarType]: ...    # array of shape (C,)
+    def __getitem__(self, key: tuple[int, int, int]) -> npt.NDArray[ScalarType]: ...    # array of shape (C,)
     @overload
     @abstractmethod
-    def __getitem__(self, key: Tuple[int, int, int, int]) -> ScalarType: ...            # value
+    def __getitem__(self, key: tuple[int, int, int, int]) -> ScalarType: ...            # value
     @overload
     @abstractmethod
     def __getitem__(
-        self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice] |  Tuple[slice, slice, slice, slice],
+        self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice] |  tuple[slice, slice, slice, slice],
     ) -> npt.NDArray[ScalarType]: ... # array of shape (X, Y, Z, C)
     @overload
     @abstractmethod
@@ -94,7 +93,7 @@ class ImageStack(ABC, Generic[ScalarType]):
         return self[:, :, :, :]
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(self) -> tuple[int, int, int, int]:
         raise NotImplementedError()
 
 
@@ -244,8 +243,8 @@ class NDArrayImageStack(ImageStack[ScalarType]):
         return self.imgs
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
-        return cast(Tuple[int, int, int, int], self.imgs.shape)
+    def shape(self) -> tuple[int, int, int, int]:
+        return cast(tuple[int, int, int, int], self.imgs.shape)
 
 
 class TiffImageStack(NDArrayImageStack[ScalarType]):
@@ -428,12 +427,12 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         raise NotImplementedError()  # TODO
 
     @property
-    def shape(self) -> Tuple[int, int, int, int]:
+    def shape(self) -> tuple[int, int, int, int]:
         res_max = self.res[-1]
         return res_max[0], res_max[1], res_max[2], 1
 
     @classmethod
-    def get_resolutions(cls, root: str) -> Tuple[list[Vec3i], list[str], list[Vec3i]]:
+    def get_resolutions(cls, root: str) -> tuple[list[Vec3i], list[str], list[Vec3i]]:
         """Get all resolutions.
 
         Returns
@@ -580,7 +579,7 @@ class GrayImageStack:
     @overload
     def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> np.float32: ...
     @overload
-    def __getitem__(self, key: slice | Tuple[slice, slice] | Tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
+    def __getitem__(self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
     # fmt: on
     def __getitem__(self, key):
         """Get pixel/patch of image stack."""
@@ -607,7 +606,7 @@ class GrayImageStack:
         return self.imgs.get_full()[:, :, :, 0]
 
     @property
-    def shape(self) -> Tuple[int, int, int]:
+    def shape(self) -> tuple[int, int, int]:
         return self.imgs.shape[:-1]
 
 

@@ -1,6 +1,6 @@
 """Base SWC format utils."""
 
-from typing import Callable, Literal, NamedTuple, Optional, Tuple, TypeVar, overload
+from typing import Callable, Literal, NamedTuple, Optional, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 T, K = TypeVar("T"), TypeVar("K")
-Topology = Tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
+Topology = tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
 
 
 class SWCNames(NamedTuple):
@@ -145,7 +145,7 @@ def _traverse_dfs(topology: Topology, *, enter=None, leave=None, root=0):
         children_map[pid].append(idx)
 
     # manual dfs to avoid stack overflow in long branch
-    stack: list[Tuple[int, bool]] = [(root, True)]  # (idx, is_enter)
+    stack: list[tuple[int, bool]] = [(root, True)]  # (idx, is_enter)
     params = {root: None}
     vals = {}
 

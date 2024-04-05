@@ -1,7 +1,7 @@
 """Sholl analysis."""
 
 import warnings
-from typing import Literal, Optional, Tuple
+from typing import Literal, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -90,7 +90,7 @@ class Sholl:
         fig: Figure | None = None,
         ax: Axes | None = None,
         **kwargs,
-    ) -> Tuple[Figure, Axes]:
+    ) -> tuple[Figure, Axes]:
         """Plot Sholl analysis.
 
         Parameters
