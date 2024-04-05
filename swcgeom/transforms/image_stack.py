@@ -12,7 +12,7 @@ pip install swcgeom[all]
 import os
 import re
 import time
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -133,7 +133,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         scene = ObjectsScene()
         scene.set_background((0, 0, 0))
 
-        def leave(n: Tree.Node, children: List[Tree.Node]) -> Tree.Node:
+        def leave(n: Tree.Node, children: list[Tree.Node]) -> Tree.Node:
             for c in children:
                 sdf = RoundCone(_tp3f(n.xyz()), _tp3f(c.xyz()), n.r, c.r).into()
                 scene.add_object(SDFObject(sdf, material).into())

@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from functools import cached_property
 from itertools import chain
 from os.path import basename
-from typing import Any, Callable, List, Literal, Tuple, overload
+from typing import Any, Callable, Literal, Tuple, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -121,7 +121,7 @@ class FeatureExtractor(ABC):
     @overload
     def get(self, feature: Feature, **kwargs) -> NDArrayf32: ...
     @overload
-    def get(self, feature: List[FeatAndKwargs]) -> List[NDArrayf32]: ...
+    def get(self, feature: list[FeatAndKwargs]) -> list[NDArrayf32]: ...
     @overload
     def get(self, feature: dict[Feature, dict[str, Any]]) -> dict[str, NDArrayf32]: ...
     # fmt:on
@@ -264,7 +264,7 @@ class PopulationFeatureExtractor(FeatureExtractor):
     """Extract features from population."""
 
     _population: Population
-    _features: List[Features]
+    _features: list[Features]
 
     def __init__(self, population: Population) -> None:
         super().__init__()
@@ -333,7 +333,7 @@ class PopulationsFeatureExtractor(FeatureExtractor):
     """Extract feature from population."""
 
     _populations: Populations
-    _features: List[List[Features]]
+    _features: list[list[Features]]
 
     def __init__(self, populations: Populations) -> None:
         super().__init__()

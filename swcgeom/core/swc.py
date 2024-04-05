@@ -3,7 +3,7 @@
 import warnings
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Any, Iterable, List, Optional, Tuple, TypeVar, overload
+from typing import Any, Iterable, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -32,7 +32,7 @@ __all__ = [
 
 
 swc_names_default = get_names()
-swc_cols: List[Tuple[str, npt.DTypeLike]] = [
+swc_cols: list[Tuple[str, npt.DTypeLike]] = [
     (swc_names_default.id, np.int32),
     (swc_names_default.type, np.int32),
     (swc_names_default.x, np.float32),
@@ -42,7 +42,7 @@ swc_cols: List[Tuple[str, npt.DTypeLike]] = [
     (swc_names_default.pid, np.int32),
 ]
 
-eswc_cols: List[Tuple[str, npt.DTypeLike]] = [
+eswc_cols: list[Tuple[str, npt.DTypeLike]] = [
     ("level", np.int32),
     ("mode", np.int32),
     ("timestamp", np.int32),
@@ -55,7 +55,7 @@ class SWCLike(ABC):
     """ABC of SWC."""
 
     source: str = ""
-    comments: List[str] = []
+    comments: list[str] = []
     names: SWCNames
     types: SWCTypes
 
@@ -131,15 +131,15 @@ class SWCLike(ABC):
 
     # fmt: off
     @overload
-    def to_swc(self, fname: str, *, extra_cols: List[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> None: ...
+    def to_swc(self, fname: str, *, extra_cols: list[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> None: ...
     @overload
-    def to_swc(self, *, extra_cols: List[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> str: ...
+    def to_swc(self, *, extra_cols: list[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> str: ...
     # fmt: on
     def to_swc(
         self,
         fname: Optional[str] = None,
         *,
-        extra_cols: Optional[List[str]] = None,
+        extra_cols: Optional[list[str]] = None,
         source: bool | str = True,
         comments: bool = True,
         id_offset: int = 1,
@@ -177,7 +177,7 @@ class SWCLike(ABC):
         self,
         fname: Optional[str] = None,
         swc_path: Optional[str] = None,
-        extra_cols: Optional[List[str]] = None,
+        extra_cols: Optional[list[str]] = None,
         **kwargs,
     ) -> str | None:
         if swc_path is None:

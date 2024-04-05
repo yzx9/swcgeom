@@ -1,6 +1,6 @@
 """Dgl grapth transforms."""
 
-from typing import List, cast
+from typing import cast
 
 import dgl
 
@@ -19,13 +19,13 @@ class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
     this class is more of a toy and template.
     """
 
-    keys: List[str] | None
+    keys: list[str] | None
     to_bidirected: bool
 
     def __init__(
         self,
         to_bidirected: bool = False,
-        keys: List[str] | None = None,
+        keys: list[str] | None = None,
     ) -> None:
         """Transofrm tree to dgl graph.
 
@@ -33,7 +33,7 @@ class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
         ----------
         to_bidirected : bool, default to `False`
             If True, return bidirected graph.
-        keys : List[str], optional
+        keys : list[str], optional
             Copy these keys as ndata of graph.
         """
 

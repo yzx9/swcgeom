@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Generic,
     Iterable,
-    List,
     Literal,
     Optional,
     Tuple,
@@ -33,7 +32,7 @@ T = TypeVar("T")
 class ImageStackFolderBase(Generic[ScalarType, T]):
     """Image stack folder base."""
 
-    files: List[str]
+    files: list[str]
     transform: Transform[npt.NDArray[ScalarType], T]
 
     # fmt: off
@@ -61,7 +60,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         return read_imgs(fname, dtype=self.dtype).get_full()  # type: ignore
 
     @staticmethod
-    def scan(root: str, *, pattern: Optional[str] = None) -> List[str]:
+    def scan(root: str, *, pattern: Optional[str] = None) -> list[str]:
         if not os.path.isdir(root):
             raise NotADirectoryError(f"not a directory: {root}")
 
@@ -171,7 +170,7 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
 class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     """Image stack folder with label."""
 
-    labels: List[int]
+    labels: list[int]
 
     def __init__(self, files: Iterable[str], labels: Iterable[int], **kwargs):
         super().__init__(files, **kwargs)

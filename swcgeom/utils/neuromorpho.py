@@ -81,7 +81,7 @@ import logging
 import math
 import os
 import urllib.parse
-from typing import Any, Callable, Iterable, List, Literal, Optional, Tuple
+from typing import Any, Callable, Iterable, Literal, Optional, Tuple
 
 from tqdm import tqdm
 
@@ -209,7 +209,7 @@ class NeuroMorpho:
             self._info("skip download metadata")
 
         # file
-        def dumps(keys: List[bytes]) -> str:
+        def dumps(keys: list[bytes]) -> str:
             return json.dumps([i.decode("utf-8") for i in keys])
 
         for name in resources:
@@ -346,14 +346,14 @@ class NeuroMorpho:
         pages: Optional[Iterable[int]] = None,
         page_size: int = API_PAGE_SIZE_MAX,
         **kwargs,
-    ) -> List[int]:
+    ) -> list[int]:
         r"""Download all neuron metadata.
 
         Parameters
         ----------
         path : str
             Path to save data.
-        pages : list of int, optional
+        pages : List of int, optional
             If is None, download all pages.
         verbose : bool, default False
             Show verbose log.
@@ -362,7 +362,7 @@ class NeuroMorpho:
 
         Returns
         -------
-        err_pages : list of int
+        err_pages : List of int
             Failed pages.
         """
 
@@ -402,7 +402,7 @@ class NeuroMorpho:
         override: bool = False,
         map_size: int = 512 * GB,
         **kwargs,
-    ) -> List[bytes]:
+    ) -> list[bytes]:
         """Download files.
 
         Parameters
@@ -412,7 +412,7 @@ class NeuroMorpho:
             Path to save data.
         path_metadata : str
             Path to lmdb of metadata.
-        keys : list of bytes, optional
+        keys : List of bytes, optional
             If exist, ignore `override` option. If None, download all key.
         override : bool, default False
             Override even exists.
@@ -422,7 +422,7 @@ class NeuroMorpho:
 
         Returns
         -------
-        err_keys : list of str
+        err_keys : List of str
             Failed keys.
         """
 

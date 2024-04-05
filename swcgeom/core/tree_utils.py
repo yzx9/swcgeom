@@ -1,7 +1,7 @@
 """SWC util wrapper for tree."""
 
 import warnings
-from typing import Callable, Iterable, List, Optional, Tuple, TypeVar, overload
+from typing import Callable, Iterable, Optional, Tuple, TypeVar, overload
 
 import numpy as np
 
@@ -52,7 +52,7 @@ def sort_tree(tree: Tree) -> Tree:
 @overload
 def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], Tuple[T, bool]]) -> Tree: ...
 @overload
-def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, List[K]], Tuple[K, bool]]) -> Tree: ...
+def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, list[K]], Tuple[K, bool]]) -> Tree: ...
 # fmt:on
 def cut_tree(tree: Tree, *, enter=None, leave=None):
     """Traverse and cut the tree.
@@ -60,7 +60,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     Returning a `True` can delete the current node and its children.
     """
 
-    removals: List[int] = []
+    removals: list[int] = []
 
     if enter:
 
@@ -79,7 +79,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
 
     elif leave:
 
-        def _leave(n: Tree.Node, children: List[K]) -> K:
+        def _leave(n: Tree.Node, children: list[K]) -> K:
             res, removal = leave(n, children)
             if removal:
                 removals.append(n.id)

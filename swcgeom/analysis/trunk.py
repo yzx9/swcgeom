@@ -3,7 +3,7 @@
 # pylint: disable=invalid-name
 
 from itertools import chain
-from typing import Any, Iterable, List, Literal, Optional, Tuple, cast
+from typing import Any, Iterable, Literal, Optional, Tuple, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -39,7 +39,7 @@ def draw_trunk(
     Parameters
     ----------
     t : Tree
-    florets : List of (int | List of int)
+    florets : List of (int | list of int)
         The florets that needs to be removed, each floret can be a
         subtree or multiple subtrees (e.g., dendrites are a bunch of
         subtrees), each number is the id of a tree node.
@@ -83,14 +83,14 @@ def draw_trunk(
 
 def split_florets(
     t: Tree, florets: Iterable[int | Iterable[int]]
-) -> Tuple[Tree, List[List[Tree]]]:
+) -> Tuple[Tree, list[list[Tree]]]:
     florets = [[i] if isinstance(i, (int, np.integer)) else i for i in florets]
     subtrees = [[get_subtree(t, ff) for ff in f] for f in florets]
     trunk = to_subtree(t, chain(*florets))
     return trunk, subtrees
 
 
-def get_length_ratio(t: Tree, tss: List[List[Tree]]) -> Any:
+def get_length_ratio(t: Tree, tss: list[list[Tree]]) -> Any:
     lens = np.array([sum(t.length() for t in ts) for ts in tss])
     return lens / t.length()
 

@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
-    List,
     Optional,
     Protocol,
     TypeVar,
@@ -43,8 +42,8 @@ class Trees(Protocol):
 class LazyLoadingTrees:
     """Lazy loading trees."""
 
-    swcs: List[str]
-    trees: List[Tree | None]
+    swcs: list[str]
+    trees: list[Tree | None]
     kwargs: dict[str, Any]
 
     def __init__(self, swcs: Iterable[str], **kwargs) -> None:
@@ -80,7 +79,7 @@ class LazyLoadingTrees:
 class ChainTrees:
     """Chain trees."""
 
-    trees: List[Trees]
+    trees: list[Trees]
     cumsum: npt.NDArray[np.int64]
 
     def __init__(self, trees: Iterable[Trees]) -> None:
@@ -145,7 +144,7 @@ class Population:
 
     # fmt:off
     @overload
-    def __getitem__(self, key: slice) -> List[Tree]: ...
+    def __getitem__(self, key: slice) -> list[Tree]: ...
     @overload
     def __getitem__(self, key: int) -> Tree: ...
     # fmt:on
@@ -215,9 +214,9 @@ class Population:
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
     @staticmethod
-    def find_swcs(root: str, ext: str = ".swc", relpath: bool = False) -> List[str]:
+    def find_swcs(root: str, ext: str = ".swc", relpath: bool = False) -> list[str]:
         """Find all swc files."""
-        swcs: List[str] = []
+        swcs: list[str] = []
         for r, _, files in os.walk(root):
             rr = os.path.relpath(r, root) if relpath else r
             fs = filter(lambda f: os.path.splitext(f)[-1] == ext, files)
@@ -230,8 +229,8 @@ class Populations:
     """A set of population."""
 
     len: int
-    populations: List[Population]
-    labels: List[str]
+    populations: list[Population]
+    labels: list[str]
 
     def __init__(
         self, populations: Iterable[Population], labels: Optional[Iterable[str]] = None
@@ -247,9 +246,9 @@ class Populations:
 
     # fmt:off
     @overload
-    def __getitem__(self, key: slice) -> List[List[Tree]]: ...
+    def __getitem__(self, key: slice) -> list[list[Tree]]: ...
     @overload
-    def __getitem__(self, key: int) -> List[Tree]: ...
+    def __getitem__(self, key: int) -> list[Tree]: ...
     # fmt:on
     def __getitem__(self, key):
         return [p[key] for p in self.populations]
@@ -258,7 +257,7 @@ class Populations:
         """Miniumn length of populations."""
         return self.len
 
-    def __iter__(self) -> Iterator[List[Tree]]:
+    def __iter__(self) -> Iterator[list[Tree]]:
         return (self[i] for i in range(self.len))
 
     def __repr__(self) -> str:
@@ -287,7 +286,7 @@ class Populations:
 
         Parameters
         ----------
-        roots : list of str
+        roots : List of str
         intersect : bool, default `True`
             Take the intersection of these populations.
         check_same : bool, default `False`

@@ -10,7 +10,6 @@ from typing import (
     Callable,
     Generic,
     Iterable,
-    List,
     Literal,
     Optional,
     Tuple,
@@ -324,7 +323,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     use its coordinate system, remember to FLIP Y-AXIS BACK.
     """
 
-    _listdir: Callable[[str], List[str]]
+    _listdir: Callable[[str], list[str]]
     _read_patch: Callable[[str], npt.NDArray]
 
     def __init__(
@@ -350,7 +349,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         self.res, self.res_dirs, self.res_patch_sizes = self.get_resolutions(root)
 
         @cache
-        def listdir(path: str) -> List[str]:
+        def listdir(path: str) -> list[str]:
             return os.listdir(path)
 
         @lru_cache(maxsize=lru_maxsize)
@@ -434,14 +433,14 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         return res_max[0], res_max[1], res_max[2], 1
 
     @classmethod
-    def get_resolutions(cls, root: str) -> Tuple[List[Vec3i], List[str], List[Vec3i]]:
+    def get_resolutions(cls, root: str) -> Tuple[list[Vec3i], list[str], list[Vec3i]]:
         """Get all resolutions.
 
         Returns
         -------
         resolutions : List of (int, int, int)
             Sequence of sorted resolutions (from small to large).
-        roots : List[str]
+        roots : list[str]
             Sequence of root of resolutions respectively.
         patch_sizes : List of (int, int, int)
             Sequence of patch size of resolutions respectively.

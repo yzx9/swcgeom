@@ -1,6 +1,6 @@
 """Analysis of volume of a SWC tree."""
 
-from typing import List, Literal
+from typing import Literal
 
 import numpy as np
 from sdflit import ColoredMaterial, ObjectsScene, SDFObject, UniformSampler
@@ -93,7 +93,7 @@ def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
 
     volume = 0.0
 
-    def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
+    def leave(n: Tree.Node, children: list[VolSphere]) -> VolSphere:
         sphere = VolSphere(n.xyz(), n.r)
         cones = [VolFrustumCone(n.xyz(), n.r, c.center, c.radius) for c in children]
 
@@ -129,7 +129,7 @@ def _get_volume_frustum_cone_mc_only(tree: Tree) -> float:
     scene = ObjectsScene()
     scene.set_background((0, 0, 0))
 
-    def leave(n: Tree.Node, children: List[VolSphere]) -> VolSphere:
+    def leave(n: Tree.Node, children: list[VolSphere]) -> VolSphere:
         sphere = VolSphere(n.xyz(), n.r)
         scene.add_object(SDFObject(sphere.sdf, material).into())
 

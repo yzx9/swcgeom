@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import Callable, Iterable, List, Literal, Optional, Tuple
+from typing import Callable, Iterable, Literal, Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -30,7 +30,7 @@ def read_swc(
     *,
     encoding: Literal["detect"] | str = "utf-8",
     names: Optional[SWCNames] = None,
-) -> Tuple[pd.DataFrame, List[str]]:
+) -> Tuple[pd.DataFrame, list[str]]:
     """Read swc file.
 
     Parameters
@@ -55,7 +55,7 @@ def read_swc(
     Returns
     -------
     df : ~pandas.DataFrame
-    comments : list of string
+    comments : List of string
     """
 
     names = get_names(names)
@@ -137,14 +137,14 @@ def parse_swc(
     names: SWCNames,
     extra_cols: Iterable[str] | None = None,
     encoding: Literal["detect"] | str = "utf-8",
-) -> Tuple[pd.DataFrame, List[str]]:
+) -> Tuple[pd.DataFrame, list[str]]:
     """Parse swc file.
 
     Parameters
     ----------
     fname : PathOrIO
     names : SWCNames
-    extra_cols : list of str, optional
+    extra_cols : List of str, optional
     encoding : str | 'detect', default `utf-8`
         The name of the encoding used to decode the file. If is
         `detect`, we will try to detect the character encoding.
@@ -152,7 +152,7 @@ def parse_swc(
     Returns
     -------
     df : ~pandas.DataFrame
-    comments : list of string
+    comments : List of string
     """
 
     # pylint: disable=too-many-locals

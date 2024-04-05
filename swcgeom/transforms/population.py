@@ -1,7 +1,5 @@
 """Transformation in population."""
 
-from typing import List
-
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
 
@@ -16,7 +14,7 @@ class PopulationTransform(Transform[Population, Population]):
         self.transform = transform
 
     def __call__(self, population: Population) -> Population:
-        trees: List[Tree] = []
+        trees: list[Tree] = []
         for t in population:
             new_t = self.transform(t)
             if new_t.source == "":

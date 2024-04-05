@@ -2,7 +2,7 @@
 
 import os
 import weakref
-from typing import Any, List, Literal, Optional, Tuple
+from typing import Any, Literal, Optional, Tuple
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -120,14 +120,14 @@ def draw(
     return fig, ax
 
 
-def get_ax_swc(ax: Axes) -> List[SWCLike]:
+def get_ax_swc(ax: Axes) -> list[SWCLike]:
     ax_weak_memo.setdefault(ax, {})
     return ax_weak_memo[ax]["swc"]
 
 
 def get_ax_color(
     ax: Axes, swc: SWCLike, color: Optional[dict[int, str] | str] = None
-) -> str | List[str]:
+) -> str | list[str]:
     if color == "vaa3d":
         color = palette.vaa3d
     elif isinstance(color, str):
