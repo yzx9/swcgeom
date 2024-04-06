@@ -1,5 +1,16 @@
 # Changelog
 
+## **0.17.1**&emsp;<sub><sup>2024-04-05 ([a8007ac...0ef3c2b](https://github.com/yzx9/swcgeom/compare/a8007ac6c5eb7de03298dbdcc6be59d3c282e125...0ef3c2b370a570366a79ef456c1125d12f006409?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`utils`
+
+- set round style ([90030e3](https://github.com/yzx9/swcgeom/commit/90030e3af1dc7ba763e04c313cb93f154e2f052c))
+
+<br>
+
+
 ## **0.17.0**&emsp;<sub><sup>2024-04-04 ([59257cb...2072139](https://github.com/yzx9/swcgeom/compare/59257cbfb6264afd3ca31fcba002f692bbb69ed0...20721393086e5a890b097b3ae32aaa1e4ad6b898?diff=split))</sup></sub>
 
 ### Features
