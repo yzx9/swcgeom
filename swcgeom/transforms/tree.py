@@ -1,10 +1,10 @@
 """Transformation in tree."""
 
-import warnings
 from collections.abc import Callable
 from typing import Optional
 
 import numpy as np
+from typing_extensions import deprecated
 
 from swcgeom.core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
 from swcgeom.core.swc_utils import SWCTypes, get_types
@@ -69,21 +69,13 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
         return f"n_nodes={self.n_nodes}"
 
 
+@deprecated("Use `Normalizer` instead")
 class TreeNormalizer(Normalizer[Tree]):
     """Noramlize coordinates and radius to 0-1.
 
     .. deprecated:: 0.6.0
         Use :cls:`Normalizer` instead.
     """
-
-    def __init__(self, *args, **kwargs) -> None:
-        warnings.warn(
-            "`TreeNormalizer` has been replaced by `Normalizer` since "
-            "v0.6.0 beacuse it applies more widely, and this will be "
-            "removed in next version",
-            DeprecationWarning,
-        )
-        super().__init__(*args, **kwargs)
 
 
 class CutByType(Transform[Tree, Tree]):

@@ -3,7 +3,6 @@
 import math
 import os
 import re
-import warnings
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import Generic, Literal, Optional, TypeVar, overload
@@ -11,7 +10,7 @@ from typing import Generic, Literal, Optional, TypeVar, overload
 import numpy as np
 import numpy.typing as npt
 from tqdm import tqdm
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from swcgeom.images.io import ScalarType, read_imgs
 from swcgeom.transforms import Identity, Transform
@@ -65,6 +64,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         return fs
 
     @staticmethod
+    @deprecated("Use `~swcgeom.images.io.read_imgs(fname).get_full()` instead")
     def read_imgs(fname: str) -> npt.NDArray[np.float32]:
         """Read images.
 
@@ -72,14 +72,6 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
             Use :meth:`~swcgeom.images.io.read_imgs(fname).get_full()` instead.
         """
 
-        warnings.warn(
-            "`ImageStackFolderBase.read_imgs` serves as a "
-            "straightforward wrapper for `~swcgeom.images.io.read_imgs(fname).get_full()`. "
-            "However, as it is not utilized within our internal "
-            "processes, it is scheduled for removal in the "
-            "forthcoming version.",
-            DeprecationWarning,
-        )
         return read_imgs(fname).get_full()
 
 

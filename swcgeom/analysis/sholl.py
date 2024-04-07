@@ -8,6 +8,7 @@ import numpy.typing as npt
 import seaborn as sns
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from typing_extensions import deprecated
 
 from swcgeom.analysis.visualization import draw
 from swcgeom.core import Tree
@@ -160,20 +161,17 @@ class Sholl:
 
         return self.get_rs(self.rmax, steps)
 
+    @deprecated("Use `Sholl.get(x)` instead")
     def get_count(self) -> npt.NDArray[np.int32]:
         """Get the count of intersection.
 
         .. deprecated:: 0.5.0
-            Use :meth:`Sholl.get` instead.
+            Use :meth:`Sholl(x).get()` instead.
         """
 
-        warnings.warn(
-            "`Sholl.get_count` has been renamed to `get` since v0.5.0, "
-            "and will be removed in next version",
-            DeprecationWarning,
-        )
         return self.get().astype(np.int32)
 
+    @deprecated("Use `Shool(x).get().mean()` instead")
     def avg(self) -> float:
         """Get the average of the count of intersection.
 
@@ -181,14 +179,9 @@ class Sholl:
             Use :meth:`Shool(x).get().mean()` instead.
         """
 
-        warnings.warn(
-            "`Sholl.avg` has been deprecated since v0.6.0 and will be "
-            "removed in next version, use `Shool(x).get().mean()` "
-            "instead",
-            DeprecationWarning,
-        )
         return self.get().mean()
 
+    @deprecated("Use `Shool(x).get().std()` instead")
     def std(self) -> float:
         """Get the std of the count of intersection.
 
@@ -196,14 +189,9 @@ class Sholl:
             Use :meth:`Shool(x).get().std()` instead.
         """
 
-        warnings.warn(
-            "`Sholl.std` has been deprecate since v0.6.0 and will be "
-            "removed in next version, use `Shool(x).get().std()` "
-            "instead",
-            DeprecationWarning,
-        )
         return self.get().std()
 
+    @deprecated("Use `Shool(x).get().sum()` instead")
     def sum(self) -> int:
         """Get the sum of the count of intersection.
 
@@ -211,10 +199,4 @@ class Sholl:
             Use :meth:`Shool(x).get().sum()` instead.
         """
 
-        warnings.warn(
-            "`Sholl.sum` has been deprecate since v0.6.0 and will be "
-            "removed in next version, use `Shool(x).get().sum()` "
-            "instead",
-            DeprecationWarning,
-        )
         return self.get().sum()

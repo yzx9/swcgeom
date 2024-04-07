@@ -14,6 +14,7 @@ from collections.abc import Iterable
 
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import deprecated
 
 from swcgeom.utils.solid_geometry import project_vector_on_plane
 
@@ -173,6 +174,7 @@ class SDFDifference(SDF):
         return flags
 
 
+@deprecated("Use `SDFUnion` instead")
 class SDFCompose(SDFUnion):
     """Compose multiple SDFs.
 
@@ -181,11 +183,6 @@ class SDFCompose(SDFUnion):
     """
 
     def __init__(self, sdfs: Iterable[SDF]) -> None:
-        warnings.warn(
-            "`SDFCompose` has been replace by `SDFUnion` since v0.14.0, "
-            "and will be removed in next version",
-            DeprecationWarning,
-        )
         sdfs = list(sdfs)
         if len(sdfs) == 1:
             warnings.warn("compose only one SDF, use SDFCompose.compose instead")

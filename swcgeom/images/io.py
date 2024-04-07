@@ -12,6 +12,7 @@ import nrrd
 import numpy as np
 import numpy.typing as npt
 import tifffile
+from typing_extensions import deprecated
 from v3dpy.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
@@ -601,6 +602,7 @@ class GrayImageStack:
         return self.imgs.shape[:-1]
 
 
+@deprecated("Use `read_imgs` instead")
 def read_images(*args, **kwargs) -> GrayImageStack:
     """Read images.
 
@@ -608,9 +610,4 @@ def read_images(*args, **kwargs) -> GrayImageStack:
         Use :meth:`read_imgs` instead.
     """
 
-    warnings.warn(
-        "`read_images` has been replaced by `read_imgs` because it"
-        "provide rgb support, and this will be removed in next version",
-        DeprecationWarning,
-    )
     return GrayImageStack(read_imgs(*args, **kwargs))

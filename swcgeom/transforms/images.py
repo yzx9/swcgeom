@@ -1,9 +1,8 @@
 """Image stack related transform."""
 
-import warnings
-
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import deprecated
 
 from swcgeom.transforms.base import Identity, Transform
 
@@ -45,20 +44,13 @@ class ImagesCenterCrop(Transform[NDArrayf32, NDArrayf32]):
         return f"shape_out=({','.join(str(a) for a in self.shape_out)})"
 
 
+@deprecated("use `ImagesCenterCrop` instead", stacklevel=2)
 class Center(ImagesCenterCrop):
     """Get image stack center.
 
     .. deprecated:: 0.16.0
         Use :class:`ImagesCenterCrop` instead.
     """
-
-    def __init__(self, shape_out: int | tuple[int, int, int]):
-        warnings.warn(
-            "`Center` is deprecated, use `ImagesCenterCrop` instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(shape_out)
 
 
 class ImagesScale(Transform[NDArrayf32, NDArrayf32]):

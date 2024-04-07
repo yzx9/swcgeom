@@ -1,11 +1,11 @@
 """Check common """
 
-import warnings
 from collections import defaultdict
 from typing import Optional
 
 import numpy as np
 import pandas as pd
+from typing_extensions import deprecated
 
 from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names, traverse
 from swcgeom.utils import DisjointSetUnion
@@ -81,6 +81,7 @@ def has_cyclic(topology: Topology) -> bool:
     return False
 
 
+@deprecated("Use `is_single_root` instead")
 def check_single_root(*args, **kwargs) -> bool:
     """Check if the tree is single root.
 
@@ -88,14 +89,10 @@ def check_single_root(*args, **kwargs) -> bool:
         Use :meth:`is_single_root` instead.
     """
 
-    warnings.warn(
-        "`check_single_root` has been renamed to `is_single_root` since"
-        "v0.5.0, and will be removed in next version",
-        DeprecationWarning,
-    )
     return is_single_root(*args, **kwargs)
 
 
+@deprecated("Use `is_bifurcate` instead")
 def is_binary_tree(
     df: pd.DataFrame, exclude_root: bool = True, *, names: Optional[SWCNames] = None
 ) -> bool:
@@ -105,11 +102,6 @@ def is_binary_tree(
         Use :meth:`is_bifurcate` instead.
     """
 
-    warnings.warn(
-        "`is_binary_tree` has been replaced by to `is_bifurcate` since"
-        "v0.8.0, and will be removed in next version",
-        DeprecationWarning,
-    )
     names = get_names(names)
     topo = (df[names.id].to_numpy(), df[names.pid].to_numpy())
     return is_bifurcate(topo, exclude_root=exclude_root)

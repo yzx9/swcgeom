@@ -1,11 +1,11 @@
 """Nueron path."""
 
-import warnings
 from collections.abc import Iterable, Iterator
 from typing import Generic, overload
 
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import deprecated
 
 from swcgeom.core.node import Node
 from swcgeom.core.swc import DictSWC, SWCLike, SWCTypeVar
@@ -75,6 +75,7 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def get_ndata(self, key: str) -> npt.NDArray:
         return self.attach.get_ndata(key)[self.idx]
 
+    @deprecated("Use `path.node` instead.")
     def get_node(self, idx: int | np.integer) -> Node:
         """Get the count of intersection.
 
@@ -82,11 +83,6 @@ class Path(SWCLike, Generic[SWCTypeVar]):
             Use :meth:`path.node` instead.
         """
 
-        warnings.warn(
-            "`Path.get_node` has been deprecated since v0.16.0 and "
-            "will be removed in future version",
-            DeprecationWarning,
-        )
         return self.node(idx)
 
     def node(self, idx: int | np.integer) -> Node:

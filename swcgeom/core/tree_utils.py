@@ -5,6 +5,7 @@ from collections.abc import Callable, Iterable
 from typing import Optional, TypeVar, overload
 
 import numpy as np
+from typing_extensions import deprecated
 
 from swcgeom.core.swc import SWCLike
 from swcgeom.core.swc_utils import (
@@ -95,6 +96,7 @@ def cut_tree(tree: Tree, *, enter=None, leave=None):
     return to_subtree(tree, removals)
 
 
+@deprecated("Use `to_subtree` instead")
 def to_sub_tree(swc_like: SWCLike, sub: Topology) -> tuple[Tree, dict[int, int]]:
     """Create subtree from origin tree.
 
@@ -110,13 +112,6 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> tuple[Tree, dict[int, int]]
     tree : Tree
     id_map : dict[int, int]
     """
-
-    warnings.warn(
-        "`to_sub_tree` will be removed in v0.6.0, it is replaced by "
-        "`to_subtree` beacuse it is easy to use, and this will be "
-        "removed in next version",
-        DeprecationWarning,
-    )
 
     sub = propagate_removal(sub)
     (new_id, new_pid), id_map_arr = to_sub_topology(sub)
