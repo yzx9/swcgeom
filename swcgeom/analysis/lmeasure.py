@@ -163,12 +163,15 @@ class LMeasure:
         --------
         L-Measure: http://cng.gmu.edu:8080/Lm/help/Partition_asymmetry.htm
         """
+
         children = n.children()
         assert (
             len(children) == 2
         ), "Partition asymmetry is only defined for bifurcations"
         n1 = len(children[0].subtree().get_tips())
         n2 = len(children[1].subtree().get_tips())
+        if n1 == n2:
+            return 0
         return abs(n1 - n2) / (n1 + n2 - 2)
 
     def fractal_dim(self):
