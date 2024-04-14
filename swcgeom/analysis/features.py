@@ -6,7 +6,7 @@ from typing import TypeVar
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from swcgeom.core import Branch, BranchTree, Tree
 
@@ -121,12 +121,24 @@ class _SubsetNodesFeatures(ABC):
         return cls(NodeFeatures(tree))
 
 
-class BifurcationFeatures(_SubsetNodesFeatures):
-    """Evaluate bifurcation node feature of tree."""
+class FurcationFeatures(_SubsetNodesFeatures):
+    """Evaluate furcation node feature of tree."""
 
     @cached_property
     def nodes(self) -> npt.NDArray[np.bool_]:
-        return np.array([n.is_bifurcation() for n in self._features.tree])
+        return np.array([n.is_furcation() for n in self._features.tree])
+
+
+@deprecated("Use FurcationFeatures instead")
+class BifurcationFeatures(FurcationFeatures):
+    """Evaluate bifurcation node feature of tree.
+
+    Notes
+    -----
+    Deprecated due to the wrong spelling of furcation. For now, it
+    is just an alias of `FurcationFeatures` and raise a warning. It
+    will be change to raise an error in the future.
+    """
 
 
 class TipFeatures(_SubsetNodesFeatures):

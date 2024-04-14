@@ -8,6 +8,7 @@ from typing import Literal, Optional, TypeVar, Union, overload
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
+from typing_extensions import deprecated
 
 from swcgeom.core.branch import Branch
 from swcgeom.core.compartment import Compartment, Compartments
@@ -38,11 +39,11 @@ class Tree(DictSWC):
 
         def branch(self) -> "Tree.Branch":
             ns: list["Tree.Node"] = [self]
-            while not ns[-1].is_bifurcation() and (p := ns[-1].parent()) is not None:
+            while not ns[-1].is_furcation() and (p := ns[-1].parent()) is not None:
                 ns.append(p)
 
             ns.reverse()
-            while not (ns[-1].is_bifurcation() or ns[-1].is_tip()):
+            while not (ns[-1].is_furcation() or ns[-1].is_tip()):
                 ns.append(ns[-1].children()[0])
 
             return Tree.Branch(self.attach, [n.id for n in ns])
@@ -187,16 +188,28 @@ class Tree(DictSWC):
             raise ValueError(f"no soma found in: {self.source}")
         return n
 
-    def get_bifurcations(self) -> list[Node]:
-        """Get all node of bifurcations."""
-        bifurcations: list[int] = []
+    def get_furcations(self) -> list[Node]:
+        """Get all node of furcations."""
+        furcations: list[int] = []
 
-        def collect_bifurcations(n: Tree.Node, children: list[None]) -> None:
+        def collect_furcations(n: Tree.Node, children: list[None]) -> None:
             if len(children) > 1:
-                bifurcations.append(n.id)
+                furcations.append(n.id)
 
-        self.traverse(leave=collect_bifurcations)
-        return [self.node(i) for i in bifurcations]
+        self.traverse(leave=collect_furcations)
+        return [self.node(i) for i in furcations]
+
+    @deprecated("Use `get_furcations` instead")
+    def get_bifurcations(self) -> list[Node]:
+        """Get all node of furcations.
+
+        Notes
+        -----
+        Deprecated due to the wrong spelling of furcation. For now, it
+        is just an alias of `get_furcations` and raise a warning. It
+        will be change to raise an error in the future.
+        """
+        return self.get_furcations()
 
     def get_tips(self) -> list[Node]:
         """Get all node of tips."""

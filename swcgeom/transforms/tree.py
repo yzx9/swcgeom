@@ -20,7 +20,7 @@ __all__ = [
     "CutByType",
     "CutAxonTree",
     "CutDendriteTree",
-    "CutByBifurcationOrder",
+    "CutByFurcationOrder",
     "CutShortTipBranch",
 ]
 
@@ -124,28 +124,48 @@ class CutDendriteTree(CutByType):
         super().__init__(type=types.basal_dendrite)  # TODO: apical dendrite
 
 
-class CutByBifurcationOrder(Transform[Tree, Tree]):
-    """Cut tree by bifurcation order."""
+class CutByFurcationOrder(Transform[Tree, Tree]):
+    """Cut tree by furcation order."""
 
-    max_bifurcation_order: int
+    max_furcation_order: int
 
     def __init__(self, max_bifurcation_order: int) -> None:
-        self.max_bifurcation_order = max_bifurcation_order
+        self.max_furcation_order = max_bifurcation_order
 
     def __call__(self, x: Tree) -> Tree:
         return cut_tree(x, enter=self._enter)
 
     def __repr__(self) -> str:
-        return f"CutByBifurcationOrder-{self.max_bifurcation_order}"
+        return f"CutByBifurcationOrder-{self.max_furcation_order}"
 
     def _enter(self, n: Tree.Node, parent_level: int | None) -> tuple[int, bool]:
         if parent_level is None:
             level = 0
-        elif n.is_bifurcation():
+        elif n.is_furcation():
             level = parent_level + 1
         else:
             level = parent_level
-        return (level, level >= self.max_bifurcation_order)
+        return (level, level >= self.max_furcation_order)
+
+
+@deprecated("Use CutByFurcationOrder instead")
+class CutByBifurcationOrder(CutByFurcationOrder):
+    """Cut tree by bifurcation order.
+
+    Notes
+    -----
+    Deprecated due to the wrong spelling of furcation. For now, it
+    is just an alias of `CutByFurcationOrder` and raise a warning. It
+    will be change to raise an error in the future.
+    """
+
+    max_furcation_order: int
+
+    def __init__(self, max_bifurcation_order: int) -> None:
+        super().__init__(max_bifurcation_order)
+
+    def __repr__(self) -> str:
+        return f"CutByBifurcationOrder-{self.max_furcation_order}"
 
 
 class CutShortTipBranch(Transform[Tree, Tree]):

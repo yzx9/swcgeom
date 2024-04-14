@@ -69,7 +69,7 @@ class LMeasure:
         --------
         L-Measure: http://cng.gmu.edu:8080/Lm/help/N_bifs.htm
         """
-        return len(tree.get_bifurcations())
+        return len(tree.get_furcations())
 
     def n_branch(self, tree: Tree) -> int:
         """Number of branches.
@@ -339,7 +339,7 @@ class LMeasure:
         return (da**rall_power + db**rall_power) / dp**rall_power
 
     def bif_ampl_local(self, bif: Tree.Node) -> float:
-        """Bifuraction angle.
+        """Bifurcation angle.
 
         Given a bifurcation, this function returns the angle between
         the first two compartments (in degree).
@@ -353,7 +353,7 @@ class LMeasure:
         return np.degrees(angle(v1, v2))
 
     def bif_ampl_remote(self, bif: Tree.Node) -> float:
-        """Bifuraction angle.
+        """Bifurcation angle.
 
         This function returns the angle between two bifurcation points
         or between bifurcation point and terminal point or between two
@@ -668,7 +668,7 @@ class LMeasure:
         n = node
         order = 0
         while n is not None:
-            if n.is_bifurcation():
+            if n.is_furcation():
                 order += 1
             n = n.parent()
         return order

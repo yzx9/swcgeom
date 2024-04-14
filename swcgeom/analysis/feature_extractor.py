@@ -19,8 +19,8 @@ import seaborn as sns
 from matplotlib.axes import Axes
 
 from swcgeom.analysis.features import (
-    BifurcationFeatures,
     BranchFeatures,
+    FurcationFeatures,
     NodeFeatures,
     PathFeatures,
     TipFeatures,
@@ -40,6 +40,9 @@ Feature = Literal[
     "node_count",
     "node_radial_distance",
     "node_branch_order",
+    # furcation nodes
+    "furcation_count",
+    "furcation_radial_distance",
     # bifurcation nodes
     "bifurcation_count",
     "bifurcation_radial_distance",
@@ -57,7 +60,7 @@ Feature = Literal[
 NDArrayf32 = npt.NDArray[np.float32]
 FeatAndKwargs = Feature | tuple[Feature, dict[str, Any]]
 
-Feature1D = set(["length", "volume", "node_count", "bifurcation_count", "tip_count"])
+Feature1D = set(["length", "volume", "node_count", "furcation_count", "tip_count"])
 
 
 class Features:
@@ -70,7 +73,7 @@ class Features:
     @cached_property
     def node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
     @cached_property
-    def bifurcation_features(self) -> BifurcationFeatures: return BifurcationFeatures(self.node_features)
+    def furcation_features(self) -> FurcationFeatures: return FurcationFeatures(self.node_features)
     @cached_property
     def tip_features(self) -> TipFeatures: return TipFeatures(self.node_features)
     @cached_property
@@ -213,6 +216,12 @@ class FeatureExtractor(ABC):
         self, vals: NDArrayf32, bin_edges: npt.NDArray, **kwargs
     ) -> Axes:
         raise NotImplementedError()
+
+    def get_bifurcation_count(self, **kwargs):
+        raise DeprecationWarning("Use `furcation_count` instead.")
+
+    def get_bifurcation_radial_distance(self, **kwargs):
+        raise DeprecationWarning("Use `furcation_radial_distance` instead.")
 
 
 class TreeFeatureExtractor(FeatureExtractor):

@@ -16,7 +16,7 @@ __all__ = ["Path"]
 class Path(SWCLike, Generic[SWCTypeVar]):
     """Neuron path.
 
-    A path is a linear set of points without bifurcations.
+    A path is a linear set of points without furcations.
     """
 
     attach: SWCTypeVar

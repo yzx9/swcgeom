@@ -5,6 +5,7 @@ from typing import Any, Generic
 
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import deprecated
 
 from swcgeom.core.swc import DictSWC, SWCTypeVar
 from swcgeom.core.swc_utils import SWCNames
@@ -95,8 +96,21 @@ class Node(Generic[SWCTypeVar]):
         items = [self.id, self.type, x, y, z, r, self.pid]
         return " ".join(map(str, items))
 
-    def is_bifurcation(self) -> bool:
+    def is_furcation(self) -> bool:
+        """Is furcation node."""
         return np.count_nonzero(self.attach.pid() == self.id) > 1
+
+    @deprecated("Use is_furcation instead")
+    def is_bifurcation(self) -> bool:
+        """Is furcation node.
+
+        Notes
+        -----
+        Deprecated due to the wrong spelling of furcation. For now, it
+        is just an alias of `is_furcation` and raise a warning. It will
+        be change to raise an error in the future.
+        """
+        return self.is_furcation()
 
     def is_tip(self) -> bool:
         return self.id not in self.attach.pid()
