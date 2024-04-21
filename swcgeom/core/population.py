@@ -148,13 +148,14 @@ class Population:
 
     # fmt:off
     @overload
-    def __getitem__(self, key: slice) -> list[Tree]: ...
+    def __getitem__(self, key: slice) -> Trees: ...
     @overload
     def __getitem__(self, key: int) -> Tree: ...
     # fmt:on
-    def __getitem__(self, key):
+    def __getitem__(self, key: int | slice):
         if isinstance(key, slice):
-            return [cast(Tree, self.trees[i]) for i in range(*key.indices(len(self)))]
+            trees = NestTrees(self.trees, range(*key.indices(len(self))))
+            return cast(Trees, trees)
 
         if isinstance(key, (int, np.integer)):
             return cast(Tree, self.trees[int(key)])
@@ -344,7 +345,9 @@ def _get_idx(key: int, length: int) -> int:
 
 
 # experimental
-def filter(pop: Population, predicate: Callable[[Tree], bool]) -> "Population":
+def filter_population(
+    pop: Population, predicate: Callable[[Tree], bool]
+) -> "Population":
     """Filter trees in the population."""
 
     # TODO: how to avoid load trees
