@@ -21,7 +21,7 @@ Vec3f = tuple[float, float, float]
 
 
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
-    """Get the agnle of vectors.
+    """Get the angle of vectors.
 
     Returns
     -------

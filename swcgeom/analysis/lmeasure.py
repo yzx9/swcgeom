@@ -5,9 +5,7 @@ from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
-
 from swcgeom.core import Branch, Compartment, Node, Tree
-from swcgeom.utils import angle
 
 __all__ = ["LMeasure"]
 
@@ -364,7 +362,7 @@ class LMeasure:
         L-Measure: http://cng.gmu.edu:8080/Lm/help/Bif_ampl_remote.htm
         """
 
-        v1, v2 = self._bif_vector_local(bif)
+        v1, v2 = self._bif_vector_remote(bif)
         return np.degrees(angle(v1, v2))
 
     def bif_tilt_local(self, bif: Tree.Node) -> float:
@@ -822,3 +820,23 @@ def pill_surface_area(ra: float, rb: float, h: float) -> float:
     bottom_hemisphere_area = 2 * math.pi * rb**2
     total_area = lateral_area + top_hemisphere_area + bottom_hemisphere_area
     return total_area
+
+
+# TODO: move to `utils`
+def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
+    """Get the angle of vectors.
+
+    Returns
+    -------
+    angle : float
+        Angle [0, PI) in radians.
+    """
+
+    a, b = np.array(a), np.array(b)
+    if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
+        raise ValueError("Input vectors must not be zero vectors.")
+
+    costheta = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+    costheta = np.clip(costheta, -1, 1)  # avoid numerical errors
+    theta = np.arccos(costheta)
+    return theta
