@@ -97,6 +97,19 @@ class ChainTrees:
         return (self[i] for i in range(self.__len__()))
 
 
+class NestTrees:
+    def __init__(self, trees: Trees, idx: Iterable[int], /) -> None:
+        super().__init__()
+        self.trees = trees
+        self.idx = list(idx)
+
+    def __getitem__(self, key: int, /) -> Tree:
+        return self.trees[self.idx[key]]
+
+    def __len__(self) -> int:
+        return len(self.idx)
+
+
 class Population:
     """Neuron population."""
 
@@ -328,3 +341,12 @@ def _get_idx(key: int, length: int) -> int:
         key += length
 
     return key
+
+
+# experimental
+def filter(pop: Population, predicate: Callable[[Tree], bool]) -> "Population":
+    """Filter trees in the population."""
+
+    # TODO: how to avoid load trees
+    idx = [i for i, t in enumerate(pop) if predicate(t)]
+    return Population(NestTrees(pop.trees, idx), root=pop.root)
