@@ -27,6 +27,7 @@ from sdflit import (
     SDFObject,
 )
 from tqdm import tqdm
+from typing_extensions import deprecated
 
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
@@ -63,9 +64,9 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         ONLY works for small image stacks, use :meth`transform_and_save`
         for big image stack.
         """
-        return np.stack(list(self.transfrom(x, verbose=False)), axis=0)
+        return np.stack(list(self.transform(x, verbose=False)), axis=0)
 
-    def transfrom(
+    def transform(
         self,
         x: Tree,
         verbose: bool = True,
@@ -102,10 +103,20 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             frame = (255 * voxel[..., 0, 0]).astype(np.uint8)
             yield frame
 
+    @deprecated("Use transform instead")
+    def transfrom(
+        self,
+        x: Tree,
+        verbose: bool = True,
+        *,
+        ranges: Optional[tuple[npt.ArrayLike, npt.ArrayLike]] = None,
+    ) -> Iterable[npt.NDArray[np.uint8]]:
+        return self.transform(x, verbose, ranges=ranges)
+
     def transform_and_save(
         self, fname: str, x: Tree, verbose: bool = True, **kwargs
     ) -> None:
-        self.save_tif(fname, self.transfrom(x, verbose=verbose, **kwargs))
+        self.save_tif(fname, self.transform(x, verbose=verbose, **kwargs))
 
     def transform_population(
         self, population: Population | str, verbose: bool = True

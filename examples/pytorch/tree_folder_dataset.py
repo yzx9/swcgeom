@@ -30,7 +30,7 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
         ----------
         swc_dir : str
             Path of SWC file directory.
-        transfroms : Transfroms[Tree, T], optional
+        transforms : Transforms[Tree, T], optional
             Branch transformations.
 
         See Also

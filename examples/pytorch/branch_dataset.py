@@ -41,7 +41,7 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
         save : Union[str, bool], default `True`
             Save branch data to file if not False. If `True`, automatically
             generate file name.
-        transfroms : Transfroms[Branch, T], optional
+        transforms : Transforms[Branch, T], optional
             Branch transformations.
 
         See Also
