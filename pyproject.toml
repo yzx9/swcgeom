@@ -23,7 +23,7 @@ dependencies = [
     "tifffile>=2022.8.12",
     "typing_extensions>=4.4.0",
     "tqdm>=4.46.1",
-    "v3d-py-helper>=0.1.0",
+    "v3d-py-helper==0.1.0",
 ]
 
 [project.optional-dependencies]
