@@ -1,5 +1,25 @@
 # Changelog
 
+## **0.17.2**&emsp;<sub><sup>2024-08-07 ([9d5347d...59a5cbf](https://github.com/yzx9/swcgeom/compare/9d5347d0a427f460b92fd86c596e40a23812e48d...59a5cbfbe78f18a95ff8f35e72a4a0f0cdbc5009?diff=split))</sup></sub>
+
+### Bug Fixes
+
+##### &ensp;`analysis`
+
+- handle zero partition asymmetry in lmeasure ([1f332f2](https://github.com/yzx9/swcgeom/commit/1f332f22f465ea1ec7ff0b5e4013ddb6d64ffa5d))
+- workaround with angle ([05d2ff7](https://github.com/yzx9/swcgeom/commit/05d2ff77ba5f4b4331daca0bade89e10a56f564d))
+
+##### &ensp;`utils`
+
+- download with multiprocessing should avoid locals func ([6aff3e0](https://github.com/yzx9/swcgeom/commit/6aff3e0ee06fb527f759e6ec9ac09ab1ca745dad))
+
+
+### BREAKING CHANGES
+-  rename bifurcation to furcation ([26e9dec](https://github.com/yzx9/swcgeom/commit/26e9dec2db5b7d457dfe52d9a8e0177d26bc5b07))
+- `core` lazy loading in range indexing ([7d38ea8](https://github.com/yzx9/swcgeom/commit/7d38ea80fefc907c3f55663c052db9b81f144d68))
+<br>
+
+
 ## **0.17.1**&emsp;<sub><sup>2024-04-05 ([a8007ac...0ef3c2b](https://github.com/yzx9/swcgeom/compare/a8007ac6c5eb7de03298dbdcc6be59d3c282e125...0ef3c2b370a570366a79ef456c1125d12f006409?diff=split))</sup></sub>
 
 ### Features
