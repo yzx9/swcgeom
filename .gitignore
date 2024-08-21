@@ -1,6 +1,7 @@
 # Auto generated
 _version.py
 .DS_Store
+.direnv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
