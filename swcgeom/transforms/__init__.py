@@ -2,6 +2,7 @@
 
 from swcgeom.transforms.base import *
 from swcgeom.transforms.branch import *
+from swcgeom.transforms.branch_tree import *
 from swcgeom.transforms.geometry import *
 from swcgeom.transforms.image_preprocess import *
 from swcgeom.transforms.image_stack import *

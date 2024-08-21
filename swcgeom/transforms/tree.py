@@ -6,10 +6,11 @@ from typing import Optional
 import numpy as np
 from typing_extensions import deprecated
 
-from swcgeom.core import BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
+from swcgeom.core import Branch, BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
 from swcgeom.core.swc_utils import SWCTypes, get_types
 from swcgeom.transforms.base import Transform
-from swcgeom.transforms.branch import BranchConvSmoother
+from swcgeom.transforms.branch import BranchConvSmoother, BranchIsometricResampler
+from swcgeom.transforms.branch_tree import BranchTreeAssembler
 from swcgeom.transforms.geometry import Normalizer
 
 __all__ = [
@@ -22,6 +23,7 @@ __all__ = [
     "CutDendriteTree",
     "CutByFurcationOrder",
     "CutShortTipBranch",
+    "IsometricResampler",
 ]
 
 
@@ -227,3 +229,27 @@ class CutShortTipBranch(Transform[Tree, Tree]):
                 cb(br)
 
         return None
+
+
+class Resampler(Transform[Tree, Tree]):
+    def __init__(self, branch_resampler: Transform[Branch, Branch]) -> None:
+        super().__init__()
+        self.resampler = branch_resampler
+        self.assembler = BranchTreeAssembler()
+
+    def __call__(self, x: Tree) -> Tree:
+        t = BranchTree.from_tree(x)
+        t.branches = {
+            k: [self.resampler(br) for br in brs] for k, brs in t.branches.items()
+        }
+        return self.assembler(t)
+
+
+class IsometricResampler(Resampler):
+    def __init__(
+        self, distance: float, *, adjust_last_gap: bool = True, **kwargs
+    ) -> None:
+        branch_resampler = BranchIsometricResampler(
+            distance, adjust_last_gap=adjust_last_gap, **kwargs
+        )
+        super().__init__(branch_resampler)

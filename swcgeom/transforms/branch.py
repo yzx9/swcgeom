@@ -76,6 +76,57 @@ class BranchLinearResampler(_BranchResampler):
         return f"n_nodes={self.n_nodes}"
 
 
+class BranchIsometricResampler(_BranchResampler):
+    def __init__(self, distance: float, *, adjust_last_gap: bool = True) -> None:
+        super().__init__()
+        self.distance = distance
+        self.adjust_last_gap = adjust_last_gap
+
+    def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
+        """Resampling by isometric interpolation, DO NOT keep original node.
+
+        Parameters
+        ----------
+        xyzr : np.ndarray[np.float32]
+            The array of shape (N, 4).
+
+        Returns
+        -------
+        new_xyzr : ~numpy.NDArray[float32]
+            An array of shape (n_nodes, 4).
+        """
+
+        # Compute the cumulative distances between consecutive points
+        diffs = np.diff(xyzr[:, :3], axis=0)
+        distances = np.sqrt((diffs**2).sum(axis=1))
+        cumulative_distances = np.concatenate([[0], np.cumsum(distances)])
+
+        total_length = cumulative_distances[-1]
+        n_nodes = int(np.ceil(total_length / self.distance)) + 1
+
+        # Determine the new distances
+        if self.adjust_last_gap and n_nodes > 1:
+            new_distances = np.linspace(0, total_length, n_nodes)
+        else:
+            new_distances = np.arange(0, total_length, self.distance)
+            # keep endpoint
+            new_distances = np.concatenate([new_distances, total_length])
+
+        # Interpolate the new points
+        new_xyzr = np.zeros((n_nodes, 4), dtype=np.float32)
+        new_xyzr[:, :3] = np.array(
+            [
+                np.interp(new_distances, cumulative_distances, xyzr[:, i])
+                for i in range(3)
+            ]
+        ).T
+        new_xyzr[:, 3] = np.interp(new_distances, cumulative_distances, xyzr[:, 3])
+        return new_xyzr
+
+    def extra_repr(self) -> str:
+        return f"distance={self.distance},adjust_last_gap={self.adjust_last_gap}"
+
+
 class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
     r"""Smooth the branch by sliding window."""
 
@@ -88,14 +139,14 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
         """
         super().__init__()
         self.n_nodes = n_nodes
-        self.kernal = np.ones(n_nodes)
+        self.kernel = np.ones(n_nodes)
 
     def __call__(self, x: Branch) -> Branch[DictSWC]:
         x = x.detach()
-        c = signal.convolve(np.ones(x.number_of_nodes()), self.kernal, mode="same")
+        c = signal.convolve(np.ones(x.number_of_nodes()), self.kernel, mode="same")
         for k in ["x", "y", "z"]:
             v = x.get_ndata(k)
-            s = signal.convolve(v, self.kernal, mode="same")
+            s = signal.convolve(v, self.kernel, mode="same")
             x.attach.ndata[k][1:-1] = (s / c)[1:-1]
 
         return x
@@ -105,7 +156,7 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
 
 
 class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
-    r"""Standarize branch.
+    r"""Standardize branch.
 
     Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up at
     y, and scale max radius to 1.
@@ -123,7 +174,7 @@ class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
 
     @staticmethod
     def get_matrix(xyz: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
-        r"""Get standarize transformation matrix.
+        r"""Get standardize transformation matrix.
 
         Standardized branch starts at (0, 0, 0), ends at (1, 0, 0), up
         at y.
@@ -136,7 +187,7 @@ class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
         Returns
         -------
         T : np.ndarray[np.float32]
-            An homogeneous transfomation matrix of shape (4, 4).
+            An homogeneous transformation matrix of shape (4, 4).
         """
 
         assert (
