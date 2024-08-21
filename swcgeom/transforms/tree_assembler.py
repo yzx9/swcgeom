@@ -38,7 +38,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
 
     def __call__(
         self, lines: Iterable[pd.DataFrame], *, names: Optional[SWCNames] = None
-    ):
+    ):  # TODO check this
         return self.assemble(lines, names=names)
 
     def assemble(
@@ -56,8 +56,8 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         Parameters
         ----------
         lines : List of ~pd.DataFrame
-            An array of tables containing a line, columns should follwing
-            the swc.
+            An array of tables containing a line, columns should
+            following the swc.
         undirected : bool, default `True`
             Forwarding to `self.try_assemble`.
         names : SWCNames, optional
@@ -170,5 +170,5 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
 
         return tree, lines
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"thre={self.thre}, undirected={self.undirected}"

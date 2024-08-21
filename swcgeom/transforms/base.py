@@ -33,7 +33,7 @@ class Transform(ABC, Generic[T, K]):
         repr_ = self.extra_repr()
         return f"{classname}({repr_})"
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         """Provides a human-friendly representation of the module.
 
         This method extends the basic string representation provided by
@@ -48,7 +48,7 @@ class Transform(ABC, Generic[T, K]):
             def __init__(self, my_parameter: int = 1):
                 self.my_parameter = my_parameter
 
-            def extra_repr(self):
+            def extra_repr(self) -> str:
                 return f"my_parameter={self.my_parameter}"
 
         Notes

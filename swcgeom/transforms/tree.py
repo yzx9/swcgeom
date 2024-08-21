@@ -65,7 +65,7 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
 
         return x
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"n_nodes={self.n_nodes}"
 
 
@@ -104,7 +104,7 @@ class CutByType(Transform[Tree, Tree]):
         y = to_subtree(x, removals)
         return y
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"type={self.type}"
 
 
@@ -195,7 +195,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         self.callbacks.pop()
         return to_subtree(x, removals)
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"threshold={self.thre}"
 
     def _leave(

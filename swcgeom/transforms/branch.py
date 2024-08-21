@@ -72,7 +72,7 @@ class BranchLinearResampler(_BranchResampler):
         r = np.interp(xvals, xp, xyzr[:, 3])
         return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"n_nodes={self.n_nodes}"
 
 
@@ -100,7 +100,7 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
 
         return x
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"n_nodes={self.n_nodes}"
 
 

@@ -136,7 +136,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             if not os.path.isfile(tif):
                 self.transform_and_save(tif, tree, verbose=False)
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         res = ",".join(f"{a:.4f}" for a in self.resolution)
         return f"resolution=({res})"
 

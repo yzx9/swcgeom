@@ -72,7 +72,7 @@ class RadiusReseter(Generic[T], Transform[T, T]):
         new_tree.ndata[new_tree.names.r] = r
         return new_tree
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"r={self.r:.4f}"
 
 
@@ -141,7 +141,7 @@ class Translate(Generic[T], AffineTransform[T]):
         super().__init__(translate3d(tx, ty, tz), **kwargs)
         self.tx, self.ty, self.tz = tx, ty, tz
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"tx={self.tx:.4f}, ty={self.ty:.4f}, tz={self.tz:.4f}"
 
     @classmethod
@@ -194,8 +194,8 @@ class Rotate(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
-    def extra_repr(self):
-        return f"n={self.n}, theta={self.theta:.4f}, center={self.center}"  # TODO: imporve format of n
+    def extra_repr(self) -> str:
+        return f"n={self.n}, theta={self.theta:.4f}, center={self.center}"  # TODO: improve format of n
 
     @classmethod
     def transform(
@@ -216,7 +216,7 @@ class RotateX(Generic[T], AffineTransform[T]):
         super().__init__(rotate3d_x(theta), center=center, **kwargs)
         self.theta = theta
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"center={self.center}, theta={self.theta:.4f}"
 
     @classmethod
@@ -232,7 +232,7 @@ class RotateY(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"theta={self.theta:.4f}, center={self.center}"
 
     @classmethod
@@ -248,7 +248,7 @@ class RotateZ(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return f"theta={self.theta:.4f}, center={self.center}"
 
     @classmethod
