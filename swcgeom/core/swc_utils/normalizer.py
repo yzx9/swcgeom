@@ -77,7 +77,7 @@ def link_roots_to_nearest_(
         vs = df[[names.x, names.y, names.z]] - row[[names.x, names.y, names.z]]
         dis = np.linalg.norm(vs.to_numpy(), axis=1)
         subtree = dsu == dsu[i]  # type: ignore
-        dis = np.where(subtree, np.Infinity, dis)  # avoid link to same tree
+        dis = np.where(subtree, np.inf, dis)  # avoid link to same tree
         dsu = np.where(subtree, dsu[dis.argmin()], dsu)  # merge set
         df.loc[i, names.pid] = df[names.id].iloc[dis.argmin()]  # type: ignore
 

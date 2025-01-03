@@ -538,7 +538,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
             if (invalid := diff > 10 * v).all():
                 return None, None
 
-            diff[invalid] = np.NINF  # remove values which greate than v
+            diff[invalid] = -np.inf  # remove values which greater than v
 
             # find the index of the value smaller than v and closest to v
             idx = np.argmax(diff)
