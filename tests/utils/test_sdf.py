@@ -13,12 +13,10 @@ class TestSphere:
     @pytest.mark.parametrize(
         "center, raidus, p, expected",
         [
-            # fmt:off
             ((0, 0, 0), 1, [[0, 0, 0], [1, 0, 0], [2, 0, 0]], [-1, 0, 1]),
             ((1, 1, 1), 1, [[0, 0, 0], [1, 0, 0]], [np.sqrt(3) - 1, np.sqrt(2) - 1]),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_distance(self, center, raidus, p, expected):
         sphere = SDFSphere(center, raidus)
         npt.assert_allclose(sphere.distance(p), expected)
@@ -26,12 +24,10 @@ class TestSphere:
     @pytest.mark.parametrize(
         "center, raidus, p, expected",
         [
-            # fmt:off
             ((0, 0, 0), 1, [[0, 0, 0], [1, 0, 0], [2, 0, 0]], [True, True, False]),
             ((1, 1, 1), 1, [[0, 0, 0], [1, 0, 0]], [False, False]),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_is_in(self, center, raidus, p, expected):
         sphere = SDFSphere(center, raidus)
         npt.assert_equal(sphere.is_in(p), expected)
@@ -43,13 +39,11 @@ class TestSDFFrustumCone:
     @pytest.mark.parametrize(
         "a, b, ra, rb, p, expected",
         [
-            # fmt:off
             ((0, 0, 0), (0, 0, 2), 2, 1,
                 [[0, 0, -1], [0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3]],
                 [        1 ,        0 ,       -1 ,        0 ,        1 ]),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_distance(self, a, b, ra, rb, p, expected):
         frustum_cone = SDFFrustumCone(a, b, ra, rb)
         npt.assert_allclose(frustum_cone.distance(p), expected)
@@ -57,13 +51,11 @@ class TestSDFFrustumCone:
     @pytest.mark.parametrize(
         "a, b, ra, rb, p, expected",
         [
-            # fmt:off
             ((0, 0, 0), (0, 0, 2), 2, 1,
                 [[0, 0, -1], [0, 0, 0], [0, 0, 1], [0, 0, 2], [0, 0, 3]],
                 [    False ,     True ,     True ,     True ,    False ]),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_is_in(self, a, b, ra, rb, p, expected):
         frustum_cone = SDFFrustumCone(a, b, ra, rb)
         npt.assert_allclose(frustum_cone.is_in(p), expected)

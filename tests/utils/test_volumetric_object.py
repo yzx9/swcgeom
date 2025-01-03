@@ -11,14 +11,12 @@ class TestSphere:
     @pytest.mark.parametrize(
         "sphere_radius, except_volume",
         [
-            # fmt:off
             (9,   4 / 3 * 9**3 * np.pi),
             (5,   4 / 3 * 5**3 * np.pi),
             (3,   4 / 3 * 3**3 * np.pi),
             (0, 0.0                   ),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_sphere_volume(self, sphere_radius, except_volume):
         volume = VolSphere.calc_volume(sphere_radius)
         npt.assert_allclose(volume, except_volume)
@@ -26,7 +24,6 @@ class TestSphere:
     @pytest.mark.parametrize(
         "sphere_radius, cap_height, excepted_volume",
         [
-            # fmt:off
             (9, 5, 550.0 / 3.0 * np.pi),
             (5, 2,  52.0 / 3.0 * np.pi),
             (3, 1,   8.0 / 3.0 * np.pi),
@@ -34,9 +31,8 @@ class TestSphere:
             (3, 4,  80.0 / 3.0 * np.pi),
             (4, 8, 256.0 / 3.0 * np.pi),
             (4, 0,   0.0              ),
-            # fmt:on
         ],
-    )
+    )  # fmt: skip
     def test_spherical_cap_volume(self, sphere_radius, cap_height, excepted_volume):
         volume = VolSphere.calc_volume_spherical_cap(sphere_radius, cap_height)
         npt.assert_allclose(volume, excepted_volume)
@@ -50,8 +46,8 @@ class TestSphere:
         v1 = VolSphere.calc_volume_spherical_cap(r, h)
         v2 = VolSphere.calc_volume_spherical_cap(r, 2 * r - h)
         v = v1 + v2
-        v_shpere = VolSphere.calc_volume(r)
-        npt.assert_allclose(v, v_shpere)
+        v_sphere = VolSphere.calc_volume(r)
+        npt.assert_allclose(v, v_sphere)
 
 
 class TestSphere2Intersection:

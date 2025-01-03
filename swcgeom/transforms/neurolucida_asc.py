@@ -421,7 +421,7 @@ class Lexer:
         return self
 
     def __next__(self) -> Token:
-        match (word := self._read_word()):
+        match word := self._read_word():
             case "":
                 raise StopIteration
 

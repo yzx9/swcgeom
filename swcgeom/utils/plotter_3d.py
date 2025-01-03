@@ -27,5 +27,7 @@ def draw_lines_3d(
         Forwarded to `~mpl_toolkits.mplot3d.art3d.Line3DCollection`.
     """
 
-    line_collection = Line3DCollection(lines, joinstyle=joinstyle, capstyle=capstyle, **kwargs)  # type: ignore
+    line_collection = Line3DCollection(
+        lines, joinstyle=joinstyle, capstyle=capstyle, **kwargs
+    )  # type: ignore
     return ax.add_collection3d(line_collection)

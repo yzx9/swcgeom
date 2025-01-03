@@ -1,4 +1,4 @@
-"""Check common """
+"""Check common"""
 
 from collections import defaultdict
 from typing import Optional

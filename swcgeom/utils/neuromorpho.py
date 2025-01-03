@@ -3,7 +3,7 @@
 Examples
 --------
 
-Metadata: 
+Metadata:
 
 ```json
 {
@@ -287,13 +287,9 @@ class NeuroMorpho:
             where = where or (lambda _: True)
             if isinstance(group_by, str):
                 key = group_by
-                group_by = lambda v: v[
-                    key
-                ]  # pylint: disable=unnecessary-lambda-assignment
+                group_by = lambda v: v[key]  # pylint: disable=unnecessary-lambda-assignment
             elif group_by is None:
-                group_by = (
-                    lambda _: None
-                )  # pylint: disable=unnecessary-lambda-assignment
+                group_by = lambda _: None  # pylint: disable=unnecessary-lambda-assignment
             items = []
             for k, v in tx_m.cursor():
                 metadata = json.loads(v)

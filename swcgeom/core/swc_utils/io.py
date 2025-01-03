@@ -172,7 +172,8 @@ def parse_swc(
         RE_FLOAT,  # r
         r"(-?[0-9]+)",  # pid
     ] + [
-        RE_FLOAT for _ in extras  # assert float
+        RE_FLOAT
+        for _ in extras  # assert float
     ]
 
     re_swc_cols_str = r"\s+".join(re_swc_cols)

@@ -8,7 +8,6 @@ If you use the method here, please review the code more frequently, we
 will try to flag all breaking changes but NO promises.
 """
 
-
 from swcgeom.core.swc_utils.assembler import *
 from swcgeom.core.swc_utils.base import *
 from swcgeom.core.swc_utils.checker import *
