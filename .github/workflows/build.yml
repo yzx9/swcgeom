@@ -1,36 +1,29 @@
 name: Build Python Package
-
 on:
   workflow_call:
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: "3.10"
-
       - name: Get history and tags for SCM versioning to work
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
           git describe --tags
           git describe --tags $(git rev-list --tags --max-count=1)
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
-
       - name: Build package
         run: python -m build
-
       - name: Archive production artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: release
           path: |
