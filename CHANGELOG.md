@@ -1,5 +1,20 @@
 # Changelog
 
+## **0.18.0**&emsp;<sub><sup>2025-01-04 ([d3a8b93...a07e648](https://github.com/yzx9/swcgeom/compare/d3a8b93433e71b61b7fae9290c86d6b4a8000894...a07e64810093af78cb9e07ec0d3108d7b3a9fbc3?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`transforms`
+
+- resample tree \(close [#8](https://github.com/yzx9/swcgeom/issues/#8) \#9\) ([b5c44bb](https://github.com/yzx9/swcgeom/commit/b5c44bbf5a6a128d9855105353260c33a9604c44))
+
+### Bug Fixes
+
+- use \`np\.inf\` \(close \#23\) ([1111613](https://github.com/yzx9/swcgeom/commit/11116132afd30a7a00399429af9f9ed37c2ed794))
+
+<br>
+
+
 ## **0.17.2**&emsp;<sub><sup>2024-08-07 ([9d5347d...59a5cbf](https://github.com/yzx9/swcgeom/compare/9d5347d0a427f460b92fd86c596e40a23812e48d...59a5cbfbe78f18a95ff8f35e72a4a0f0cdbc5009?diff=split))</sup></sub>
 
 ### Bug Fixes
