@@ -25,16 +25,20 @@ pip install build
 pip install --editable .
 ```
 
-Static analysis don't support import hook used in editable install for [PEP660](https://peps.python.org/pep-0660/) since upgrade to setuptools v64+, detail infomation at [setuptools#3518](https://github.com/pypa/setuptools/issues/3518), a workaround for vscode with pylance:
+Static analysis don't support import hook used in editable install for
+[PEP660](https://peps.python.org/pep-0660/) since upgrade to setuptools v64+,
+detail information at [setuptools#3518](https://github.com/pypa/setuptools/issues/3518),
+a workaround for vscode with pylance:
 
 ```json
 {
-    "python.analysis.extraPaths": ["/path/to/this/project"]
+  "python.analysis.extraPaths": ["/path/to/this/project"]
 }
 ```
 
 ## LICENSE
 
-This work is licensed under a <a rel="license" href="https://www.apache.org/licenses/">Apache-2.0</a>.
+This work is licensed under a
+<a rel="license" href="https://www.apache.org/licenses/">Apache-2.0</a>.
 
 Copyright (c) 2022-present, Zexin Yuan
