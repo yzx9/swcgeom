@@ -9,11 +9,11 @@ from swcgeom.transforms import Transform
 
 
 class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
-    """Transofrm tree to dgl graph.
+    """Transform tree to dgl graph.
 
     Notes
     -----
-    You SHOULD initially decide to constrct your own transformation,
+    You SHOULD initially decide to construct your own transformation,
     even if we are attempting to provide additional capabilities for
     you because there are so many custom initial options in graph and
     this class is more of a toy and template.
@@ -27,7 +27,7 @@ class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
         to_bidirected: bool = False,
         keys: list[str] | None = None,
     ) -> None:
-        """Transofrm tree to dgl graph.
+        """Transform tree to dgl graph.
 
         Parameters
         ----------
