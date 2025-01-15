@@ -17,3 +17,15 @@
 from swcgeom import analysis, core, images, transforms
 from swcgeom.analysis import draw
 from swcgeom.core import BranchTree, Population, Populations, Tree
+
+__all__ = [
+    "analysis",
+    "core",
+    "images",
+    "transforms",
+    "draw",
+    "BranchTree",
+    "Population",
+    "Populations",
+    "Tree",
+]

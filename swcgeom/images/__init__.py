@@ -15,5 +15,5 @@
 
 """Image Stack Related."""
 
-from swcgeom.images.folder import *
-from swcgeom.images.io import *
+from swcgeom.images.folder import *  # noqa: F403
+from swcgeom.images.io import *  # noqa: F403
