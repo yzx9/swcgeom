@@ -19,6 +19,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release
+          path: dist
       - name: Pack release
         run: tar czf swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz dist/
       - name: Create release
