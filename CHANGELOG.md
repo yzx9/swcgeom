@@ -1,5 +1,13 @@
 # Changelog
 
+## **0.18.2**&emsp;<sub><sup>2025-01-15 ([a245213...25f698c](https://github.com/yzx9/swcgeom/compare/a245213f8d43bd5ae96d46f943327a04657e5b4c...25f698c7e3ffd57da0c831487b6e3b4f9032628c?diff=split))</sup></sub>
+
+### Merges
+
+- pull request [#30](https://github.com/yzx9/swcgeom/issues/#30) from yzx9/chore/uv ([fde7733](https://github.com/yzx9/swcgeom/commit/fde773367202402707fca067f128170e2e54fefc))
+
+<br>
+
 ## **0.18.1**&emsp;<sub><sup>2025-01-04 ([9bbacc8...163776f](https://github.com/yzx9/swcgeom/compare/9bbacc89c4b44edd8211be15fbaa3cf80de2e14a...163776f95252737cc997e24d5b363fef30b9ba98?diff=split))</sup></sub>
 
 _no relevant changes_
