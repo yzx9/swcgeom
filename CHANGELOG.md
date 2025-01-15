@@ -1,5 +1,10 @@
 # Changelog
 
+## **0.18.3**&emsp;<sub><sup>2025-01-15 ([053715c...053715c](https://github.com/yzx9/swcgeom/compare/053715c0673fd2d75a8350cea6cbdfd117c19f39...053715c0673fd2d75a8350cea6cbdfd117c19f39?diff=split))</sup></sub>
+
+_no relevant changes_
+<br>
+
 ## **0.18.2**&emsp;<sub><sup>2025-01-15 ([a245213...25f698c](https://github.com/yzx9/swcgeom/compare/a245213f8d43bd5ae96d46f943327a04657e5b4c...25f698c7e3ffd57da0c831487b6e3b4f9032628c?diff=split))</sup></sub>
 
 ### Merges
