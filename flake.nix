@@ -138,6 +138,7 @@
             packages = [
               python
               pkgs.uv
+              pkgs.just
             ];
             env =
               {
@@ -186,6 +187,7 @@
               packages = [
                 virtualenv
                 pkgs.uv
+                pkgs.just
               ];
 
               env = {

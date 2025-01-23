@@ -34,3 +34,8 @@ all = [
 
 [project.urls]
 repository = "https://github.com/yzx9/swcgeom"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.4",
+]
