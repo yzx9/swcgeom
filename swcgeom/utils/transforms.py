@@ -36,17 +36,42 @@ Vec3f = tuple[float, float, float]
 
 
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
-    """Get the angle of vectors.
+    """Get the signed angle between two vectors.
+
+    The angle is positive if the rotation from a to b is counter-clockwise,
+    and negative if clockwise.
 
     Returns
     -------
     angle : float
-        Angle in radians.
+        Angle in radians between -π and π.
+
+    Examples
+    --------
+    >>> angle([1, 0, 0], [1, 0, 0])     # identical
+    0.0
+    >>> angle([1, 0, 0], [0, 1, 0])     # 90 degrees counter-clockwise
+    1.5707963267948966
+    >>> angle([1, 0, 0], [0, -1, 0])    # 90 degrees clockwise
+    -1.5707963267948966
     """
-    a, b = np.array(a), np.array(b)
-    costheta = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
-    theta = np.arccos(costheta)
-    return theta if np.cross(a, b) > 0 else -theta
+
+    a = np.asarray(a)
+    b = np.asarray(b)
+
+    # Normalize vectors
+    a_norm = a / np.linalg.norm(a)
+    b_norm = b / np.linalg.norm(b)
+
+    # Calculate cosine of angle
+    cos_theta = np.dot(a_norm, b_norm)
+    cos_theta = np.clip(cos_theta, -1.0, 1.0)  # Ensure within valid range
+    theta = np.arccos(cos_theta)
+
+    # Determine sign using cross product
+    cross = np.cross(a_norm, b_norm)
+    sign = np.sign(cross[2])  # Use z-component for 3D
+    return float(sign * theta)
 
 
 def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float32]:
