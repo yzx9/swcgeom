@@ -529,9 +529,15 @@ class NeuroMorpho:
                 self.ssl_context = ssl_context
                 super().__init__(**kwargs)
 
-            def init_poolmanager(self, connections, maxsize, block=False):
+            def init_poolmanager(
+                self, connections, maxsize, block=False, **pool_kwargs
+            ):
                 super().init_poolmanager(
-                    connections, maxsize, block, ssl_context=self.ssl_context
+                    connections,
+                    maxsize,
+                    block,
+                    ssl_context=self.ssl_context,
+                    **pool_kwargs,
                 )
 
             def proxy_manager_for(self, proxy, **proxy_kwargs):

@@ -22,6 +22,20 @@ class DisjointSetUnion:
     """Disjoint Set Union.
 
     DSU with path compression and union by rank.
+
+    Examples
+    --------
+    >>> dsu = DisjointSetUnion(3)
+    >>> dsu.is_same_set(0, 1)
+    False
+    >>> dsu.union_sets(0, 1)
+    >>> dsu.is_same_set(0, 1)
+    True
+    >>> dsu.is_same_set(0, 2)
+    False
+    >>> dsu.union_sets(1, 2)
+    >>> dsu.is_same_set(0, 2)
+    True
     """
 
     def __init__(self, node_number: int):

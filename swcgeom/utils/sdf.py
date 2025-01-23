@@ -60,8 +60,8 @@ class SDF(ABC):
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Calculate signed distance.
 
-        Parmeters
-        ---------
+        Parameters
+        ----------
         p: ArrayLike
             Hit point p of shape (N, 3).
 

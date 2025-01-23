@@ -28,6 +28,17 @@ __all__ = [
 
 
 def find_unit_vector_on_plane(normal_vec3: npt.NDArray) -> npt.NDArray:
+    """Find a random unit vector on the plane defined by the normal vector.
+
+    Examples
+    --------
+    >>> normal = np.array([0, 0, 1])
+    >>> u = find_unit_vector_on_plane(normal)
+    >>> np.allclose(np.dot(u, normal), 0)  # Should be perpendicular
+    True
+    >>> np.allclose(np.linalg.norm(u), 1)  # Should be unit length
+    True
+    """
     r = np.random.rand(3)
     r /= np.linalg.norm(r)
     while np.allclose(r, normal_vec3) or np.allclose(r, -normal_vec3):
@@ -45,6 +56,23 @@ def find_sphere_line_intersection(
     line_point_a: npt.NDArray,
     line_point_b: npt.NDArray,
 ) -> list[tuple[float, npt.NDArray[np.float64]]]:
+    """Find intersection points between a sphere and a line.
+
+    Examples
+    --------
+    >>> center = np.array([0, 0, 0])
+    >>> radius = 1.0
+    >>> p1 = np.array([-2, 0, 0])
+    >>> p2 = np.array([2, 0, 0])
+    >>> intersections = find_sphere_line_intersection(center, radius, p1, p2)
+    >>> len(intersections)
+    2
+    >>> np.allclose(intersections[0][1], [-1, 0, 0])
+    True
+    >>> np.allclose(intersections[1][1], [1, 0, 0])
+    True
+    """
+
     A = np.array(line_point_a)
     B = np.array(line_point_b)
     C = np.array(sphere_center)
@@ -74,8 +102,22 @@ def find_sphere_line_intersection(
 
 
 def project_point_on_line(
-    point_a: npt.ArrayLike, direction_vector: npt.ArrayLike, point_p: npt.ArrayLike
+    point_a: npt.ArrayLike,
+    direction_vector: npt.ArrayLike,
+    point_p: npt.ArrayLike,
 ) -> npt.NDArray:
+    """Project a point onto a line defined by a point and direction vector.
+
+    Examples
+    --------
+    >>> a = np.array([0, 0, 0])
+    >>> d = np.array([1, 0, 0])
+    >>> p = np.array([1, 1, 0])
+    >>> projection = project_point_on_line(a, d, p)
+    >>> np.allclose(projection, [1, 0, 0])
+    True
+    """
+
     A = np.array(point_a)
     n = np.array(direction_vector)
     P = np.array(point_p)
@@ -86,6 +128,16 @@ def project_point_on_line(
 
 
 def project_vector_on_vector(vec: npt.ArrayLike, target: npt.ArrayLike) -> npt.NDArray:
+    """Project one vector onto another.
+
+    Examples
+    --------
+    >>> v = np.array([1, 1, 0])
+    >>> t = np.array([1, 0, 0])
+    >>> proj = project_vector_on_vector(v, t)
+    >>> np.allclose(proj, [1, 0, 0])
+    True
+    """
     v = np.array(vec)
     n = np.array(target)
 
@@ -95,8 +147,22 @@ def project_vector_on_vector(vec: npt.ArrayLike, target: npt.ArrayLike) -> npt.N
 
 
 def project_vector_on_plane(
-    vec: npt.ArrayLike, plane_normal_vec: npt.ArrayLike
+    vec: npt.ArrayLike,
+    plane_normal_vec: npt.ArrayLike,
 ) -> npt.NDArray:
+    """Project a vector onto a plane defined by its normal vector.
+
+    Examples
+    --------
+    >>> v = np.array([1, 1, 1])
+    >>> n = np.array([0, 0, 1])
+    >>> proj = project_vector_on_plane(v, n)
+    >>> np.allclose(proj, [1, 1, 0])  # Z component removed
+    True
+    >>> np.allclose(np.dot(proj, n), 0)  # Should be perpendicular to normal
+    True
+    """
+
     v = np.array(vec)
     n = np.array(plane_normal_vec)
 

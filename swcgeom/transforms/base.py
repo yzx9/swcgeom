@@ -59,12 +59,11 @@ class Transform(ABC, Generic[T, K]):
 
         Examples
         --------
-        class Foo(Transform[T, K]):
-            def __init__(self, my_parameter: int = 1):
-                self.my_parameter = my_parameter
-
-            def extra_repr(self) -> str:
-                return f"my_parameter={self.my_parameter}"
+        >>> class Foo(Transform[T, K]):
+        ...    def __init__(self, my_parameter: int = 1):
+        ...        self.my_parameter = my_parameter
+        ...    def extra_repr(self) -> str:
+        ...        return f"my_parameter={self.my_parameter}"
 
         Notes
         -----

@@ -151,11 +151,10 @@ def random_augmentations(
 
     Examples
     --------
-    ```python
-    xs = os.listdir("path_to_imgs")
-    augs = generate_random_augmentations(len(xs), 5)
-    for i, j in range(augs):
-        x = play_augment(read_imgs(os.path.join("path_to_imgs", xs[i])), j)
+    >>> xs = os.listdir("path_to_imgs")                     # doctest: +SKIP
+    >>> augs = generate_random_augmentations(len(xs), 5)    # doctest: +SKIP
+    >>> for i, j in range(augs):                            # doctest: +SKIP
+    ...    x = play_augment(read_imgs(os.path.join("path_to_imgs", xs[i])), j)
     ```
     """
 

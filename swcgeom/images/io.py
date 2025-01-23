@@ -374,9 +374,8 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         Examples
         --------
-        ```python
-        imgs[0, 0, 0, 0]            # get value
-        imgs[0:64, 0:64, 0:64, :]   # get patch
+        >>> imgs[0, 0, 0, 0]            # get value # doctest: +SKIP
+        >>> imgs[0:64, 0:64, 0:64, :]   # get patch # doctest: +SKIP
         ```
         """
         if not isinstance(key, tuple):
@@ -497,13 +496,13 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         res = self.res[res_level]
         for p in coords:
-            assert np.less(
-                [0, 0, 0], p
-            ).all(), f"indices ({p[0]}, {p[1]}, {p[2]}) out of range (0, 0, 0)"
+            assert np.less([0, 0, 0], p).all(), (
+                f"indices ({p[0]}, {p[1]}, {p[2]}) out of range (0, 0, 0)"
+            )
 
-            assert np.greater(
-                res, p
-            ).all(), f"indices ({p[0]}, {p[1]}, {p[2]}) out of range ({res[0]}, {res[1]}, {res[2]})"
+            assert np.greater(res, p).all(), (
+                f"indices ({p[0]}, {p[1]}, {p[2]}) out of range ({res[0]}, {res[1]}, {res[2]})"
+            )
 
     def _get_range(self, starts, ends, res_level, out):
         # pylint: disable=too-many-locals

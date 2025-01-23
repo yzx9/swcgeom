@@ -44,6 +44,15 @@ def padding1d(
     dtype : np.DTypeLike, optional
         Data type of array. If specify, cast x to dtype, else dtype of
         x will used, otherwise defaults to `~numpy.float32`.
+
+    Examples
+    --------
+    >>> padding1d(5, [1, 2, 3])
+    array([1., 2., 3., 0., 0.], dtype=float32)
+    >>> padding1d(5, [1, 2, 3], padding_value=6)
+    array([1., 2., 3., 6., 6.], dtype=float32)
+    >>> padding1d(5, [1, 2, 3], dtype=np.int64)
+    array([1, 2, 3, 0, 0])
     """
 
     if not isinstance(v, np.ndarray):

@@ -75,12 +75,21 @@ def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
 
 
 def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float32]:
-    """Get the 3D scale transfomation matrix.
+    """Get the 3D scale transformation matrix.
 
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
+
+    Examples
+    --------
+    >>> np.allclose(scale3d(2, 3, 4), 
+    ...    [[2., 0., 0., 0.],
+    ...     [0., 3., 0., 0.],
+    ...     [0., 0., 4., 0.],
+    ...     [0., 0., 0., 1.]])
+    True
     """
     return np.array(
         [
@@ -94,12 +103,21 @@ def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float32]:
 
 
 def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float32]:
-    """Get the 3D translate transfomation matrix.
+    """Get the 3D translate transformation matrix.
 
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
+
+    Examples
+    --------
+    >>> np.allclose(translate3d(1, 2, 3),
+    ...    [[1., 0., 0., 1.],
+    ...     [0., 1., 0., 2.],
+    ...     [0., 0., 1., 3.],
+    ...     [0., 0., 0., 1.]])
+    True
     """
     return np.array(
         [
@@ -113,10 +131,10 @@ def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float32]:
 
 
 def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
-    r"""Get the 3D rotation transfomation matrix.
+    r"""Get the 3D rotation transformation matrix.
 
     Rotate v with axis n by an angle theta according to the right hand rule,
-    follow rodrigues' rotaion formula.
+    follow rodrigues' rotation formula.
 
     .. math::
 
@@ -140,7 +158,7 @@ def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
     """
 
     n = np.array(n)
@@ -163,7 +181,7 @@ def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
 
 
 def rotate3d_x(theta: float) -> npt.NDArray[np.float32]:
-    """Get the 3D rotation transfomation matrix.
+    """Get the 3D rotation transformation matrix.
 
     Rotate 3D vector `v` with `x`-axis by an angle theta according to the right
     hand rule.
@@ -176,7 +194,16 @@ def rotate3d_x(theta: float) -> npt.NDArray[np.float32]:
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
+
+    Examples
+    --------
+    >>> np.allclose(rotate3d_x(np.pi/2),  # 90 degree rotation
+    ...    [[ 1.,  0.,  0.,  0.],
+    ...     [ 0.,  0., -1.,  0.],
+    ...     [ 0.,  1.,  0.,  0.],
+    ...     [ 0.,  0.,  0.,  1.]])
+    True
     """
 
     return np.array(
@@ -191,7 +218,7 @@ def rotate3d_x(theta: float) -> npt.NDArray[np.float32]:
 
 
 def rotate3d_y(theta: float) -> npt.NDArray[np.float32]:
-    """Get the 3D rotation transfomation matrix.
+    """Get the 3D rotation transformation matrix.
 
     Rotate 3D vector `v` with `y`-axis by an angle theta according to the right
     hand rule.
@@ -204,7 +231,16 @@ def rotate3d_y(theta: float) -> npt.NDArray[np.float32]:
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
+
+    Examples
+    --------
+    >>> np.allclose(rotate3d_y(np.pi/2),  # 90 degree rotation
+    ...    [[ 0.,  0.,  1.,  0.],
+    ...     [ 0.,  1.,  0.,  0.],
+    ...     [-1.,  0.,  0.,  0.],
+    ...     [ 0.,  0.,  0.,  1.]])
+    True
     """
     return np.array(
         [
@@ -218,7 +254,7 @@ def rotate3d_y(theta: float) -> npt.NDArray[np.float32]:
 
 
 def rotate3d_z(theta: float) -> npt.NDArray[np.float32]:
-    """Get the 3D rotation transfomation matrix.
+    """Get the 3D rotation transformation matrix.
 
     Rotate 3D vector `v` with `z`-axis by an angle theta according to the right
     hand rule.
@@ -231,7 +267,16 @@ def rotate3d_z(theta: float) -> npt.NDArray[np.float32]:
     Returns
     -------
     T : np.NDArray
-        The homogeneous transfomation matrix, shape (4, 4).
+        The homogeneous transformation matrix, shape (4, 4).
+
+    Examples
+    --------
+    >>> np.allclose(rotate3d_z(np.pi/2),  # 90 degree rotation
+    ...    [[ 0., -1.,  0.,  0.],
+    ...     [ 1.,  0.,  0.,  0.],
+    ...     [ 0.,  0.,  1.,  0.],
+    ...     [ 0.,  0.,  0.,  1.]])
+    True
     """
     return np.array(
         [
@@ -258,6 +303,15 @@ def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
     -------
     xyz4 : npt.NDArray[np.float32]
         Array of shape (..., 4)
+
+    Examples
+    --------
+    >>> np.allclose(to_homogeneous([1, 2, 3], 1), [1., 2., 3., 1.])
+    True
+    >>> np.allclose(to_homogeneous([[1, 2, 3], [4, 5, 6]], 0),
+    ...    [[1., 2., 3., 0.],
+    ...     [4., 5., 6., 0.]])
+    True
     """
     xyz = np.array(xyz)
     if xyz.ndim == 1:
@@ -326,7 +380,17 @@ def model_view_transformation(
 
 
 def orthographic_projection_simple() -> npt.NDArray[np.float32]:
-    """Simple orthographic projection by drop z-axis"""
+    """Simple orthographic projection by drop z-axis
+
+    Examples
+    --------
+    >>> np.allclose(orthographic_projection_simple(),
+    ...    [[1., 0., 0., 0.],
+    ...     [0., 1., 0., 0.],
+    ...     [0., 0., 0., 0.],
+    ...     [0., 0., 0., 0.]])
+    True
+    """
     return np.array(
         [
             [1, 0, 0, 0],

@@ -85,21 +85,34 @@ class Ellipse:
 
 
 def mvee(points: npt.NDArray[np.floating], tol: float = 1e-3) -> Ellipse:
-    A, centroid = _mvee(points, tol=tol)
-    return Ellipse(A, centroid)
-
-
-def _mvee(
-    points: npt.NDArray[np.floating], tol: float = 1e-3
-) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """Finds the Minimum Volume Enclosing Ellipsoid.
+
+    Parameters
+    ----------
+    points : np.NDArray
+        Array of shape (N, d) where N is number of points and d is dimension
+    tol : float
+        Tolerance for convergence
 
     Returns
     -------
-    A : matrix of shape (d, d)
-        The ellipse equation in the 'center form': (x-c)' * A * (x-c) = 1
-    centroid : array of shape (d,)
-        The center coordinates of the ellipse.
+    Ellipse
+        An Ellipse object containing the minimum volume enclosing ellipse
+
+    Examples
+    --------
+    >>> # Create a set of 2D points
+    >>> points = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype=np.float64)
+    >>> ellipse = mvee(points)
+
+    >>> # Check centroid is at center of points
+    >>> np.allclose(ellipse.centroid, [0.5, 0.5])
+    True
+
+    >>> # Check ellipse properties
+    >>> rx, ry = ellipse.radii
+    >>> np.allclose([rx, ry], [np.sqrt(2)/2, np.sqrt(2)/2], rtol=1e-5)
+    True
 
     Reference
     ---------
@@ -108,6 +121,13 @@ def _mvee(
     3. https://minillinim.github.io/GroopM/dev_docs/groopm.ellipsoid-pysrc.html
     """
 
+    A, centroid = _mvee(points, tol=tol)
+    return Ellipse(A, centroid)
+
+
+def _mvee(
+    points: npt.NDArray[np.floating], tol: float = 1e-3
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     N, d = points.shape
     Q = np.column_stack((points, np.ones(N))).T
     err = tol + 1.0
