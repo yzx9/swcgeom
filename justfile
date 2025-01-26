@@ -12,6 +12,5 @@ test-cov:
   uv run --with pytest --with pytest-cov \
     pytest \
       --doctest-modules \
-      --junitxml=junit/test-results.xml \
       --cov=swcgeom --cov-report=xml --cov-report=html \
       --ignore=examples
