@@ -20,10 +20,15 @@ from typing import Any, Generic, TypeVar, overload
 
 __all__ = ["Transform", "Transforms", "Identity"]
 
-T, K = TypeVar("T"), TypeVar("K")
+T = TypeVar("T")
+K = TypeVar("K")
 
-T1, T2, T3 = TypeVar("T1"), TypeVar("T2"), TypeVar("T3")  # pylint: disable=invalid-name
-T4, T5, T6 = TypeVar("T4"), TypeVar("T5"), TypeVar("T6")  # pylint: disable=invalid-name
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+T3 = TypeVar("T3")
+T4 = TypeVar("T4")
+T5 = TypeVar("T5")
+T6 = TypeVar("T6")
 
 
 class Transform(ABC, Generic[T, K]):
@@ -98,6 +103,11 @@ class Transforms(Transform[T, K]):
     def __init__(self, t1: Transform[T, T1],  t2: Transform[T1, T2],
                        t3: Transform[T2, T3], t4: Transform[T3, T4],
                        t5: Transform[T4, T5], t6: Transform[T5, K], /) -> None: ...
+    @overload
+    def __init__(self, t1: Transform[T, T1],  t2: Transform[T1, T2],
+                       t3: Transform[T2, T3], t4: Transform[T3, T4],
+                       t5: Transform[T4, T5], t6: Transform[T5, T6],
+                       t7: Transform[T6, K], /) -> None: ...
     @overload
     def __init__(self, t1: Transform[T, T1],  t2: Transform[T1, T2],
                        t3: Transform[T2, T3], t4: Transform[T3, T4],
