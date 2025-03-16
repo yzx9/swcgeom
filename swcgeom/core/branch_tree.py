@@ -19,6 +19,7 @@ import itertools
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Self
 
 from swcgeom.core.branch import Branch
 from swcgeom.core.swc_utils import to_sub_topology
@@ -44,7 +45,7 @@ class BranchTree(Tree):
         return self.branches[idx]
 
     @classmethod
-    def from_tree(cls, tree: Tree) -> "BranchTree":
+    def from_tree(cls, tree: Tree) -> Self:
         """Generating a branch tree from tree."""
 
         branches = tree.get_branches()
@@ -69,6 +70,6 @@ class BranchTree(Tree):
         return branch_tree
 
     @classmethod
-    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> "BranchTree":
+    def from_data_frame(cls, df: pd.DataFrame, *args, **kwargs) -> Self:
         tree = super().from_data_frame(df, *args, **kwargs)
         return cls.from_tree(tree)
