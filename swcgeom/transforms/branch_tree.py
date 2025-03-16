@@ -16,6 +16,7 @@
 from collections.abc import Iterable
 
 import numpy as np
+from typing_extensions import override
 
 from swcgeom.core import Branch, BranchTree, Node, Tree
 from swcgeom.transforms.base import Transform
@@ -26,6 +27,7 @@ __all__ = ["BranchTreeAssembler"]
 class BranchTreeAssembler(Transform[BranchTree, Tree]):
     EPS = 1e-6
 
+    @override
     def __call__(self, x: BranchTree) -> Tree:
         nodes = [x.soma().detach()]
         stack = [(x.soma(), 0)]  # n_orig, id_new

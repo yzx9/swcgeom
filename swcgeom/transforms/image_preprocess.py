@@ -19,6 +19,7 @@ import numpy as np
 import numpy.typing as npt
 from scipy.fftpack import fftn, fftshift, ifftn
 from scipy.ndimage import gaussian_filter, minimum_filter
+from typing_extensions import override
 
 from swcgeom.transforms.base import Transform
 
@@ -36,6 +37,7 @@ class SGuoImPreProcess(Transform[npt.NDArray[np.uint8], npt.NDArray[np.uint8]]):
     January 2022, Pages 503–512, https://doi.org/10.1093/bioinformatics/btab638
     """
 
+    @override
     def __call__(self, x: npt.NDArray[np.uint8]) -> npt.NDArray[np.uint8]:
         # TODO: support np.float32
         assert x.dtype == np.uint8, "Image must be in uint8 format"

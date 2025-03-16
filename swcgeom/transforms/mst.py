@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 from numpy import ma
 from numpy import typing as npt
+from typing_extensions import override
 
 from swcgeom.core import Tree, sort_tree
 from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
@@ -74,6 +75,7 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
         self.names = get_names(names)
         self.types = get_types(types)
 
+    @override
     def __call__(  # pylint: disable=too-many-locals
         self,
         points: npt.NDArray[np.floating],
@@ -154,6 +156,7 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
             t = sort_tree(t)
         return t
 
+    @override
     def extra_repr(self) -> str:  # TODO: names, types
         return f"bf={self.bf:.4f}, furcations={self.furcations}, exclude_soma={self.exclude_soma}, sort={self.sort}"
 
@@ -201,5 +204,6 @@ class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
             **kwargs,
         )
 
+    @override
     def extra_repr(self) -> str:
         return f"furcations-{self.furcations}, exclude-soma={self.exclude_soma}"

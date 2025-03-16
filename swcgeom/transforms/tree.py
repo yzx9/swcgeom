@@ -18,7 +18,7 @@
 from collections.abc import Callable
 
 import numpy as np
-from typing_extensions import deprecated
+from typing_extensions import deprecated, override
 
 from swcgeom.core import Branch, BranchTree, DictSWC, Path, Tree, cut_tree, to_subtree
 from swcgeom.core.swc_utils import SWCTypes, get_types
@@ -45,6 +45,7 @@ __all__ = [
 class ToBranchTree(Transform[Tree, BranchTree]):
     """Transform tree to branch tree."""
 
+    @override
     def __call__(self, x: Tree) -> BranchTree:
         return BranchTree.from_tree(x)
 
@@ -55,6 +56,7 @@ class ToLongestPath(Transform[Tree, Path[DictSWC]]):
     def __init__(self, *, detach: bool = True) -> None:
         self.detach = detach
 
+    @override
     def __call__(self, x: Tree) -> Path[DictSWC]:
         paths = x.get_paths()
         idx = np.argmax([p.length() for p in paths])
@@ -70,6 +72,7 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
         self.n_nodes = n_nodes
         self.trans = BranchConvSmoother(n_nodes=n_nodes)
 
+    @override
     def __call__(self, x: Tree) -> Tree:
         x = x.copy()
         for br in x.get_branches():
@@ -81,6 +84,7 @@ class TreeSmoother(Transform[Tree, Tree]):  # pylint: disable=missing-class-docs
 
         return x
 
+    @override
     def extra_repr(self) -> str:
         return f"n_nodes={self.n_nodes}"
 
@@ -108,6 +112,7 @@ class CutByType(Transform[Tree, Tree]):
         super().__init__()
         self.type = type
 
+    @override
     def __call__(self, x: Tree) -> Tree:
         removals = set(x.id()[x.type() != self.type])
 
@@ -120,6 +125,7 @@ class CutByType(Transform[Tree, Tree]):
         y = to_subtree(x, removals)
         return y
 
+    @override
     def extra_repr(self) -> str:
         return f"type={self.type}"
 
@@ -148,6 +154,7 @@ class CutByFurcationOrder(Transform[Tree, Tree]):
     def __init__(self, max_bifurcation_order: int) -> None:
         self.max_furcation_order = max_bifurcation_order
 
+    @override
     def __call__(self, x: Tree) -> Tree:
         return cut_tree(x, enter=self._enter)
 
@@ -204,6 +211,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         if callback is not None:
             self.callbacks.append(callback)
 
+    @override
     def __call__(self, x: Tree) -> Tree:
         removals: list[int] = []
         self.callbacks.append(lambda br: removals.append(br[1].id))
@@ -211,6 +219,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
         self.callbacks.pop()
         return to_subtree(x, removals)
 
+    @override
     def extra_repr(self) -> str:
         return f"threshold={self.thre}"
 
@@ -251,6 +260,7 @@ class Resampler(Transform[Tree, Tree]):
         self.resampler = branch_resampler
         self.assembler = BranchTreeAssembler()
 
+    @override
     def __call__(self, x: Tree) -> Tree:
         t = BranchTree.from_tree(x)
         t.branches = {

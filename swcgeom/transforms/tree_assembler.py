@@ -20,6 +20,7 @@ from copy import copy
 
 import numpy as np
 import pandas as pd
+from typing_extensions import override
 
 from swcgeom.core import Tree
 from swcgeom.core.swc_utils import (
@@ -50,6 +51,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         self.thre = thre
         self.undirected = undirected
 
+    @override
     def __call__(
         self, lines: Iterable[pd.DataFrame], *, names: SWCNames | None = None
     ):  # TODO check this
@@ -123,7 +125,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         Parameters
         ----------
         lines : List of ~pd.DataFrame
-            An array of tables containing a line, columns should follwing
+            An array of tables containing a line, columns should following
             the swc.
         id_offset : int, default `0`
             The offset of the line node id.
@@ -184,5 +186,6 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
 
         return tree, lines
 
+    @override
     def extra_repr(self) -> str:
         return f"thre={self.thre}, undirected={self.undirected}"

@@ -15,6 +15,8 @@
 
 """Transformation in path."""
 
+from typing_extensions import override
+
 from swcgeom.core import Path, Tree, redirect_tree
 from swcgeom.transforms.base import Transform
 
@@ -24,6 +26,7 @@ __all__ = ["PathToTree", "PathReverser"]
 class PathToTree(Transform[Path, Tree]):
     """Transform path to tree."""
 
+    @override
     def __call__(self, x: Path) -> Tree:
         t = Tree(
             x.number_of_nodes(),
@@ -55,6 +58,7 @@ class PathReverser(Transform[Path, Path]):
         super().__init__()
         self.to_tree = PathToTree()
 
+    @override
     def __call__(self, x: Path) -> Path:
         x[0].type, x[-1].type = x[-1].type, x[0].type
         t = self.to_tree(x)

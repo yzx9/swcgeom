@@ -21,6 +21,7 @@ from typing import cast
 import numpy as np
 import numpy.typing as npt
 from scipy import signal
+from typing_extensions import override
 
 from swcgeom.core import Branch, DictSWC
 from swcgeom.transforms.base import Transform
@@ -40,13 +41,13 @@ __all__ = ["BranchLinearResampler", "BranchConvSmoother", "BranchStandardizer"]
 class _BranchResampler(Transform[Branch, Branch], ABC):
     r"""Resample branch."""
 
+    @override
     def __call__(self, x: Branch) -> Branch:
         xyzr = self.resample(x.xyzr())
         return Branch.from_xyzr(xyzr)
 
     @abstractmethod
-    def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
-        raise NotImplementedError()
+    def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]: ...
 
 
 class BranchLinearResampler(_BranchResampler):
@@ -63,6 +64,7 @@ class BranchLinearResampler(_BranchResampler):
         super().__init__()
         self.n_nodes = n_nodes
 
+    @override
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Resampling by linear interpolation, DO NOT keep original node.
 
@@ -87,6 +89,7 @@ class BranchLinearResampler(_BranchResampler):
         r = np.interp(xvals, xp, xyzr[:, 3])
         return cast(npt.NDArray[np.float32], np.stack([x, y, z, r], axis=1))
 
+    @override
     def extra_repr(self) -> str:
         return f"n_nodes={self.n_nodes}"
 
@@ -97,6 +100,7 @@ class BranchIsometricResampler(_BranchResampler):
         self.distance = distance
         self.adjust_last_gap = adjust_last_gap
 
+    @override
     def resample(self, xyzr: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Resampling by isometric interpolation, DO NOT keep original node.
 
@@ -138,6 +142,7 @@ class BranchIsometricResampler(_BranchResampler):
         new_xyzr[:, 3] = np.interp(new_distances, cumulative_distances, xyzr[:, 3])
         return new_xyzr
 
+    @override
     def extra_repr(self) -> str:
         return f"distance={self.distance},adjust_last_gap={self.adjust_last_gap}"
 
@@ -156,6 +161,7 @@ class BranchConvSmoother(Transform[Branch, Branch[DictSWC]]):
         self.n_nodes = n_nodes
         self.kernel = np.ones(n_nodes)
 
+    @override
     def __call__(self, x: Branch) -> Branch[DictSWC]:
         x = x.detach()
         c = signal.convolve(np.ones(x.number_of_nodes()), self.kernel, mode="same")
@@ -177,6 +183,7 @@ class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
     y, and scale max radius to 1.
     """
 
+    @override
     def __call__(self, x: Branch) -> Branch:
         xyzr = x.xyzr()
         xyz, r = xyzr[:, 0:3], xyzr[:, 3:4]
@@ -205,9 +212,9 @@ class BranchStandardizer(Transform[Branch, Branch[DictSWC]]):
             An homogeneous transformation matrix of shape (4, 4).
         """
 
-        assert (
-            xyz.ndim == 2 and xyz.shape[1] == 3
-        ), f"xyz should be of shape (N, 3), got {xyz.shape}"
+        assert xyz.ndim == 2 and xyz.shape[1] == 3, (
+            f"xyz should be of shape (N, 3), got {xyz.shape}"
+        )
 
         xyz = xyz[:, :3]
         T = np.identity(4)

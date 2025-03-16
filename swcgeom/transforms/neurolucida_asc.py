@@ -20,6 +20,8 @@ import re
 from enum import Enum, auto
 from typing import IO, Any, NamedTuple, cast
 
+from typing_extensions import override
+
 from swcgeom.core import Tree
 from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
 from swcgeom.transforms.base import Transform
@@ -30,6 +32,7 @@ __all__ = ["NeurolucidaAscToSwc"]
 class NeurolucidaAscToSwc(Transform[str, Tree]):
     """Convert neurolucida asc format to swc format."""
 
+    @override
     def __call__(self, x: str) -> Tree:
         return self.convert(x)
 

@@ -20,6 +20,7 @@ from typing import Generic, Literal, TypeVar
 
 import numpy as np
 import numpy.typing as npt
+from typing_extensions import override
 
 from swcgeom.core import DictSWC
 from swcgeom.core.swc_utils import SWCNames
@@ -63,6 +64,7 @@ class Normalizer(Generic[T], Transform[T, T]):
                 DeprecationWarning,
             )
 
+    @override
     def __call__(self, x: T) -> T:
         """Scale the `x`, `y`, `z`, `r` of nodes to 0-1."""
         new_tree = x.copy()
@@ -87,6 +89,7 @@ class RadiusReseter(Generic[T], Transform[T, T]):
         new_tree.ndata[new_tree.names.r] = r
         return new_tree
 
+    @override
     def extra_repr(self) -> str:
         return f"r={self.r:.4f}"
 
@@ -122,6 +125,7 @@ class AffineTransform(Generic[T], Transform[T, T]):
                 DeprecationWarning,
             )
 
+    @override
     def __call__(self, x: T) -> T:
         match self.center:
             case "root" | "soma":
@@ -156,6 +160,7 @@ class Translate(Generic[T], AffineTransform[T]):
         super().__init__(translate3d(tx, ty, tz), **kwargs)
         self.tx, self.ty, self.tz = tx, ty, tz
 
+    @override
     def extra_repr(self) -> str:
         return f"tx={self.tx:.4f}, ty={self.ty:.4f}, tz={self.tz:.4f}"
 
@@ -209,6 +214,7 @@ class Rotate(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
+    @override
     def extra_repr(self) -> str:
         return f"n={self.n}, theta={self.theta:.4f}, center={self.center}"  # TODO: improve format of n
 
@@ -231,6 +237,7 @@ class RotateX(Generic[T], AffineTransform[T]):
         super().__init__(rotate3d_x(theta), center=center, **kwargs)
         self.theta = theta
 
+    @override
     def extra_repr(self) -> str:
         return f"center={self.center}, theta={self.theta:.4f}"
 
@@ -247,6 +254,7 @@ class RotateY(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
+    @override
     def extra_repr(self) -> str:
         return f"theta={self.theta:.4f}, center={self.center}"
 
@@ -263,6 +271,7 @@ class RotateZ(Generic[T], AffineTransform[T]):
         self.theta = theta
         self.center = center
 
+    @override
     def extra_repr(self) -> str:
         return f"theta={self.theta:.4f}, center={self.center}"
 

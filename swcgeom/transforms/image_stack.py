@@ -41,7 +41,7 @@ from sdflit import (
     SDFObject,
 )
 from tqdm import tqdm
-from typing_extensions import deprecated
+from typing_extensions import deprecated, override
 
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
@@ -69,6 +69,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         self.resolution = np.array(resolution, dtype=np.float32)
         assert len(self.resolution) == 3, "resolution should be vector of 3d."
 
+    @override
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.
 
@@ -150,6 +151,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             if not os.path.isfile(tif):
                 self.transform_and_save(tif, tree, verbose=False)
 
+    @override
     def extra_repr(self) -> str:
         res = ",".join(f"{a:.4f}" for a in self.resolution)
         return f"resolution=({res})"

@@ -18,6 +18,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, TypeVar, overload
 
+from typing_extensions import override
+
 __all__ = ["Transform", "Transforms", "Identity"]
 
 T = TypeVar("T")
@@ -123,6 +125,7 @@ class Transforms(Transform[T, K]):
                 trans.append(t)
         self.transforms = trans
 
+    @override
     def __call__(self, x: T) -> K:
         """Apply transforms."""
         for transform in self.transforms:
@@ -136,6 +139,7 @@ class Transforms(Transform[T, K]):
     def __len__(self) -> int:
         return len(self.transforms)
 
+    @override
     def extra_repr(self) -> str:
         return ", ".join([str(transform) for transform in self])
 
@@ -143,5 +147,6 @@ class Transforms(Transform[T, K]):
 class Identity(Transform[T, T]):
     """Resurn input as-is."""
 
+    @override
     def __call__(self, x: T) -> T:
         return x

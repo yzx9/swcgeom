@@ -15,6 +15,8 @@
 
 """Transformation in population."""
 
+from typing_extensions import override
+
 from swcgeom.core import Population, Tree
 from swcgeom.transforms.base import Transform
 
@@ -28,6 +30,7 @@ class PopulationTransform(Transform[Population, Population]):
         super().__init__()
         self.transform = transform
 
+    @override
     def __call__(self, population: Population) -> Population:
         trees: list[Tree] = []
         for t in population:
@@ -38,5 +41,6 @@ class PopulationTransform(Transform[Population, Population]):
 
         return Population(trees, root=population.root)
 
+    @override
     def extra_repr(self) -> str:
         return f"transform={self.transform}"

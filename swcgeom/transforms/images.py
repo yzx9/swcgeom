@@ -17,7 +17,7 @@
 
 import numpy as np
 import numpy.typing as npt
-from typing_extensions import deprecated
+from typing_extensions import deprecated, override
 
 from swcgeom.transforms.base import Identity, Transform
 
@@ -49,12 +49,14 @@ class ImagesCenterCrop(Transform[NDArrayf32, NDArrayf32]):
             else (shape_out, shape_out, shape_out)
         )
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         diff = np.subtract(x.shape[:3], self.shape_out)
         s = diff // 2
         e = np.add(s, self.shape_out)
         return x[s[0] : e[0], s[1] : e[1], s[2] : e[2], :]
 
+    @override
     def extra_repr(self) -> str:
         return f"shape_out=({','.join(str(a) for a in self.shape_out)})"
 
@@ -73,9 +75,11 @@ class ImagesScale(Transform[NDArrayf32, NDArrayf32]):
         super().__init__()
         self.scaler = scaler
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return self.scaler * x
 
+    @override
     def extra_repr(self) -> str:
         return f"scaler={self.scaler}"
 
@@ -85,9 +89,11 @@ class ImagesClip(Transform[NDArrayf32, NDArrayf32]):
         super().__init__()
         self.vmin, self.vmax = vmin, vmax
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return np.clip(x, self.vmin, self.vmax)
 
+    @override
     def extra_repr(self) -> str:
         return f"vmin={self.vmin}, vmax={self.vmax}"
 
@@ -99,9 +105,11 @@ class ImagesFlip(Transform[NDArrayf32, NDArrayf32]):
         super().__init__()
         self.axis = axis
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return np.flip(x, axis=self.axis)
 
+    @override
     def extra_repr(self) -> str:
         return f"axis={self.axis}"
 
@@ -127,6 +135,7 @@ class ImagesFlipY(ImagesFlip):
 class ImagesNormalizer(Transform[NDArrayf32, NDArrayf32]):
     """Normalize image stack."""
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         mean = np.mean(x)
         variance = np.var(x)
@@ -146,9 +155,11 @@ class ImagesMeanVarianceAdjustment(Transform[NDArrayf32, NDArrayf32]):
         self.mean = mean
         self.variance = variance
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return (x - self.mean) / self.variance
 
+    @override
     def extra_repr(self) -> str:
         return f"mean={self.mean}, variance={self.variance}"
 
@@ -176,9 +187,11 @@ class ImagesScaleToUnitRange(Transform[NDArrayf32, NDArrayf32]):
         self.clip = clip
         self.post = ImagesClip(0, 1) if self.clip else Identity()
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         return self.post((x - self.vmin) / self.diff)
 
+    @override
     def extra_repr(self) -> str:
         return f"vmin={self.vmin}, vmax={self.vmax}, clip={self.clip}"
 
@@ -195,6 +208,7 @@ class ImagesHistogramEqualization(Transform[NDArrayf32, NDArrayf32]):
         super().__init__()
         self.bins = bins
 
+    @override
     def __call__(self, x: NDArrayf32) -> NDArrayf32:
         # get image histogram
         hist, bin_edges = np.histogram(x.flatten(), self.bins, density=True)
@@ -205,5 +219,6 @@ class ImagesHistogramEqualization(Transform[NDArrayf32, NDArrayf32]):
         equalized = np.interp(x.flatten(), bin_edges[:-1], cdf)
         return equalized.reshape(x.shape).astype(np.float32)
 
+    @override
     def extra_repr(self) -> str:
         return f"bins={self.bins}"
