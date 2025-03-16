@@ -52,7 +52,7 @@ def contrast_std(image: Array3D, contrast: float) -> Array3D:
     Parameters
     ----------
     imgs : ndarray
-    constrast : float
+    contrast : float
         The contrast adjustment factor. 1.0 leaves the image unchanged.
 
     Returns

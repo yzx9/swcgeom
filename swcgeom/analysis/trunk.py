@@ -138,7 +138,7 @@ def create_bound_2d(ts: Iterable[Tree], bound: Bounds, **kwargs) -> Patch:
         return create_aabb_2d(xy, **kwargs)
     if bound == "ellipse":
         return create_ellipse_2d(xy, **kwargs)
-    raise ValueError(f"unsupport bound `{bound}` in 2d projection")
+    raise ValueError(f"unsupported bound `{bound}` in 2d projection")
 
 
 def create_aabb_2d(xy: npt.NDArray, fill: bool = False, **kwargs) -> Rectangle:

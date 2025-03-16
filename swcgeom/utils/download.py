@@ -95,7 +95,7 @@ def _clone_index_page(url: str, index_url: str, dist_dir: str, override: bool) -
     dist = os.path.join(dist_dir, filepath)
     if os.path.exists(dist):
         if not override:
-            logging.info("downloader: file `%s` exits, skiped.", dist)
+            logging.info("downloader: file `%s` exits, skipped.", dist)
             return
 
         logging.info("downloader: file `%s` exits, deleted.", dist)

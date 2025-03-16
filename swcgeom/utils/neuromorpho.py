@@ -445,10 +445,10 @@ class NeuroMorpho:
         if keys is None:
             with env_m.begin() as tx_m:
                 if override:
-                    keys = [k for k, v in tx_m.cursor()]
+                    keys = [k for k, _ in tx_m.cursor()]
                 else:
                     with env_c.begin() as tx:
-                        keys = [k for k, v in tx_m.cursor() if tx.get(k) is None]
+                        keys = [k for k, _ in tx_m.cursor() if tx.get(k) is None]
 
         err_keys = []
         for k in tqdm(keys) if self.verbose else keys:

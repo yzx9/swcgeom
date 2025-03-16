@@ -20,6 +20,7 @@ from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
+
 from swcgeom.core import Branch, Compartment, Node, Tree
 
 __all__ = ["LMeasure"]
@@ -178,9 +179,9 @@ class LMeasure:
         """
 
         children = n.children()
-        assert (
-            len(children) == 2
-        ), "Partition asymmetry is only defined for bifurcations"
+        assert len(children) == 2, (
+            "Partition asymmetry is only defined for bifurcations"
+        )
         n1 = len(children[0].subtree().get_tips())
         n2 = len(children[1].subtree().get_tips())
         if n1 == n2:
@@ -687,7 +688,7 @@ class LMeasure:
         return order
 
     def terminal_degree(self, node: Tree.Node) -> int:
-        """The number of tips of the comparment.
+        """The number of tips of the compartment.
 
         This function gives the total number of tips that each
         compartment will terminate into.

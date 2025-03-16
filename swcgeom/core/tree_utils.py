@@ -46,7 +46,8 @@ __all__ = [
     "cat_tree",
 ]
 
-T, K = TypeVar("T"), TypeVar("K")
+T = TypeVar("T")
+K = TypeVar("K")
 EPS = 1e-5
 
 
@@ -232,8 +233,8 @@ def cat_tree(  # pylint: disable=too-many-arguments
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     tree1 : Tree
     tree2 : Tree
     node1 : int, default `0`
@@ -241,7 +242,7 @@ def cat_tree(  # pylint: disable=too-many-arguments
     node2 : int, default `0`
         The node id of the connection point.
     translate : bool, default `True`
-        Wheather to translate node_2 to node_1. If False, add link
+        Weather to translate node_2 to node_1. If False, add link
         between node_1 and node_2 without translate.
     """
     if no_move is not None:

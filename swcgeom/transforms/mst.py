@@ -83,8 +83,8 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
         names: Optional[SWCNames] = None,
     ) -> Tree:
         """
-        Paramters
-        ---------
+        Parameters
+        ----------
         points : array of shape (N, 3)
             Positions of points cloud.
         soma : array of shape (3,), default `None`

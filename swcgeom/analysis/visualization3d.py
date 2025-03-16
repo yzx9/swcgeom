@@ -58,7 +58,7 @@ def draw3d(
     fig : ~matplotlib.axes.Figure, optional
     ax : ~matplotlib.axes.Axes, optional
     show : bool | None, default `None`
-        Wheather to call `plt.show()`. If not specified, it will depend
+        Weather to call `plt.show()`. If not specified, it will depend
         on if ax is passed in, it will not be called, otherwise it will
         be called by default.
     color : dict[int, str] | "vaa3d" | str, optional

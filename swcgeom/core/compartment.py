@@ -60,7 +60,7 @@ T = TypeVar("T", bound=Compartment)
 
 
 class Compartments(list[T]):
-    r"""Comparments contains a set of comparment."""
+    r"""Comparments contains a set of compartment."""
 
     names: SWCNames
 

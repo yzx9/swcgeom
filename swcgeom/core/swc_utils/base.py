@@ -34,7 +34,8 @@ __all__ = [
     "traverse",
 ]
 
-T, K = TypeVar("T"), TypeVar("K")
+T = TypeVar("T")
+K = TypeVar("K")
 Topology = tuple[npt.NDArray[np.int32], npt.NDArray[np.int32]]  # (id, pid)
 
 

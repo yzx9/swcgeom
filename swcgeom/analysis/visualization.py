@@ -1,4 +1,5 @@
 # Copyright 2022-2025 Zexin Yuan
+
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -69,7 +70,7 @@ def draw(
     fig : ~matplotlib.axes.Figure, optional
     ax : ~matplotlib.axes.Axes, optional
     show : bool | None, default `None`
-        Wheather to call `plt.show()`. If not specified, it will depend
+        Weather to call `plt.show()`. If not specified, it will depend
         on if ax is passed in, it will not be called, otherwise it will
         be called by default.
     camera : CameraOptions | CameraPreset, default "xy"

@@ -205,7 +205,7 @@ class SWCLike(ABC):
             fname = swc_path
 
         extra_cols = extra_cols or []
-        extra_cols.extend(k for k, t in eswc_cols)
+        extra_cols.extend(k for k, _ in eswc_cols)
         return self.to_swc(fname, extra_cols=extra_cols, **kwargs)  # type: ignore
 
 

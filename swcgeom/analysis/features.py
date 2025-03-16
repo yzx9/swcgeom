@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-"""Feature anlysis of tree."""
+"""Feature analysis of tree."""
 
 from abc import ABC, abstractmethod
 from functools import cached_property

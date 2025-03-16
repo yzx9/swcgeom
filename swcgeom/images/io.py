@@ -320,7 +320,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     -----
     Terafly and Vaa3d use a especial right-handed coordinate system
     (with origin point in the left-top and z-axis points front), but we
-    flip y-axis to makes it a left-handed coordinate system (with orgin
+    flip y-axis to makes it a left-handed coordinate system (with origin
     point in the left-bottom and z-axis points front). If you need to
     use its coordinate system, remember to FLIP Y-AXIS BACK.
     """
@@ -342,7 +342,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
             Forwarding to `functools.lru_cache`. A decompressed array
             size of (256, 256, 256, 1), which is the typical size of
             terafly image stack, takes about 256 * 256 * 256 * 1 *
-            4B = 64MB. A cache size of 128 requires about 8GB memeory.
+            4B = 64MB. A cache size of 128 requires about 8GB memory.
         """
 
         super().__init__()
@@ -596,7 +596,7 @@ class GrayImageStack:
             return v[:, 0]
         if v.ndim == 1:
             return v[0]
-        raise ValueError("unsupport key")
+        raise ValueError("unsupported key")
 
     def get_full(self) -> npt.NDArray[np.float32]:
         """Get full image stack.

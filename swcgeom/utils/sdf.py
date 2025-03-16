@@ -285,8 +285,8 @@ class SDFRoundCone(SDF):
     ) -> None:
         """SDF of round cone.
 
-        Parmeters
-        ---------
+        Parameters
+        ----------
         a, b : ArrayLike
             Coordinates of point A/B of shape (3,).
         ra, rb : float

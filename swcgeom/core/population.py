@@ -54,8 +54,8 @@ class LazyLoadingTrees:
 
     def __init__(self, swcs: Iterable[str], **kwargs) -> None:
         """
-        Paramters
-        ---------
+        Parameters
+        ----------
         swcs : List of str
         kwargs : dict[str, Any]
             Forwarding to `Tree.from_swc`
@@ -230,7 +230,7 @@ class Population:
         **kwargs,
     ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
-        extra_cols.extend(k for k, t in eswc_cols)
+        extra_cols.extend(k for k, _ in eswc_cols)
         return cls.from_swc(root, ext, extra_cols=extra_cols, **kwargs)
 
     @staticmethod
@@ -259,9 +259,9 @@ class Populations:
         self.populations = list(populations)
 
         labels = list(labels) if labels is not None else ["" for i in populations]
-        assert len(labels) == len(
-            self.populations
-        ), f"got {len( self.populations)} populations, but has {len(labels)} labels"
+        assert len(labels) == len(self.populations), (
+            f"got {len(self.populations)} populations, but has {len(labels)} labels"
+        )
         self.labels = labels
 
     # fmt:off
@@ -345,7 +345,7 @@ class Populations:
         **kwargs,
     ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
-        extra_cols.extend(k for k, t in eswc_cols)
+        extra_cols.extend(k for k, _ in eswc_cols)
         return cls.from_swc(roots, extra_cols=extra_cols, ext=ext, **kwargs)
 
 

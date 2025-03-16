@@ -36,7 +36,8 @@ from swcgeom.utils import PathOrIO, padding1d
 
 __all__ = ["Tree"]
 
-T, K = TypeVar("T"), TypeVar("K")
+T = TypeVar("T")
+K = TypeVar("K")
 
 
 class Tree(DictSWC):
