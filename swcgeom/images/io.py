@@ -231,13 +231,13 @@ class NDArrayImageStack(ImageStack[ScalarType]):
             if np.issubdtype(dtype, np.floating) and np.issubdtype(
                 dtype_raw, np.unsignedinteger
             ):
-                sclar_factor = 1.0 / UINT_MAX[dtype_raw]
-                imgs = sclar_factor * imgs.astype(dtype)
+                scalar_factor = 1.0 / UINT_MAX[dtype_raw]
+                imgs = scalar_factor * imgs.astype(dtype)
             elif np.issubdtype(dtype, np.unsignedinteger) and np.issubdtype(
                 dtype_raw, np.floating
             ):
-                sclar_factor = UINT_MAX[dtype]  # type: ignore
-                imgs *= (sclar_factor * imgs).astype(dtype)
+                scalar_factor = UINT_MAX[dtype]  # type: ignore
+                imgs *= (scalar_factor * imgs).astype(dtype)
             else:
                 imgs = imgs.astype(dtype)
 
@@ -284,26 +284,22 @@ class NrrdImageStack(NDArrayImageStack[ScalarType]):
 class V3dImageStack(NDArrayImageStack[ScalarType]):
     """v3d image stack."""
 
-    def __init__(
-        self, fname: str, loader: Raw | PBD, *, dtype: ScalarType, **kwargs
-    ) -> None:
-        r = loader()
+    def __init_subclass__(cls, loader: Raw | PBD) -> None:
+        super().__init_subclass__()
+        cls._loader = loader
+
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
+        r = self._loader()
         imgs = r.load(fname)
         super().__init__(imgs, dtype=dtype, **kwargs)
 
 
-class V3drawImageStack(V3dImageStack[ScalarType]):
+class V3drawImageStack(V3dImageStack[ScalarType], loader=Raw):
     """v3draw image stack."""
 
-    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
-        super().__init__(fname, loader=Raw, dtype=dtype, **kwargs)
 
-
-class V3dpbdImageStack(V3dImageStack[ScalarType]):
+class V3dpbdImageStack(V3dImageStack[ScalarType], loader=PBD):
     """v3dpbd image stack."""
-
-    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
-        super().__init__(fname, loader=PBD, dtype=dtype, **kwargs)
 
 
 class TeraflyImageStack(ImageStack[ScalarType]):
