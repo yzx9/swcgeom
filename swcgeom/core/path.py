@@ -56,15 +56,12 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def __repr__(self) -> str:
         return f"Neuron path with {len(self)} nodes."
 
-    # fmt:off
     @overload
     def __getitem__(self, key: int) -> Node: ...
     @overload
     def __getitem__(self, key: slice) -> list[Node]: ...
     @overload
     def __getitem__(self, key: str) -> npt.NDArray: ...
-    # fmt:on
-
     def __getitem__(self, key):
         if isinstance(key, slice):
             return [self.node(i) for i in range(*key.indices(len(self)))]

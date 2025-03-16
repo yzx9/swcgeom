@@ -41,13 +41,21 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
     files: list[str]
     transform: Transform[npt.NDArray[ScalarType], T]
 
-    # fmt: off
     @overload
-    def __init__(self, files: Iterable[str], *,                    transform: Optional[Transform[npt.NDArray[np.float32], T]] = None) -> None: ...
+    def __init__(
+        self,
+        files: Iterable[str],
+        *,
+        transform: Optional[Transform[npt.NDArray[np.float32], T]] = ...,
+    ) -> None: ...
     @overload
-    def __init__(self, files: Iterable[str], *, dtype: ScalarType, transform: Optional[Transform[npt.NDArray[ScalarType], T]] = None) -> None: ...
-    # fmt: on
-
+    def __init__(
+        self,
+        files: Iterable[str],
+        *,
+        dtype: ScalarType,
+        transform: Optional[Transform[npt.NDArray[ScalarType], T]] = ...,
+    ) -> None: ...
     def __init__(self, files: Iterable[str], *, dtype=None, transform=None) -> None:
         super().__init__()
         self.files = list(files)

@@ -83,23 +83,31 @@ class Features:
 
     tree: Tree
 
-    # fmt:off
     # Modules
     @cached_property
-    def node_features(self) -> NodeFeatures: return NodeFeatures(self.tree)
+    def node_features(self) -> NodeFeatures:
+        return NodeFeatures(self.tree)
+
     @cached_property
-    def furcation_features(self) -> FurcationFeatures: return FurcationFeatures(self.node_features)
+    def furcation_features(self) -> FurcationFeatures:
+        return FurcationFeatures(self.node_features)
+
     @cached_property
-    def tip_features(self) -> TipFeatures: return TipFeatures(self.node_features)
+    def tip_features(self) -> TipFeatures:
+        return TipFeatures(self.node_features)
+
     @cached_property
-    def branch_features(self) -> BranchFeatures: return BranchFeatures(self.tree)
+    def branch_features(self) -> BranchFeatures:
+        return BranchFeatures(self.tree)
+
     @cached_property
-    def path_features(self) -> PathFeatures: return PathFeatures(self.tree)
+    def path_features(self) -> PathFeatures:
+        return PathFeatures(self.tree)
 
     # Caches
     @cached_property
-    def sholl(self) -> Sholl: return Sholl(self.tree)
-    # fmt:on
+    def sholl(self) -> Sholl:
+        return Sholl(self.tree)
 
     def __init__(self, tree: Tree) -> None:
         self.tree = tree
@@ -136,14 +144,12 @@ class Features:
 class FeatureExtractor(ABC):
     """Extract features from tree."""
 
-    # fmt:off
     @overload
     def get(self, feature: Feature, **kwargs) -> NDArrayf32: ...
     @overload
     def get(self, feature: list[FeatAndKwargs]) -> list[NDArrayf32]: ...
     @overload
     def get(self, feature: dict[Feature, dict[str, Any]]) -> dict[str, NDArrayf32]: ...
-    # fmt:on
     def get(self, feature, **kwargs):
         """Get feature.
 

@@ -88,16 +88,22 @@ class Tree(DictSWC):
         def is_soma(self) -> bool:  # TODO: support multi soma, e.g. 3 points
             return self.type == self.attach.types.soma and self.is_root()
 
-        # fmt: off
         @overload
-        def traverse(self, *, enter: Callable[[Node, T | None], T], mode: Literal["dfs"] = ...) -> None: ...
+        def traverse(
+            self, *, enter: Callable[[Node, T | None], T], mode: Literal["dfs"] = ...
+        ) -> None: ...
         @overload
-        def traverse(self, *, leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...) -> K: ...
-        @overload
-        def traverse(self, *,
-            enter: Callable[[Node, T | None], T], leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...,
+        def traverse(
+            self, *, leave: Callable[[Node, list[K]], K], mode: Literal["dfs"] = ...
         ) -> K: ...
-        # fmt: on
+        @overload
+        def traverse(
+            self,
+            *,
+            enter: Callable[[Node, T | None], T],
+            leave: Callable[[Node, list[K]], K],
+            mode: Literal["dfs"] = ...,
+        ) -> K: ...
         def traverse(self, **kwargs):  # type: ignore
             """Traverse from node.
 
@@ -163,14 +169,12 @@ class Tree(DictSWC):
         n_nodes, n_edges = self.number_of_nodes(), self.number_of_edges()
         return f"Neuron Tree with {n_nodes} nodes and {n_edges} edges"
 
-    # fmt:off
     @overload
     def __getitem__(self, key: slice) -> list[Node]: ...
     @overload
     def __getitem__(self, key: int) -> Node: ...
     @overload
     def __getitem__(self, key: str) -> npt.NDArray: ...
-    # fmt:on
     def __getitem__(self, key):
         if isinstance(key, slice):
             return [self.node(i) for i in range(*key.indices(len(self)))]
@@ -292,22 +296,31 @@ class Tree(DictSWC):
         children = self.soma(type_check).children()
         return (n.subtree() for n in children if n.type in types)
 
-    # fmt: off
     @overload
-    def traverse(self, *,
-                 enter: Callable[[Node, T | None], T],
-                 root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> None: ...
+    def traverse(
+        self,
+        *,
+        enter: Callable[[Node, T | None], T],
+        root: int | np.integer = ...,
+        mode: Literal["dfs"] = ...,
+    ) -> None: ...
     @overload
-    def traverse(self, *,
-                 leave: Callable[[Node, list[K]], K],
-                 root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
+    def traverse(
+        self,
+        *,
+        leave: Callable[[Node, list[K]], K],
+        root: int | np.integer = ...,
+        mode: Literal["dfs"] = ...,
+    ) -> K: ...
     @overload
-    def traverse(self, *,
-                 enter: Callable[[Node, T | None], T],
-                 leave: Callable[[Node, list[K]], K],
-                 root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
-    # fmt: on
-
+    def traverse(
+        self,
+        *,
+        enter: Callable[[Node, T | None], T],
+        leave: Callable[[Node, list[K]], K],
+        root: int | np.integer = ...,
+        mode: Literal["dfs"] = ...,
+    ) -> K: ...
     def traverse(self, *, enter=None, leave=None, **kwargs):
         """Traverse nodes.
 

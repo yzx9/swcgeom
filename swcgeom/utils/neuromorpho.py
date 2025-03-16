@@ -140,7 +140,7 @@ DOWNLOAD_CONFIGS: dict[RESOURCES, tuple[str, int]] = {
     "log_source": (URL_LOG_SOURCE, 512 * GB),
 }
 
-# fmt:off
+# fmt: off
 # Test version: 8.5.25 (2023-08-01)
 # No ETAs for future version
 invalid_ids = [

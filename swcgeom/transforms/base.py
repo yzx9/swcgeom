@@ -84,7 +84,7 @@ class Transforms(Transform[T, K]):
 
     transforms: list[Transform[Any, Any]]
 
-    # fmt:off
+    # fmt: off
     @overload
     def __init__(self, t1: Transform[T, K], /) -> None: ...
     @overload
@@ -113,7 +113,7 @@ class Transforms(Transform[T, K]):
                        t3: Transform[T2, T3], t4: Transform[T3, T4],
                        t5: Transform[T4, T5], t6: Transform[T5, T6],
                        t7: Transform[T6, Any], /, *transforms: Transform[Any, K]) -> None: ...
-    # fmt:on
+    # fmt: on
     def __init__(self, *transforms: Transform[Any, Any]) -> None:
         trans = []
         for t in transforms:

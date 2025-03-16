@@ -48,21 +48,29 @@ class Camera:
     _look_at: Vec3f
     _up: Vec3f
 
-    # fmt: off
     @property
-    def position(self) -> Vec3f:    return self._position
-    @property
-    def look_at(self) -> Vec3f:     return self._look_at
-    @property
-    def up(self) -> Vec3f:          return self._up
+    def position(self) -> Vec3f:
+        return self._position
 
     @property
-    def MV(self) -> npt.NDArray[np.float32]:    raise NotImplementedError()
+    def look_at(self) -> Vec3f:
+        return self._look_at
+
     @property
-    def P(self) -> npt.NDArray[np.float32]:     raise NotImplementedError()
+    def up(self) -> Vec3f:
+        return self._up
+
     @property
-    def MVP(self) -> npt.NDArray[np.float32]:   return self.P.dot(self.MV)
-    # fmt: on
+    def MV(self) -> npt.NDArray[np.float32]:
+        raise NotImplementedError()
+
+    @property
+    def P(self) -> npt.NDArray[np.float32]:
+        raise NotImplementedError()
+
+    @property
+    def MVP(self) -> npt.NDArray[np.float32]:
+        return self.P.dot(self.MV)
 
 
 class SimpleCamera(Camera):

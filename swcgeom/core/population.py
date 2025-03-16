@@ -39,10 +39,8 @@ T = TypeVar("T")
 class Trees(Protocol):
     """Trees protocol support index and len."""
 
-    # fmt: off
     def __getitem__(self, key: int, /) -> Tree: ...
     def __len__(self) -> int: ...
-    # fmt: on
 
 
 class LazyLoadingTrees:
@@ -130,13 +128,12 @@ class Population:
 
     trees: Trees
 
-    # fmt: off
     @overload
-    def __init__(self, swcs: Iterable[str], lazy_loading: bool = ..., root: str = ..., **kwargs) -> None: ...
+    def __init__(
+        self, swcs: Iterable[str], lazy_loading: bool = ..., root: str = ..., **kwargs
+    ) -> None: ...
     @overload
     def __init__(self, trees: Trees, /, *, root: str = "") -> None: ...
-    # fmt: on
-
     def __init__(self, swcs, lazy_loading=True, root="", **kwargs) -> None:
         super().__init__()
         if len(swcs) > 0 and isinstance(swcs[0], str):
@@ -161,12 +158,10 @@ class Population:
         if len(swcs) == 0:
             warnings.warn(f"no trees in population from '{root}'")
 
-    # fmt:off
     @overload
     def __getitem__(self, key: slice) -> Trees: ...
     @overload
     def __getitem__(self, key: int) -> Tree: ...
-    # fmt:on
     def __getitem__(self, key: int | slice):
         if isinstance(key, slice):
             trees = NestTrees(self.trees, range(*key.indices(len(self))))
@@ -264,12 +259,10 @@ class Populations:
         )
         self.labels = labels
 
-    # fmt:off
     @overload
     def __getitem__(self, key: slice) -> list[list[Tree]]: ...
     @overload
     def __getitem__(self, key: int) -> list[Tree]: ...
-    # fmt:on
     def __getitem__(self, key):
         return [p[key] for p in self.populations]
 
@@ -360,9 +353,7 @@ def _get_idx(key: int, length: int) -> int:
 
 
 # experimental
-def filter_population(
-    pop: Population, predicate: Callable[[Tree], bool]
-) -> "Population":
+def filter_population(pop: Population, predicate: Callable[[Tree], bool]) -> Population:
     """Filter trees in the population."""
 
     # TODO: how to avoid load trees

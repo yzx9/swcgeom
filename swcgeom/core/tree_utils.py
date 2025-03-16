@@ -66,12 +66,14 @@ def sort_tree(tree: Tree) -> Tree:
     return _sort_tree(tree.copy())
 
 
-# fmt:off
 @overload
-def cut_tree(tree: Tree, *, enter: Callable[[Tree.Node, T | None], tuple[T, bool]]) -> Tree: ...
+def cut_tree(
+    tree: Tree, *, enter: Callable[[Tree.Node, T | None], tuple[T, bool]]
+) -> Tree: ...
 @overload
-def cut_tree(tree: Tree, *, leave: Callable[[Tree.Node, list[K]], tuple[K, bool]]) -> Tree: ...
-# fmt:on
+def cut_tree(
+    tree: Tree, *, leave: Callable[[Tree.Node, list[K]], tuple[K, bool]]
+) -> Tree: ...
 def cut_tree(tree: Tree, *, enter=None, leave=None):
     """Traverse and cut the tree.
 

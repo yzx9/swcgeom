@@ -104,14 +104,10 @@ class ImageStack(ABC, Generic[ScalarType]):
         raise NotImplementedError()
 
 
-# fmt:off
 @overload
 def read_imgs(fname: str, *, dtype: ScalarType, **kwargs) -> ImageStack[ScalarType]: ...
 @overload
-def read_imgs(fname: str, *, dtype: None =..., **kwargs) -> ImageStack[np.float32]: ...
-# fmt:on
-
-
+def read_imgs(fname: str, *, dtype: None = ..., **kwargs) -> ImageStack[np.float32]: ...
 def read_imgs(fname: str, **kwargs):  # type: ignore
     """Read image stack.
 
@@ -575,14 +571,14 @@ class GrayImageStack:
     def __init__(self, imgs: ImageStack) -> None:
         self.imgs = imgs
 
-    # fmt: off
     @overload
     def __getitem__(self, key: Vec3i) -> np.float32: ...
     @overload
     def __getitem__(self, key: npt.NDArray[np.integer[Any]]) -> np.float32: ...
     @overload
-    def __getitem__(self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice]) -> npt.NDArray[np.float32]: ...
-    # fmt: on
+    def __getitem__(
+        self, key: slice | tuple[slice, slice] | tuple[slice, slice, slice]
+    ) -> npt.NDArray[np.float32]: ...
     def __getitem__(self, key):
         """Get pixel/patch of image stack."""
         v = self[key]

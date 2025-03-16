@@ -117,14 +117,31 @@ def get_dsu(
     return dsu
 
 
-# fmt: off
 @overload
-def traverse(topology: Topology, *, enter: Callable[[int, T | None], T],                                     root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> None: ...
+def traverse(
+    topology: Topology,
+    *,
+    enter: Callable[[int, T | None], T],
+    root: int | np.integer = ...,
+    mode: Literal["dfs"] = ...,
+) -> None: ...
 @overload
-def traverse(topology: Topology, *,                                      leave: Callable[[int, list[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
+def traverse(
+    topology: Topology,
+    *,
+    leave: Callable[[int, list[K]], K],
+    root: int | np.integer = ...,
+    mode: Literal["dfs"] = ...,
+) -> K: ...
 @overload
-def traverse(topology: Topology, *, enter: Callable[[int, T | None], T], leave: Callable[[int, list[K]], K], root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
-# fmt: on
+def traverse(
+    topology: Topology,
+    *,
+    enter: Callable[[int, T | None], T],
+    leave: Callable[[int, list[K]], K],
+    root: int | np.integer = ...,
+    mode: Literal["dfs"] = ...,
+) -> K: ...
 def traverse(topology: Topology, *, mode="dfs", **kwargs):
     """Traverse nodes.
 
