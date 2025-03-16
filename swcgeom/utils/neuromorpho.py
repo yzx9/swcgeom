@@ -97,7 +97,7 @@ import math
 import os
 import urllib.parse
 from collections.abc import Callable, Iterable
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from tqdm import tqdm
 
@@ -166,7 +166,7 @@ def neuromorpho_is_valid(metadata: dict[str, Any]) -> bool:
 
 
 def neuromorpho_convert_lmdb_to_swc(
-    root: str, dest: Optional[str] = None, *, verbose: bool = False, **kwargs
+    root: str, dest: str | None = None, *, verbose: bool = False, **kwargs
 ) -> None:
     nmo = NeuroMorpho(root, verbose=verbose)
     nmo.convert_lmdb_to_swc(dest, **kwargs)
@@ -252,10 +252,10 @@ class NeuroMorpho:
     # pylint: disable-next=too-many-locals
     def convert_lmdb_to_swc(
         self,
-        dest: Optional[str] = None,
+        dest: str | None = None,
         *,
-        group_by: Optional[str | Callable[[dict[str, Any]], str | None]] = None,
-        where: Optional[Callable[[dict[str, Any]], bool]] = None,
+        group_by: str | Callable[[dict[str, Any]], str | None] | None = None,
+        where: Callable[[dict[str, Any]], bool] | None = None,
         encoding: str | None = "utf-8",
     ) -> None:
         r"""Convert lmdb format to SWCs.
@@ -355,7 +355,7 @@ class NeuroMorpho:
         self,
         path: str,
         *,
-        pages: Optional[Iterable[int]] = None,
+        pages: Iterable[int] | None = None,
         page_size: int = API_PAGE_SIZE_MAX,
         **kwargs,
     ) -> list[int]:
@@ -410,7 +410,7 @@ class NeuroMorpho:
         path: str,
         path_metadata: str,
         *,
-        keys: Optional[Iterable[bytes]] = None,
+        keys: Iterable[bytes] | None = None,
         override: bool = False,
         map_size: int = 512 * GB,
         **kwargs,
@@ -502,7 +502,7 @@ class NeuroMorpho:
         return self._get(url, **kwargs)
 
     def _get(
-        self, url: str, *, timeout: int = 2 * 60, proxy: Optional[str] = None
+        self, url: str, *, timeout: int = 2 * 60, proxy: str | None = None
     ) -> bytes:
         if not url.startswith("http://") and not url.startswith("https://"):
             url = urllib.parse.urljoin(self.url_base, url)

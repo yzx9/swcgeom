@@ -16,7 +16,7 @@
 """Sholl analysis."""
 
 import warnings
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -60,7 +60,7 @@ class Sholl:
     def __init__(
         self,
         tree: Tree | str,
-        step: Optional[float] = None,
+        step: float | None = None,
     ) -> None:
         tree = Tree.from_swc(tree) if isinstance(tree, str) else tree
         try:

@@ -18,7 +18,7 @@
 import os
 import re
 from enum import Enum, auto
-from typing import IO, Any, NamedTuple, Optional, cast
+from typing import IO, Any, NamedTuple, cast
 
 from swcgeom.core import Tree
 from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
@@ -51,8 +51,8 @@ class NeurolucidaAscToSwc(Transform[str, Tree]):
     def from_ast(
         ast: "AST",
         *,
-        names: Optional[SWCNames] = None,
-        types: Optional[SWCTypes] = None,
+        names: SWCNames | None = None,
+        types: SWCTypes | None = None,
     ) -> Tree:
         names = get_names(names)
         types = get_types(types)
@@ -128,8 +128,8 @@ class ASTNode:
         self,
         type: ASTType,
         value: Any = None,
-        tokens: Optional[list["Token"]] = None,
-        children: Optional[list["ASTNode"]] = None,
+        tokens: list["Token"] | None = None,
+        children: list["ASTNode"] | None = None,
     ):
         self.type = type
         self.value = value
@@ -161,7 +161,7 @@ class ASTNode:
 
 
 class AST(ASTNode):
-    def __init__(self, children: Optional[list[ASTNode]] = None, source: str = ""):
+    def __init__(self, children: list[ASTNode] | None = None, source: str = ""):
         super().__init__(ASTType.ROOT, children=children)
         self.source = source
 

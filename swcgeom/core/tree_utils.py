@@ -17,7 +17,7 @@
 
 import warnings
 from collections.abc import Callable, Iterable
-from typing import Optional, TypeVar, overload
+from typing import TypeVar, overload
 
 import numpy as np
 from typing_extensions import deprecated
@@ -150,7 +150,7 @@ def to_subtree(
     swc_like: SWCLike,
     removals: Iterable[int],
     *,
-    out_mapping: Optional[Mapping] = None,
+    out_mapping: Mapping | None = None,
 ) -> Tree:
     """Create subtree from origin tree.
 
@@ -175,7 +175,7 @@ def to_subtree(
 
 
 def get_subtree(
-    swc_like: SWCLike, n: int, *, out_mapping: Optional[Mapping] = None
+    swc_like: SWCLike, n: int, *, out_mapping: Mapping | None = None
 ) -> Tree:
     """Get subtree rooted at n.
 
@@ -230,8 +230,8 @@ def cat_tree(  # pylint: disable=too-many-arguments
     node2: int = 0,
     *,
     translate: bool = True,
-    names: Optional[SWCNames] = None,
-    no_move: Optional[bool] = None,  # legacy
+    names: SWCNames | None = None,
+    no_move: bool | None = None,  # legacy
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 

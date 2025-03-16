@@ -18,7 +18,7 @@
 import re
 import warnings
 from collections.abc import Callable, Iterable
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -39,13 +39,13 @@ __all__ = ["read_swc", "to_swc"]
 
 def read_swc(
     swc_file: PathOrIO,
-    extra_cols: Optional[Iterable[str]] = None,
+    extra_cols: Iterable[str] | None = None,
     fix_roots: Literal["somas", "nearest", False] = False,
     sort_nodes: bool = False,
     reset_index: bool = True,
     *,
     encoding: Literal["detect"] | str = "utf-8",
-    names: Optional[SWCNames] = None,
+    names: SWCNames | None = None,
 ) -> tuple[pd.DataFrame, list[str]]:
     """Read swc file.
 
@@ -110,10 +110,10 @@ def read_swc(
 def to_swc(
     get_ndata: Callable[[str], npt.NDArray],
     *,
-    extra_cols: Optional[Iterable[str]] = None,
+    extra_cols: Iterable[str] | None = None,
     id_offset: int = 1,
-    comments: Optional[Iterable[str]] = None,
-    names: Optional[SWCNames] = None,
+    comments: Iterable[str] | None = None,
+    names: SWCNames | None = None,
 ) -> Iterable[str]:
     """Convert to swc format."""
 
@@ -208,7 +208,7 @@ def parse_swc(
                 if (match := re_swc.search(line)) is not None:
                     if flag and match.group(last_group):
                         warnings.warn(
-                            f"some fields are ignored in row {i+1} of `{fname}`"
+                            f"some fields are ignored in row {i + 1} of `{fname}`"
                         )
                         flag = False
 
@@ -219,10 +219,10 @@ def parse_swc(
                     if not comment.startswith(ignored_comment):
                         comments.append(comment)
                 elif not line.isspace():
-                    raise ValueError(f"invalid row {i+1} in `{fname}`")
+                    raise ValueError(f"invalid row {i + 1} in `{fname}`")
         except UnicodeDecodeError as e:
             raise ValueError(
-                f"decode failed, try to enable auto detect `encoding='detect'`"
+                "decode failed, try to enable auto detect `encoding='detect'`"
             ) from e
 
     df = pd.DataFrame.from_dict(dict(zip(keys, vals)))

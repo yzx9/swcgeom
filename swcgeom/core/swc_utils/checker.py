@@ -16,7 +16,6 @@
 """Check common"""
 
 from collections import defaultdict
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -36,7 +35,7 @@ __all__ = [
 ]
 
 
-def is_single_root(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> bool:
+def is_single_root(df: pd.DataFrame, *, names: SWCNames | None = None) -> bool:
     """Check is it only one root."""
     return len(np.unique(get_dsu(df, names=names))) == 1
 
@@ -109,7 +108,7 @@ def check_single_root(*args, **kwargs) -> bool:
 
 @deprecated("Use `is_bifurcate` instead")
 def is_binary_tree(
-    df: pd.DataFrame, exclude_root: bool = True, *, names: Optional[SWCNames] = None
+    df: pd.DataFrame, exclude_root: bool = True, *, names: SWCNames | None = None
 ) -> bool:
     """Check is it a binary tree.
 

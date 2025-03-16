@@ -18,7 +18,7 @@
 import itertools
 import os
 from collections.abc import Callable, Iterable, Iterator
-from typing import Literal, Optional, TypeVar, Union, overload
+from typing import Literal, TypeVar, Union, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -68,7 +68,7 @@ class Tree(DictSWC):
             """The end-to-end straight-line distance to soma."""
             return self.distance(self.attach.soma())
 
-        def subtree(self, *, out_mapping: Optional[Mapping] = None) -> "Tree":
+        def subtree(self, *, out_mapping: Mapping | None = None) -> "Tree":
             """Get subtree from node.
 
             Parameters
@@ -132,8 +132,8 @@ class Tree(DictSWC):
         n_nodes: int,
         *,
         source: str = "",
-        comments: Optional[Iterable[str]] = None,
-        names: Optional[SWCNames] = None,
+        comments: Iterable[str] | None = None,
+        names: SWCNames | None = None,
         **kwargs: npt.NDArray,
     ) -> None:
         names = get_names(names)
@@ -356,8 +356,8 @@ class Tree(DictSWC):
         df: pd.DataFrame,
         source: str = "",
         *,
-        comments: Optional[Iterable[str]] = None,
-        names: Optional[SWCNames] = None,
+        comments: Iterable[str] | None = None,
+        names: SWCNames | None = None,
     ) -> "Tree":
         """Read neuron tree from data frame."""
         names = get_names(names)
@@ -389,7 +389,7 @@ class Tree(DictSWC):
 
     @classmethod
     def from_eswc(
-        cls, swc_file: str, extra_cols: Optional[list[str]] = None, **kwargs
+        cls, swc_file: str, extra_cols: list[str] | None = None, **kwargs
     ) -> "Tree":
         """Read neuron tree from eswc file.
 

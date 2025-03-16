@@ -20,7 +20,7 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor
 from functools import reduce
-from typing import Any, Optional, Protocol, TypeVar, cast, overload
+from typing import Any, Protocol, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -185,7 +185,7 @@ class Population:
         self,
         fn: Callable[[Tree], T],
         *,
-        max_worker: Optional[int] = None,
+        max_worker: int | None = None,
         verbose: bool = False,
     ) -> Iterator[T]:
         """Map a function to all trees in the population.
@@ -221,7 +221,7 @@ class Population:
         cls,
         root: str,
         ext: str = ".eswc",
-        extra_cols: Optional[Iterable[str]] = None,
+        extra_cols: Iterable[str] | None = None,
         **kwargs,
     ) -> Self:
         extra_cols = list(extra_cols) if extra_cols is not None else []
@@ -248,7 +248,7 @@ class Populations:
     labels: list[str]
 
     def __init__(
-        self, populations: Iterable[Population], labels: Optional[Iterable[str]] = None
+        self, populations: Iterable[Population], labels: Iterable[str] | None = None
     ) -> None:
         self.len = min(len(p) for p in populations)
         self.populations = list(populations)
@@ -292,7 +292,7 @@ class Populations:
         ext: str = ".swc",
         intersect: bool = True,
         check_same: bool = False,
-        labels: Optional[Iterable[str]] = None,
+        labels: Iterable[str] | None = None,
         **kwargs,
     ) -> Self:
         """Get population from dirs.
@@ -332,7 +332,7 @@ class Populations:
     def from_eswc(
         cls,
         roots: Iterable[str],
-        extra_cols: Optional[Iterable[str]] = None,
+        extra_cols: Iterable[str] | None = None,
         *,
         ext: str = ".eswc",
         **kwargs,

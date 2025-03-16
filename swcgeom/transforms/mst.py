@@ -16,7 +16,6 @@
 """Minimum spanning tree."""
 
 import warnings
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -52,8 +51,8 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
         furcations: int = 2,
         exclude_soma: bool = True,
         sort: bool = True,
-        names: Optional[SWCNames] = None,
-        types: Optional[SWCTypes] = None,
+        names: SWCNames | None = None,
+        types: SWCTypes | None = None,
     ) -> None:
         """
         Parameters
@@ -78,9 +77,9 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
     def __call__(  # pylint: disable=too-many-locals
         self,
         points: npt.NDArray[np.floating],
-        soma: Optional[npt.ArrayLike] = None,
+        soma: npt.ArrayLike | None = None,
         *,
-        names: Optional[SWCNames] = None,
+        names: SWCNames | None = None,
     ) -> Tree:
         """
         Parameters
@@ -166,10 +165,10 @@ class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
         self,
         furcations: int = 2,
         *,
-        k_furcations: Optional[int] = None,
+        k_furcations: int | None = None,
         exclude_soma: bool = True,
-        names: Optional[SWCNames] = None,
-        types: Optional[SWCTypes] = None,
+        names: SWCNames | None = None,
+        types: SWCTypes | None = None,
         **kwargs,
     ) -> None:
         """

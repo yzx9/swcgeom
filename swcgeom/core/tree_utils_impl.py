@@ -20,7 +20,7 @@ Notes
 Do not import `Tree` and keep this file minimized.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 import numpy.typing as npt
@@ -35,7 +35,7 @@ TreeArgs = tuple[int, dict[str, npt.NDArray[Any]], str, SWCNames]
 
 
 def get_subtree_impl(
-    swc_like: SWCLike, n: int, *, out_mapping: Optional[Mapping] = None
+    swc_like: SWCLike, n: int, *, out_mapping: Mapping | None = None
 ) -> TreeArgs:
     ids = []
     topo = (swc_like.id(), swc_like.pid())
@@ -51,7 +51,7 @@ def to_subtree_impl(
     swc_like: SWCLike,
     sub: Topology,
     *,
-    out_mapping: Optional[Mapping] = None,
+    out_mapping: Mapping | None = None,
 ) -> TreeArgs:
     (new_id, new_pid), mapping = to_sub_topology(sub)
 

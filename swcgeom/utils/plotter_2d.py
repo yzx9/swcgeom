@@ -15,8 +15,6 @@
 
 """2D Plotting utils."""
 
-from typing import Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
@@ -113,8 +111,8 @@ def draw_circles(
     x: npt.NDArray,
     y: npt.NDArray,
     *,
-    y_min: Optional[float] = None,
-    y_max: Optional[float] = None,
+    y_min: float | None = None,
+    y_max: float | None = None,
     cmap: str | Colormap = "viridis",
 ) -> PatchCollection:
     """Draw a sequential of circles."""
@@ -140,7 +138,7 @@ def draw_circles(
 
 
 def get_fig_ax(
-    fig: Optional[Figure] = None, ax: Optional[Axes] = None
+    fig: Figure | None = None, ax: Axes | None = None
 ) -> tuple[Figure, Axes]:
     if fig is None and ax is not None:
         fig = ax.get_figure()

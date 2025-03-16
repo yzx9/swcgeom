@@ -20,8 +20,6 @@ Notes
 This is a experimental function, it may be changed in the future.
 """
 
-from typing import Optional
-
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
@@ -45,7 +43,7 @@ def draw3d(
     *,
     ax: Axes,
     show: bool | None = None,
-    color: Optional[dict[int, str] | str] = None,
+    color: dict[int, str] | str | None = None,
     label: str | bool = True,
     **kwargs,
 ) -> tuple[Figure, Axes]:

@@ -19,7 +19,7 @@ Methods ending with a underline imply an in-place transformation.
 """
 
 from collections.abc import Callable
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -44,7 +44,7 @@ def mark_roots_as_somas(
     df: pd.DataFrame,
     update_type: int | Literal[False] = 1,
     *,
-    names: Optional[SWCNames] = None,
+    names: SWCNames | None = None,
 ) -> pd.DataFrame:
     return _copy_and_apply(
         mark_roots_as_somas_, df, update_type=update_type, names=names
@@ -55,7 +55,7 @@ def mark_roots_as_somas_(
     df: pd.DataFrame,
     update_type: int | Literal[False] = 1,
     *,
-    names: Optional[SWCNames] = None,
+    names: SWCNames | None = None,
 ) -> None:
     """Merge multiple roots in swc.
 
@@ -72,14 +72,12 @@ def mark_roots_as_somas_(
 
 
 def link_roots_to_nearest(
-    df: pd.DataFrame, *, names: Optional[SWCNames] = None
+    df: pd.DataFrame, *, names: SWCNames | None = None
 ) -> pd.DataFrame:
     return _copy_and_apply(link_roots_to_nearest_, df, names=names)
 
 
-def link_roots_to_nearest_(
-    df: pd.DataFrame, *, names: Optional[SWCNames] = None
-) -> None:
+def link_roots_to_nearest_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
     """Merge multiple roots in swc.
 
     The first root are reserved, and the others was.
@@ -97,7 +95,7 @@ def link_roots_to_nearest_(
         df.loc[i, names.pid] = df[names.id].iloc[dis.argmin()]
 
 
-def sort_nodes(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.DataFrame:
+def sort_nodes(df: pd.DataFrame, *, names: SWCNames | None = None) -> pd.DataFrame:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
@@ -109,7 +107,7 @@ def sort_nodes(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.Data
     return _copy_and_apply(sort_nodes_, df, names=names)
 
 
-def sort_nodes_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
+def sort_nodes_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
     """Sort the indices of neuron tree.
 
     The index for parent are always less than children.
@@ -157,12 +155,12 @@ def sort_nodes_impl(topology: Topology) -> tuple[Topology, npt.NDArray[np.int32]
     return (new_ids, new_pids), indices
 
 
-def reset_index(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.DataFrame:
+def reset_index(df: pd.DataFrame, *, names: SWCNames | None = None) -> pd.DataFrame:
     """Reset node index to start with zero."""
     return _copy_and_apply(reset_index_, df, names=names)
 
 
-def reset_index_(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> None:
+def reset_index_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
     """Reset node index to start with zero."""
     names = get_names(names)
     roots = df[names.pid] == -1

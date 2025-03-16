@@ -21,7 +21,7 @@ This is expremental code, and the API is subject to change.
 """
 
 import random
-from typing import Literal, Optional
+from typing import Literal
 
 import numpy as np
 import numpy.typing as npt
@@ -67,7 +67,7 @@ class Augmentation:
         self.seed = seed
         self.rand = random.Random(seed)
 
-    def swapaxes(self, x, mode: Optional[Literal["xy", "xz", "yz"]] = None) -> NDArrf32:
+    def swapaxes(self, x, mode: Literal["xy", "xz", "yz"] | None = None) -> NDArrf32:
         if mode is None:
             modes: list[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
             mode = modes[self.rand.randint(0, 2)]
@@ -82,7 +82,7 @@ class Augmentation:
             case _:
                 raise ValueError(f"invalid mode: {mode}")
 
-    def flip(self, x, mode: Optional[Literal["xy", "xz", "yz"]] = None) -> NDArrf32:
+    def flip(self, x, mode: Literal["xy", "xz", "yz"] | None = None) -> NDArrf32:
         if mode is None:
             modes: list[Literal["xy", "xz", "yz"]] = ["xy", "xz", "yz"]
             mode = modes[random.randint(0, 2)]
@@ -101,7 +101,7 @@ class Augmentation:
 fns = list(augs.keys())
 
 
-def play_augment(x: NDArrf32, method: Optional[Augmentation | int] = None) -> NDArrf32:
+def play_augment(x: NDArrf32, method: Augmentation | int | None = None) -> NDArrf32:
     """Play augment in x.
 
     Parameters

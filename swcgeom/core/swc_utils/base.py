@@ -16,7 +16,7 @@
 """Base SWC format utils."""
 
 from collections.abc import Callable
-from typing import Literal, NamedTuple, Optional, TypeVar, overload
+from typing import Literal, NamedTuple, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -57,7 +57,7 @@ class SWCNames(NamedTuple):
 swc_names = SWCNames()
 
 
-def get_names(names: Optional[SWCNames] = None) -> SWCNames:
+def get_names(names: SWCNames | None = None) -> SWCNames:
     return names or swc_names
 
 
@@ -83,17 +83,17 @@ class SWCTypes(NamedTuple):
 swc_types = SWCTypes()
 
 
-def get_types(types: Optional[SWCTypes] = None) -> SWCTypes:
+def get_types(types: SWCTypes | None = None) -> SWCTypes:
     return types or swc_types
 
 
-def get_topology(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> Topology:
+def get_topology(df: pd.DataFrame, *, names: SWCNames | None = None) -> Topology:
     names = get_names(names)
     return (df[names.id].to_numpy(), df[names.pid].to_numpy())
 
 
 def get_dsu(
-    df: pd.DataFrame, *, names: Optional[SWCNames] = None
+    df: pd.DataFrame, *, names: SWCNames | None = None
 ) -> npt.NDArray[np.int32]:
     """Get disjoint set union."""
     names = get_names(names)

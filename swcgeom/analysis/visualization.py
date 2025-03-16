@@ -18,7 +18,7 @@
 
 import os
 import weakref
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 import numpy as np
 from matplotlib.axes import Axes
@@ -51,14 +51,14 @@ ax_weak_memo = weakref.WeakKeyDictionary[Axes, dict[str, Any]]({})
 def draw(
     swc: SWCLike | str,
     *,
-    fig: Optional[Figure] = None,
-    ax: Optional[Axes] = None,
+    fig: Figure | None = None,
+    ax: Axes | None = None,
     show: bool | None = None,
     camera: CameraOptions = "xy",
-    color: Optional[dict[int, str] | str] = None,
+    color: dict[int, str] | str | None = None,
     label: str | bool = True,
     direction_indicator: Positions | Literal[False] = "rb",
-    unit: Optional[str] = None,
+    unit: str | None = None,
     **kwargs,
 ) -> tuple[Figure, Axes]:
     r"""Draw neuron tree.
@@ -142,7 +142,7 @@ def get_ax_swc(ax: Axes) -> list[SWCLike]:
 
 
 def get_ax_color(
-    ax: Axes, swc: SWCLike, color: Optional[dict[int, str] | str] = None
+    ax: Axes, swc: SWCLike, color: dict[int, str] | str | None = None
 ) -> str | list[str]:
     if color == "vaa3d":
         color = palette.vaa3d
@@ -179,8 +179,8 @@ def set_ax_legend(ax: Axes, *args, **kwargs) -> Legend | None:
 def _set_ax_memo(
     ax: Axes,
     swc: SWCLike,
-    label: Optional[str | bool] = None,
-    handle: Optional[Any] = None,
+    label: str | bool | None = None,
+    handle: Any | None = None,
 ):
     ax_weak_memo.setdefault(ax, {})
     ax_weak_memo[ax].setdefault("swc", [])

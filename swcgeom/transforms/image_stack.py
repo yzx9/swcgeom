@@ -28,7 +28,6 @@ import os
 import re
 import time
 from collections.abc import Iterable
-from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -86,7 +85,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         x: Tree,
         verbose: bool = True,
         *,
-        ranges: Optional[tuple[npt.ArrayLike, npt.ArrayLike]] = None,
+        ranges: tuple[npt.ArrayLike, npt.ArrayLike] | None = None,
     ) -> Iterable[npt.NDArray[np.uint8]]:
         if verbose:
             print("To image stack: " + x.source)
@@ -124,7 +123,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         x: Tree,
         verbose: bool = True,
         *,
-        ranges: Optional[tuple[npt.ArrayLike, npt.ArrayLike]] = None,
+        ranges: tuple[npt.ArrayLike, npt.ArrayLike] | None = None,
     ) -> Iterable[npt.NDArray[np.uint8]]:
         return self.transform(x, verbose, ranges=ranges)
 
@@ -175,7 +174,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         self,
         coord_min: npt.NDArray,
         coord_max: npt.NDArray,
-        offset: Optional[npt.NDArray] = None,
+        offset: npt.NDArray | None = None,
     ) -> Iterable[RangeSampler]:
         """Get Samplers.
 

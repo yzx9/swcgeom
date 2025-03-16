@@ -31,7 +31,7 @@ computations.
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -98,7 +98,7 @@ class VolMCObject(VolObject, ABC):
     cache_volume: float | None = None
     cache_volume_n_samples: int = 0
 
-    def __init__(self, *, n_samples: Optional[int] = None) -> None:
+    def __init__(self, *, n_samples: int | None = None) -> None:
         super().__init__()
         if n_samples is not None:
             warnings.warn(
@@ -143,7 +143,7 @@ class VolMCObject(VolObject, ABC):
         """
         return np.array([self.inside(pp) for pp in p])
 
-    def _get_volume(self, *, n_samples: Optional[int] = None) -> float:
+    def _get_volume(self, *, n_samples: int | None = None) -> float:
         """Get volume by Monte Carlo integration.
 
         Parameters

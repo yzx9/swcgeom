@@ -20,7 +20,7 @@ Notes
 This is expremental code, and the API is subject to change.
 """
 
-from typing import Optional, overload
+from typing import overload
 
 import numpy as np
 import numpy.typing as npt
@@ -63,7 +63,7 @@ def contrast_std(image: Array3D, contrast: float) -> Array3D:
     ...
 
 
-def contrast_std(image: Array3D, contrast: Optional[float] = None):
+def contrast_std(image: Array3D, contrast: float | None = None):
     if contrast is None:
         return np.std(image).item()
     else:

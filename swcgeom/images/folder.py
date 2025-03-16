@@ -20,7 +20,7 @@ import os
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Generic, Literal, Optional, TypeVar, overload
+from typing import Generic, Literal, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -46,7 +46,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         self,
         files: Iterable[str],
         *,
-        transform: Optional[Transform[npt.NDArray[np.float32], T]] = ...,
+        transform: Transform[npt.NDArray[np.float32], T] | None = ...,
     ) -> None: ...
     @overload
     def __init__(
@@ -54,7 +54,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         files: Iterable[str],
         *,
         dtype: ScalarType,
-        transform: Optional[Transform[npt.NDArray[ScalarType], T]] = ...,
+        transform: Transform[npt.NDArray[ScalarType], T] | None = ...,
     ) -> None: ...
     def __init__(self, files: Iterable[str], *, dtype=None, transform=None) -> None:
         super().__init__()
@@ -74,7 +74,7 @@ class ImageStackFolderBase(Generic[ScalarType, T]):
         return read_imgs(fname, dtype=self.dtype).get_full()  # type: ignore
 
     @staticmethod
-    def scan(root: str, *, pattern: Optional[str] = None) -> list[str]:
+    def scan(root: str, *, pattern: str | None = None) -> list[str]:
         if not os.path.isdir(root):
             raise NotADirectoryError(f"not a directory: {root}")
 
@@ -160,7 +160,7 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         )
 
     @classmethod
-    def from_dir(cls, root: str, *, pattern: Optional[str] = None, **kwargs) -> Self:
+    def from_dir(cls, root: str, *, pattern: str | None = None, **kwargs) -> Self:
         """
         Parameters
         ----------
@@ -192,7 +192,7 @@ class LabeledImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         root: str,
         label: int | Callable[[str], int],
         *,
-        pattern: Optional[str] = None,
+        pattern: str | None = None,
         **kwargs,
     ) -> Self:
         files = cls.scan(root, pattern=pattern)
@@ -219,7 +219,7 @@ class PathImageStackFolder(ImageStackFolderBase[ScalarType, T]):
         return self._get(self.files[idx]), relpath
 
     @classmethod
-    def from_dir(cls, root: str, *, pattern: Optional[str] = None, **kwargs) -> Self:
+    def from_dir(cls, root: str, *, pattern: str | None = None, **kwargs) -> Self:
         """
         Parameters
         ----------

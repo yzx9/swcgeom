@@ -16,7 +16,6 @@
 """Transformation in tree."""
 
 from collections.abc import Callable
-from typing import Optional
 
 import numpy as np
 from typing_extensions import deprecated
@@ -128,7 +127,7 @@ class CutByType(Transform[Tree, Tree]):
 class CutAxonTree(CutByType):
     """Cut axon tree."""
 
-    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+    def __init__(self, types: SWCTypes | None = None) -> None:
         types = get_types(types)
         super().__init__(type=types.axon)
 
@@ -136,7 +135,7 @@ class CutAxonTree(CutByType):
 class CutDendriteTree(CutByType):
     """Cut dendrite tree."""
 
-    def __init__(self, types: Optional[SWCTypes] = None) -> None:
+    def __init__(self, types: SWCTypes | None = None) -> None:
         types = get_types(types)
         super().__init__(type=types.basal_dendrite)  # TODO: apical dendrite
 
@@ -197,7 +196,7 @@ class CutShortTipBranch(Transform[Tree, Tree]):
     callbacks: list[Callable[[Tree.Branch], None]]
 
     def __init__(
-        self, thre: float = 5, callback: Optional[Callable[[Tree.Branch], None]] = None
+        self, thre: float = 5, callback: Callable[[Tree.Branch], None] | None = None
     ) -> None:
         self.thre = thre
         self.callbacks = []

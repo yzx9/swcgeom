@@ -21,7 +21,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from functools import cache, lru_cache
-from typing import Any, Generic, Literal, Optional, TypeVar, cast, overload
+from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import nrrd
 import numpy as np
@@ -151,7 +151,7 @@ def save_tiff(
     data: npt.NDArray | ImageStack,
     fname: str,
     *,
-    dtype: Optional[np.unsignedinteger | np.floating] = None,
+    dtype: np.unsignedinteger | np.floating | None = None,
     compression: str | Literal[False] = "zlib",
     **kwargs,
 ) -> None:
@@ -214,7 +214,7 @@ class NDArrayImageStack(ImageStack[ScalarType]):
     """NDArray image stack."""
 
     def __init__(
-        self, imgs: npt.NDArray[Any], *, dtype: Optional[ScalarType] = None
+        self, imgs: npt.NDArray[Any], *, dtype: ScalarType | None = None
     ) -> None:
         super().__init__()
 

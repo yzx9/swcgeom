@@ -16,7 +16,7 @@
 """SWC geometry operations."""
 
 import warnings
-from typing import Generic, Literal, Optional, TypeVar
+from typing import Generic, Literal, TypeVar
 
 import numpy as np
 import numpy.typing as npt
@@ -54,7 +54,7 @@ Center = Literal["root", "soma", "origin"]
 class Normalizer(Generic[T], Transform[T, T]):
     """Noramlize coordinates and radius to 0-1."""
 
-    def __init__(self, *, names: Optional[SWCNames] = None) -> None:
+    def __init__(self, *, names: SWCNames | None = None) -> None:
         super().__init__()
         if names is not None:
             warnings.warn(
@@ -103,8 +103,8 @@ class AffineTransform(Generic[T], Transform[T, T]):
         tm: npt.NDArray[np.float32],
         center: Center = "origin",
         *,
-        fmt: Optional[str] = None,
-        names: Optional[SWCNames] = None,
+        fmt: str | None = None,
+        names: SWCNames | None = None,
     ) -> None:
         self.tm, self.center = tm, center
 

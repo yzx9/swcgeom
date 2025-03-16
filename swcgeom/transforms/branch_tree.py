@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import numpy as np
 

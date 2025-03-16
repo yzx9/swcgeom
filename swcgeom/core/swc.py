@@ -19,7 +19,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from copy import deepcopy
-from typing import Any, Optional, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 import numpy as np
 import numpy.typing as npt
@@ -164,9 +164,9 @@ class SWCLike(ABC):
     ) -> str: ...
     def to_swc(
         self,
-        fname: Optional[str] = None,
+        fname: str | None = None,
         *,
-        extra_cols: Optional[list[str]] = None,
+        extra_cols: list[str] | None = None,
         source: bool | str = True,
         comments: bool = True,
         id_offset: int = 1,
@@ -200,9 +200,9 @@ class SWCLike(ABC):
     def to_eswc(self, fname: None = ..., **kwargs) -> str: ...
     def to_eswc(
         self,
-        fname: Optional[str] = None,
-        swc_path: Optional[str] = None,
-        extra_cols: Optional[list[str]] = None,
+        fname: str | None = None,
+        swc_path: str | None = None,
+        extra_cols: list[str] | None = None,
         **kwargs,
     ) -> str | None:
         if swc_path is None:
@@ -230,8 +230,8 @@ class DictSWC(SWCLike):
         self,
         *,
         source: str = "",
-        comments: Optional[Iterable[str]] = None,
-        names: Optional[SWCNames] = None,
+        comments: Iterable[str] | None = None,
+        names: SWCNames | None = None,
         **kwargs: npt.NDArray,
     ):
         super().__init__()

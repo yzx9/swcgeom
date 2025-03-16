@@ -17,7 +17,6 @@
 
 from collections.abc import Iterable
 from copy import copy
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -52,7 +51,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         self.undirected = undirected
 
     def __call__(
-        self, lines: Iterable[pd.DataFrame], *, names: Optional[SWCNames] = None
+        self, lines: Iterable[pd.DataFrame], *, names: SWCNames | None = None
     ):  # TODO check this
         return self.assemble(lines, names=names)
 
@@ -61,7 +60,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         lines: Iterable[pd.DataFrame],
         *,
         undirected: bool = True,
-        names: Optional[SWCNames] = None,
+        names: SWCNames | None = None,
     ) -> pd.DataFrame:
         """Assemble lines to a tree.
 
@@ -112,7 +111,7 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
         id_offset: int = 0,
         undirected: bool = True,
         sort_nodes: bool = True,
-        names: Optional[SWCNames] = None,
+        names: SWCNames | None = None,
     ) -> tuple[pd.DataFrame, list[pd.DataFrame]]:
         """Trying assemble lines to a tree.
 

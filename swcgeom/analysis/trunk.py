@@ -19,7 +19,7 @@
 
 from collections.abc import Iterable
 from itertools import chain
-from typing import Any, Literal, Optional, cast
+from typing import Any, Literal, cast
 
 import numpy as np
 import numpy.typing as npt
@@ -42,8 +42,8 @@ def draw_trunk(
     t: Tree,
     florets: Iterable[int | Iterable[int]],
     *,
-    fig: Optional[Figure] = None,
-    ax: Optional[Axes] = None,
+    fig: Figure | None = None,
+    ax: Axes | None = None,
     bound: Bounds | tuple[Bounds, dict[str, Any]] | None = "ellipse",
     point: bool | dict[str, Any] = True,
     projection: Projection = "2d",
@@ -177,7 +177,7 @@ def draw_point(ts: Iterable[Tree], ax: Axes, projection: Projection, **kwargs) -
 
 
 def create_point_2d(
-    ts: Iterable[Tree], radius: Optional[float] = None, **kwargs
+    ts: Iterable[Tree], radius: float | None = None, **kwargs
 ) -> Circle:
     if radius is None:
         xyz = np.concatenate([t.xyz() for t in ts])  # TODO: cache
