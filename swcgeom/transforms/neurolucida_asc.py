@@ -18,8 +18,7 @@
 import os
 import re
 from enum import Enum, auto
-from io import TextIOBase
-from typing import Any, NamedTuple, Optional, cast
+from typing import IO, Any, NamedTuple, Optional, cast
 
 from swcgeom.core import Tree
 from swcgeom.core.swc_utils import SWCNames, SWCTypes, get_names, get_types
@@ -42,7 +41,7 @@ class NeurolucidaAscToSwc(Transform[str, Tree]):
         return tree
 
     @classmethod
-    def from_stream(cls, x: TextIOBase, *, source: str = "") -> Tree:
+    def from_stream(cls, x: IO[str], *, source: str = "") -> Tree:
         parser = Parser(x, source=source)
         ast = parser.parse()
         tree = cls.from_ast(ast)
@@ -216,7 +215,7 @@ class AssertionTokenTypeError(Exception):
 
 
 class Parser:
-    def __init__(self, r: TextIOBase, *, source: str = ""):
+    def __init__(self, r: IO[str], *, source: str = ""):
         self.lexer = Lexer(r)
         self.next_token = None
         self.source = source
@@ -426,7 +425,7 @@ RE_FLOAT = re.compile(r"[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?")
 
 
 class Lexer:
-    def __init__(self, r: TextIOBase):
+    def __init__(self, r: IO[str]):
         self.r = r
         self.lineno = 1
         self.column = 1
