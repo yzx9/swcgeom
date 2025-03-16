@@ -299,7 +299,11 @@ class Tree(DictSWC):
                  root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> None: ...
     @overload
     def traverse(self, *,
-                 enter: Optional[Callable[[Node, T | None], T]] = ...,
+                 leave: Callable[[Node, list[K]], K],
+                 root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
+    @overload
+    def traverse(self, *,
+                 enter: Callable[[Node, T | None], T],
                  leave: Callable[[Node, list[K]], K],
                  root: int | np.integer = ..., mode: Literal["dfs"] = ...) -> K: ...
     # fmt: on

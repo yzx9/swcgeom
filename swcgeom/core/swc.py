@@ -145,12 +145,23 @@ class SWCLike(ABC):
         """Get the number of edges."""
         return self.number_of_nodes() - 1  # for tree structure: n = e + 1
 
-    # fmt: off
     @overload
-    def to_swc(self, fname: str, *, extra_cols: list[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> None: ...
+    def to_swc(
+        self,
+        fname: str,
+        *,
+        extra_cols: list[str] | None = ...,
+        source: bool | str = ...,
+        id_offset: int = ...,
+    ) -> None: ...
     @overload
-    def to_swc(self, *, extra_cols: list[str] | None = ..., source: bool | str = ..., id_offset: int = ...) -> str: ...
-    # fmt: on
+    def to_swc(
+        self,
+        *,
+        extra_cols: list[str] | None = ...,
+        source: bool | str = ...,
+        id_offset: int = ...,
+    ) -> str: ...
     def to_swc(
         self,
         fname: Optional[str] = None,
@@ -183,12 +194,10 @@ class SWCLike(ABC):
 
         return None
 
-    # fmt: off
     @overload
     def to_eswc(self, fname: str, **kwargs) -> None: ...
     @overload
-    def to_eswc(self, **kwargs) -> str: ...
-    # fmt: on
+    def to_eswc(self, fname: None = ..., **kwargs) -> str: ...
     def to_eswc(
         self,
         fname: Optional[str] = None,
