@@ -39,10 +39,10 @@ RE_TERAFLY_ROOT = re.compile(r"^RES\((\d+)x(\d+)x(\d+)\)$")
 RE_TERAFLY_NAME = re.compile(r"^\d+(_\d+)?(_\d+)?")
 
 UINT_MAX = {
-    np.dtype(np.uint8): (2**8) - 1,  # type: ignore
-    np.dtype(np.uint16): (2**16) - 1,  # type: ignore
-    np.dtype(np.uint32): (2**32) - 1,  # type: ignore
-    np.dtype(np.uint64): (2**64) - 1,  # type: ignore
+    np.dtype(np.uint8): (2**8) - 1,
+    np.dtype(np.uint16): (2**16) - 1,
+    np.dtype(np.uint32): (2**32) - 1,
+    np.dtype(np.uint64): (2**64) - 1,
 }
 
 AXES_ORDER = {
@@ -187,11 +187,11 @@ def save_tiff(
         if np.issubdtype(data.dtype, np.floating) and np.issubdtype(
             dtype, np.unsignedinteger
         ):
-            scaler_factor = UINT_MAX[np.dtype(dtype)]  # type: ignore
+            scaler_factor = UINT_MAX[np.dtype(dtype)]
         elif np.issubdtype(data.dtype, np.unsignedinteger) and np.issubdtype(
             dtype, np.floating
         ):
-            scaler_factor = 1 / UINT_MAX[np.dtype(data.dtype)]  # type: ignore
+            scaler_factor = 1 / UINT_MAX[np.dtype(data.dtype)]
         else:
             scaler_factor = 1
 
@@ -232,7 +232,7 @@ class NDArrayImageStack(ImageStack[ScalarType]):
             elif np.issubdtype(dtype, np.unsignedinteger) and np.issubdtype(
                 dtype_raw, np.floating
             ):
-                scalar_factor = UINT_MAX[dtype]  # type: ignore
+                scalar_factor = UINT_MAX[dtype]
                 imgs *= (scalar_factor * imgs).astype(dtype)
             else:
                 imgs = imgs.astype(dtype)
@@ -520,13 +520,13 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         if shape[1] > lens[1]:
             starts_y = starts + [0, lens[1], 0]
             ends_y = np.array([starts[0], ends[1], ends[2]])
-            ends_y += [min(shape[0], lens[0]), 0, 0]  # type: ignore
+            ends_y += [min(shape[0], lens[0]), 0, 0]
             self._get_range(starts_y, ends_y, res_level, out[:, lens[1] :, :])
 
         if shape[2] > lens[2]:
             starts_z = starts + [0, 0, lens[2]]
             ends_z = np.array([starts[0], starts[1], ends[2]])
-            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]  # type: ignore
+            ends_z += [min(shape[0], lens[0]), min(shape[1], lens[1]), 0]
             self._get_range(starts_z, ends_z, res_level, out[:, :, lens[2] :])
 
     def _find_correspond_imgs(self, p, res_level):

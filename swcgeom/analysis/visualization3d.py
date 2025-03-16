@@ -75,7 +75,7 @@ def draw3d(
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc
 
     show = (show is True) or (show is None and ax is None)
-    my_color = get_ax_color(ax, swc, color)  # type: ignore
+    my_color = get_ax_color(ax, swc, color)
 
     xyz = swc.xyz()
     starts, ends = swc.id()[1:], swc.pid()[1:]

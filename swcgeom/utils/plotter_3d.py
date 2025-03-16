@@ -44,5 +44,5 @@ def draw_lines_3d(
 
     line_collection = Line3DCollection(
         lines, joinstyle=joinstyle, capstyle=capstyle, **kwargs
-    )  # type: ignore
+    )
     return ax.add_collection3d(line_collection)

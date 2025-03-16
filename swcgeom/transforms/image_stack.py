@@ -68,7 +68,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             resolution = [resolution, resolution, resolution]  # type: ignore
 
         self.resolution = np.array(resolution, dtype=np.float32)
-        assert len(self.resolution) == 3, "resolution shoule be vector of 3d."
+        assert len(self.resolution) == 3, "resolution should be vector of 3d."
 
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.

@@ -142,7 +142,7 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
                 M2 = np.zeros_like(imgs)
 
             n += 1
-            delta = imgs - mean  # type: ignore
+            delta = imgs - mean
             mean += delta / n
             delta2 = imgs - mean
             M2 += delta * delta2

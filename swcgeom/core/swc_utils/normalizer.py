@@ -94,7 +94,7 @@ def link_roots_to_nearest_(
         subtree = dsu == dsu[i]  # type: ignore
         dis = np.where(subtree, np.inf, dis)  # avoid link to same tree
         dsu = np.where(subtree, dsu[dis.argmin()], dsu)  # merge set
-        df.loc[i, names.pid] = df[names.id].iloc[dis.argmin()]  # type: ignore
+        df.loc[i, names.pid] = df[names.id].iloc[dis.argmin()]
 
 
 def sort_nodes(df: pd.DataFrame, *, names: Optional[SWCNames] = None) -> pd.DataFrame:

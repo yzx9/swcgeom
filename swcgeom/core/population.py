@@ -145,14 +145,14 @@ class Population:
                 DeprecationWarning,
             )
 
-            trees = LazyLoadingTrees(swcs, **kwargs)  # type: ignore
+            trees = LazyLoadingTrees(swcs, **kwargs)
             if not lazy_loading:
                 for i in range(len(swcs)):
                     trees.load(i)
         else:
             trees = swcs
 
-        self.trees = trees  # type: ignore
+        self.trees = trees
         self.root = root
 
         if len(swcs) == 0:

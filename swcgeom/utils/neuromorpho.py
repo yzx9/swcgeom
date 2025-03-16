@@ -336,9 +336,9 @@ class NeuroMorpho:
 
                     if encoding is None:
                         with open(fs, "wb") as f:
-                            f.write(bs)  # type: ignore
+                            f.write(bs)
                     else:
-                        bs = io.BytesIO(bs)  # type: ignore
+                        bs = io.BytesIO(bs)
                         with (
                             open(fs, "w", encoding=encoding) as fw,
                             FileReader(bs, encoding="detect") as fr,
@@ -454,7 +454,7 @@ class NeuroMorpho:
         for k in tqdm(keys) if self.verbose else keys:
             try:
                 with env_m.begin() as tx:
-                    metadata = json.loads(tx.get(k).decode("utf-8"))  # type: ignore
+                    metadata = json.loads(tx.get(k).decode("utf-8"))
 
                 swc = self._get_file(url, metadata, **kwargs)
                 with env_c.begin(write=True) as tx:
