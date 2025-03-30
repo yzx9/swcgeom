@@ -15,10 +15,8 @@
 
 """Easy way to compute and visualize common features for feature.
 
-Notes
------
-For development, see method `Features.get_evaluator` to confirm the
-naming specification.
+NOTE: For development, see method `Features.get_evaluator` to confirm the naming
+specification.
 """
 
 from abc import ABC, abstractmethod
@@ -153,11 +151,8 @@ class FeatureExtractor(ABC):
     def get(self, feature, **kwargs):
         """Get feature.
 
-        Notes
-        -----
-        Shape of returned array is not uniform, `TreeFeatureExtractor`
-        returns array of shape (L, ), `PopulationFeatureExtracor`
-        returns array of shape (N, L).
+        NOTE: Shape of returned array is not uniform, `TreeFeatureExtractor` returns
+        array of shape (L, ), `PopulationFeatureExtracor` returns array of shape (N, L).
         """
         if isinstance(feature, dict):
             return {k: self._get(k, **v) for k, v in feature.items()}
@@ -170,11 +165,8 @@ class FeatureExtractor(ABC):
     def plot(self, feature: FeatAndKwargs, title: str | bool = True, **kwargs) -> Axes:
         """Plot feature with appropriate way.
 
-        Notes
-        -----
-        The drawing method is different in different classes, different
-        in different features, and may different between versions,
-        there are NO guarantees.
+        NOTE: The drawing method is different in different classes, different in
+        different features, and may different between versions, there are NO guarantees.
         """
         feat, feat_kwargs = _get_feat_and_kwargs(feature)
         if callable(custom_plot := getattr(self, f"plot_{feat}", None)):

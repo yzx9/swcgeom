@@ -87,20 +87,6 @@ class Ellipse:
 def mvee(points: npt.NDArray[np.floating], tol: float = 1e-3) -> Ellipse:
     """Finds the Minimum Volume Enclosing Ellipsoid.
 
-    Parameters
-    ----------
-    points : np.NDArray
-        Array of shape (N, d) where N is number of points and d is dimension
-    tol : float
-        Tolerance for convergence
-
-    Returns
-    -------
-    Ellipse
-        An Ellipse object containing the minimum volume enclosing ellipse
-
-    Examples
-    --------
     >>> # Create a set of 2D points
     >>> points = np.array([[0, 0], [1, 0], [0, 1], [1, 1]], dtype=np.float64)
     >>> ellipse = mvee(points)
@@ -114,11 +100,17 @@ def mvee(points: npt.NDArray[np.floating], tol: float = 1e-3) -> Ellipse:
     >>> np.allclose([rx, ry], [np.sqrt(2)/2, np.sqrt(2)/2], rtol=1e-5)
     True
 
-    Reference
-    ---------
+    Reference:
     1. http://stackoverflow.com/questions/14016898/port-matlab-bounding-ellipsoid-code-to-python
     2. http://stackoverflow.com/questions/1768197/bounding-ellipse/1768440#1768440
     3. https://minillinim.github.io/GroopM/dev_docs/groopm.ellipsoid-pysrc.html
+
+    Args:
+        points: Array of shape (N, d) where N is number of points and d is dimension
+        tol: Tolerance for convergence
+
+    Returns:
+        Ellipse: An Ellipse object containing the minimum volume enclosing ellipse
     """
 
     A, centroid = _mvee(points, tol=tol)

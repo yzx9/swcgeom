@@ -39,13 +39,10 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
 
     def __init__(self, *, thre: float = 0.2, undirected: bool = True):
         """
-        Parameters
-        ----------
-        thre : float, default `0.2`
-            Connection threshold.
-        undirected : bool, default `True`
-            Both ends of a line can be considered connection point. If
-            `False`, only the starting point.
+        Args:
+            thre: Connection threshold.
+            undirected: Both ends of a line can be considered connection point.
+                If `False`, only the starting point.
         """
         super().__init__()
         self.thre = thre
@@ -66,26 +63,18 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
     ) -> pd.DataFrame:
         """Assemble lines to a tree.
 
-        Assemble all the lines into a set of subtrees, and then connect
-        them.
+        Assemble all the lines into a set of subtrees, and then connect them.
 
-        Parameters
-        ----------
-        lines : List of ~pd.DataFrame
-            An array of tables containing a line, columns should
-            following the swc.
-        undirected : bool, default `True`
-            Forwarding to `self.try_assemble`.
-        names : SWCNames, optional
-            Forwarding to `self.try_assemble`.
+        Args:
+            lines: An array of tables containing a line, columns should following the swc.
+            undirected: Forwarding to `self.try_assemble`.
+            names: Forwarding to `self.try_assemble`.
 
-        Returns
-        -------
-        tree : ~pd.DataFrame
+        Returns:
+            tree: ~pd.DataFrame
 
-        See Also
-        --------
-        self.try_assemble
+        See Also:
+            self.try_assemble
         """
 
         tree, lines = self.try_assemble(
@@ -117,29 +106,21 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
     ) -> tuple[pd.DataFrame, list[pd.DataFrame]]:
         """Trying assemble lines to a tree.
 
-        Treat the first line as a tree, find a line whose shortest distance
-        between the tree and the line is less than threshold, merge it into
-        the tree, repeat until there are no line to merge, return tree and
-        the remaining lines.
+        Treat the first line as a tree, find a line whose shortest distance between
+        the tree and the line is less than threshold, merge it into the tree, repeat
+        until there are no line to merge, return tree and the remaining lines.
 
-        Parameters
-        ----------
-        lines : List of ~pd.DataFrame
-            An array of tables containing a line, columns should following
-            the swc.
-        id_offset : int, default `0`
-            The offset of the line node id.
-        undirected : bool, default `True`
-            Both ends of a line can be considered connection point. If
-            `False`, only the starting point.
-        sort_nodes : bool, default `True`
-            sort nodes of subtree.
-        names : SWCNames, optional
+        Args:
+            lines: An array of tables containing a line, columns should following the swc.
+            id_offset: The offset of the line node id.
+            undirected: Both ends of a line can be considered connection point.
+                If `False`, only the starting point.
+            sort_nodes: sort nodes of subtree.
+            names: SWCNames, optional
 
-        Returns
-        -------
-        tree : ~pandas.DataFrame
-        remaining_lines : List of ~pandas.DataFrame
+        Returns:
+            tree: ~pandas.DataFrame
+            remaining_lines: List of ~pandas.DataFrame
         """
 
         names = get_names(names)

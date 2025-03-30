@@ -71,10 +71,8 @@ class Tree(DictSWC):
         def subtree(self, *, out_mapping: Mapping | None = None) -> "Tree":
             """Get subtree from node.
 
-            Parameters
-            ----------
-            out_mapping : List of int or dict[int, int], optional
-                Map from new id to old id.
+            Args:
+                out_mapping: Map from new id to old id.
             """
 
             n_nodes, ndata, source, names = get_subtree_impl(
@@ -107,9 +105,8 @@ class Tree(DictSWC):
         def traverse(self, **kwargs):  # type: ignore
             """Traverse from node.
 
-            See Also
-            --------
-            ~Tree.traverse
+            See Also:
+                ~Tree.traverse
             """
             return self.attach.traverse(root=self.idx, **kwargs)
 
@@ -223,11 +220,10 @@ class Tree(DictSWC):
     def get_bifurcations(self) -> list[Node]:
         """Get all node of furcations.
 
-        Notes
-        -----
-        Deprecated due to the wrong spelling of furcation. For now, it
-        is just an alias of `get_furcations` and raise a warning. It
-        will be change to raise an error in the future.
+        .. deprecated:: 0.17.2
+            Deprecated due to the wrong spelling of furcation. For now, it is just an
+            alias of `get_furcations` and raise a warning. It will be change to raise
+            an error in the future.
         """
         return self.get_furcations()
 
@@ -324,14 +320,12 @@ class Tree(DictSWC):
     def traverse(self, *, enter=None, leave=None, **kwargs):
         """Traverse nodes.
 
-        Parameters
-        ----------
-        enter : (n: Node, parent: T | None) => T, optional
-        leave : (n: Node, children: list[T]) => T, optional
+        Args:
+            enter: (n: Node, parent: T | None) => T
+            leave: (n: Node, children: list[T]) => T
 
-        See Also
-        --------
-        ~swc_utils.traverse
+        See Also:
+            ~swc_utils.traverse
         """
 
         def wrap(fn) -> Callable | None:
@@ -374,9 +368,8 @@ class Tree(DictSWC):
     def from_swc(cls, swc_file: PathOrIO, **kwargs) -> "Tree":
         """Read neuron tree from swc file.
 
-        See Also
-        --------
-        ~swcgeom.core.swc_utils.read_swc
+        See Also:
+            ~swcgeom.core.swc_utils.read_swc
         """
 
         try:
@@ -393,9 +386,8 @@ class Tree(DictSWC):
     ) -> "Tree":
         """Read neuron tree from eswc file.
 
-        See Also
-        --------
-        ~swcgeom.Tree.from_swc
+        See Also:
+            ~swcgeom.Tree.from_swc
         """
         extra_cols = extra_cols or []
         extra_cols.extend(k for k, t in eswc_cols)

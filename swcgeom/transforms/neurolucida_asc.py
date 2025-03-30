@@ -151,9 +151,7 @@ class ASTNode:
         """
         Compare two ASTNode objects.
 
-        Notes
-        -----
-        The `parent`, `tokens` attribute is not compared.
+        NOTE: The `parent`, `tokens` attribute is not compared.
         """
         return (
             isinstance(__value, ASTNode)

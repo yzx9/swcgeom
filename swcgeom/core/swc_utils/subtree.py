@@ -15,10 +15,9 @@
 
 """Cut subtree.
 
-This module provides a series of low-level topological subtree methods,
-but in more cases, you can use the high-level methods provided in
-`tree_utils`, which wrap the methods in this module and provide a
-high-level API.
+This module provides a series of low-level topological subtree methods, but in more
+cases, you can use the high-level methods provided in `tree_utils`, which wrap the
+methods in this module and provide a high-level API.
 """
 
 from typing import cast
@@ -36,22 +35,17 @@ REMOVAL = -2  # A marker in utils, place in the ids to mark it removal
 def to_sub_topology(sub: Topology) -> tuple[Topology, npt.NDArray[np.int32]]:
     """Create sub tree from origin tree.
 
-    Mark the node to be removed, then use this method to get a child
-    structure.
+    Mark the node to be removed, then use this method to get a child structure.
 
-    Returns
-    -------
-    sub_topology : Topology
-    mapping : List of int
-        Map from new id to old id.
+    Returns:
+        sub_topology: Topology
+        mapping: Map from new id to old id.
 
-    See Also
-    --------
-    propagate_removal :
-        If the node you remove is not a leaf node, you need to use it
-        to mark all child nodes.
+    See Also:
+        propagate_removal:
+            If the node you remove is not a leaf node, you need to use it
+            to mark all child nodes.
     """
-
     sub_id = np.array(sub[0], dtype=np.int32)
     sub_pid = np.array(sub[1], dtype=np.int32)
 
@@ -69,9 +63,8 @@ def to_sub_topology(sub: Topology) -> tuple[Topology, npt.NDArray[np.int32]]:
 def propagate_removal(topology: Topology) -> Topology:
     """Mark all children when parent is marked as removed.
 
-    Returns
-    -------
-    new_topology : Topology
+    Returns:
+        new_topology: Topology
     """
 
     new_ids, pids = topology

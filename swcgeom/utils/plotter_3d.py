@@ -32,14 +32,12 @@ def draw_lines_3d(
 ):
     """Draw lines.
 
-    Parameters
-    ----------
-    ax : ~matplotlib.axes.Axes
-    lines : A collection of coords of lines
-        Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
-        and the axis-3 holds the coordinates (x, y, z).
-    **kwargs : dict[str, Unknown]
-        Forwarded to `~mpl_toolkits.mplot3d.art3d.Line3DCollection`.
+    Args:
+        ax: The plot axes.
+        lines: A collection of coords of lines
+            Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
+            and the axis-3 holds the coordinates (x, y, z).
+        **kwargs: Forwarded to `~mpl_toolkits.mplot3d.art3d.Line3DCollection`.
     """
 
     line_collection = Line3DCollection(

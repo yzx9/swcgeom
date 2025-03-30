@@ -43,9 +43,7 @@ class Transform(ABC, Generic[T, K]):
     def __call__(self, x: T) -> K:
         """Apply transform.
 
-        Notes
-        -----
-        All subclasses should overwrite :meth:`__call__`, supporting
+        NOTE: All subclasses should overwrite :meth:`__call__`, supporting
         applying transform in `x`.
         """
         raise NotImplementedError()
@@ -64,17 +62,13 @@ class Transform(ABC, Generic[T, K]):
         which can be particularly useful for debugging and model
         architecture introspection.
 
-        Examples
-        --------
         >>> class Foo(Transform[T, K]):
         ...    def __init__(self, my_parameter: int = 1):
         ...        self.my_parameter = my_parameter
         ...    def extra_repr(self) -> str:
         ...        return f"my_parameter={self.my_parameter}"
 
-        Notes
-        -----
-        This method should be overridden in custom modules to provide
+        NOTE: This method should be overridden in custom modules to provide
         specific details relevant to the module's functionality and
         configuration.
         """

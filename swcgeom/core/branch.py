@@ -31,10 +31,8 @@ __all__ = ["Branch"]
 class Branch(Path, Generic[SWCTypeVar]):
     r"""Neural branch.
 
-    Notes
-    -----
-    Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and
-    `r`, but the `id` and `pid` is usually invalid.
+    NOTE: Only a part of data of branch nodes is valid, such as `x`, `y`, `z` and `r`,
+    but the `id` and `pid` is usually invalid.
     """
 
     attach: SWCTypeVar
@@ -76,12 +74,10 @@ class Branch(Path, Generic[SWCTypeVar]):
     def from_xyzr(cls, xyzr: npt.NDArray[np.float32]) -> "Branch[DictSWC]":
         r"""Create a branch from ~numpy.ndarray.
 
-        Parameters
-        ----------
-        xyzr : npt.NDArray[np.float32]
-            Collection of nodes. If shape (n, 4), both `x`, `y`, `z`, `r` of
-            nodes is enabled. If shape (n, 3), only `x`, `y`, `z` is enabled
-            and `r` will fill by 1.
+        Args:
+            xyzr: Collection of nodes.
+                If shape (n, 4), both `x`, `y`, `z`, `r` of nodes is enabled. If shape
+                (n, 3), only `x`, `y`, `z` is enabled and `r` will fill by 1.
         """
         assert xyzr.ndim == 2 and xyzr.shape[1] in (
             3,
@@ -111,14 +107,11 @@ class Branch(Path, Generic[SWCTypeVar]):
     ) -> list["Branch[DictSWC]"]:
         r"""Create list of branch form ~numpy.ndarray.
 
-        Parameters
-        ----------
-        xyzr : npt.NDArray[np.float32]
-            Batch of collection of nodes. If shape (bs, n, 4), both `x`, `y`,
-            `z`, `r` of nodes is enabled. If shape (bs, n, 3), only `x`, `y`,
-            `z` is enabled and `r` will fill by 1.
+        Args:
+            xyzr: Batch of collection of nodes.
+                If shape (bs, n, 4), both `x`, `y`, `z`, `r` of nodes is enabled. If
+                shape (bs, n, 3), only `x`, `y`, `z` is enabled and `r` will fill by 1.
         """
-
         assert xyzr_batch.ndim == 3
         assert xyzr_batch.shape[1] >= 3
 

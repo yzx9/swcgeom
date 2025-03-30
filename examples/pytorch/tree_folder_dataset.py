@@ -26,17 +26,12 @@ class TreeFolderDataset(torch.utils.data.Dataset, Generic[T]):
     ) -> None:
         """Create tree dataset.
 
-        Parameters
-        ----------
-        swc_dir : str
-            Path of SWC file directory.
-        transforms : Transforms[Tree, T], optional
-            Branch transformations.
+        See Also:
+            ~swcgeom.transforms: Preset transform set.
 
-        See Also
-        --------
-        ~swcgeom.data.torch.transforms : module
-            Preset transform set.
+        Args:
+            swc_dir: Path of SWC file directory.
+            transforms: Branch transformations.
         """
         super().__init__()
         self.population = Population.from_swc(swc_dir)

@@ -100,9 +100,8 @@ def sort_nodes(df: pd.DataFrame, *, names: SWCNames | None = None) -> pd.DataFra
 
     The index for parent are always less than children.
 
-    See Also
-    --------
-    ~.core.swc_utils.checker.is_sorted
+    See Also:
+        ~.core.swc_utils.checker.is_sorted
     """
     return _copy_and_apply(sort_nodes_, df, names=names)
 
@@ -112,9 +111,8 @@ def sort_nodes_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
 
     The index for parent are always less than children.
 
-    See Also
-    --------
-    ~.core.swc_utils.checker.is_sorted
+    See Also:
+        ~.core.swc_utils.checker.is_sorted
     """
     names = get_names(names)
     ids, pids = df[names.id].to_numpy(), df[names.pid].to_numpy()
@@ -128,11 +126,9 @@ def sort_nodes_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
 def sort_nodes_impl(topology: Topology) -> tuple[Topology, npt.NDArray[np.int32]]:
     """Sort the indices of neuron tree.
 
-    Returns
-    -------
-    new_topology : Topology
-    id_map : List of int
-        Map from new id to original id.
+    Returns:
+        new_topology: Topology
+        id_map: Map from new id to original id.
     """
     old_ids, old_pids = topology
     assert np.count_nonzero(old_pids == -1) == 1, "should be single root"

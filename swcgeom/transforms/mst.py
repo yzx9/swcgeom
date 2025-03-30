@@ -36,8 +36,7 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
     Creates trees corresponding to the minimum spanning tree keeping
     the path length to the root small (with balancing factor bf).
 
-    References
-    ----------
+    References:
     .. [1] Cuntz, H., Forstner, F., Borst, A. & Häusser, M. One Rule to
        Grow Them Al: A General Theory of Neuronal Branching and Its
        Practical Application. PLOS Comput Biol 6, e1000877 (2010).
@@ -56,17 +55,11 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
         types: SWCTypes | None = None,
     ) -> None:
         """
-        Parameters
-        ----------
-        bf : float, default `0.4`
-            Balancing factor between 0~1.
-        furcations : int, default `2`
-            Suppress multi-furcations which more than k. If set to -1,
-            no suppression.
-        exclude_soma : bool, default `True`
-            Suppress multi-furcations exclude soma.
-        names : SWCNames, optional
-        types : SWCTypes, optional
+        Args:
+            bf: Balancing factor between 0~1.
+            furcations: Suppress multi-furcations which more than k.
+                If set to -1, no suppression.
+            exclude_soma: Suppress multi-furcations exclude soma.
         """
         self.bf = np.clip(bf, 0, 1)
         self.furcations = furcations
@@ -84,21 +77,17 @@ class PointsToCuntzMST(Transform[npt.NDArray[np.float32], Tree]):
         names: SWCNames | None = None,
     ) -> Tree:
         """
-        Parameters
-        ----------
-        points : array of shape (N, 3)
-            Positions of points cloud.
-        soma : array of shape (3,), default `None`
-            Position of soma. If none, use the first point as soma.
-        names : SWCNames, optional
+        Args:
+            points: Positions of points cloud.
+            soma: Position of soma. If none, use the first point as soma.
         """
         if names is None:
             names = self.names
         else:
             warnings.warn(
-                "`PointsToCuntzMST(...)(names=...)` has been "
-                "replaced by `PointsToCuntzMST(...,names=...)` since "
-                "v0.12.0, and will be removed in next version",
+                "`PointsToCuntzMST(...)(names=...)` has been replaced by "
+                "`PointsToCuntzMST(...,names=...)` since v0.12.0, and will be removed "
+                "in next version",
                 DeprecationWarning,
             )
             names = get_names(names)  # TODO: remove it
@@ -175,15 +164,10 @@ class PointsToMST(PointsToCuntzMST):  # pylint: disable=too-few-public-methods
         **kwargs,
     ) -> None:
         """
-        Parameters
-        ----------
-        furcations : int, default `2`
-            Suppress multifurcations which more than k. If set to -1,
-            no suppression.
-        exclude_soma : bool, default `True`
-            Suppress multi-furcations exclude soma.
-        names : SWCNames, optional
-        types : SWCTypes, optional
+        Args:
+            furcations: Suppress multifurcations which more than k.
+                If set to -1, no suppression.
+            exclude_soma: Suppress multi-furcations exclude soma.
         """
 
         if k_furcations is not None:

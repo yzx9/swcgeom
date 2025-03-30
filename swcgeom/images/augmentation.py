@@ -15,9 +15,7 @@
 
 """Play augment in image stack.
 
-Notes
------
-This is expremental code, and the API is subject to change.
+NOTE: This is expremental code, and the API is subject to change.
 """
 
 import random
@@ -104,13 +102,10 @@ fns = list(augs.keys())
 def play_augment(x: NDArrf32, method: Augmentation | int | None = None) -> NDArrf32:
     """Play augment in x.
 
-    Parameters
-    ----------
-    x : Array
-        Array of shape (X, Y, Z, C)
-    method : int or str, optional
-        Augmentation method index / name. if not provided, a random
-        augment will be apply.
+    Args
+        x: Array of shape (X, Y, Z, C)
+        method: Augmentation method index / name.
+            If not provided, a random augment will be apply.
     """
 
     if isinstance(method, str):
@@ -132,30 +127,20 @@ def random_augmentations(
 ) -> npt.NDArray[np.int64]:
     """Generate a sequence of augmentations.
 
-    Parameters
-    ----------
-    n : int
-        Size of image stacks.
-    k : int
-        Each image stack augmented to K image stack.
-    seed : int | None, optional
-        Random seed, forwarding to `random.Random`
-    include_identity : bool, default `True`
-        Include identity transform.
-
-    Returns
-    -------
-    augmentations : List of (int, int)
-        Sequence of length N * K, contains image index and augmentation
-        method index.
-
-    Examples
-    --------
     >>> xs = os.listdir("path_to_imgs")                     # doctest: +SKIP
     >>> augs = generate_random_augmentations(len(xs), 5)    # doctest: +SKIP
     >>> for i, j in range(augs):                            # doctest: +SKIP
     ...    x = play_augment(read_imgs(os.path.join("path_to_imgs", xs[i])), j)
-    ```
+
+    Args:
+        n: Size of image stacks.
+        k: Each image stack augmented to K image stack.
+        seed: Random seed, forwarding to `random.Random`
+        include_identity: Include identity transform.
+
+    Returns:
+        augmentations: List of (int, int)
+            Sequence of length N * K, contains index of image and augmentation method.
     """
 
     rand = random.Random(seed)

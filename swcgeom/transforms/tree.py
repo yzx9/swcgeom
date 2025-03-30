@@ -103,9 +103,7 @@ class CutByType(Transform[Tree, Tree]):
 
     In order to preserve the tree structure, all ancestor nodes of the node to be preserved will be preserved.
 
-    Notes
-    -----
-    Not all reserved nodes are of the specified type.
+    NOTE: Not all reserved nodes are of the specified type.
     """
 
     def __init__(self, type: int) -> None:  # pylint: disable=redefined-builtin
@@ -175,9 +173,7 @@ class CutByFurcationOrder(Transform[Tree, Tree]):
 class CutByBifurcationOrder(CutByFurcationOrder):
     """Cut tree by bifurcation order.
 
-    Notes
-    -----
-    Deprecated due to the wrong spelling of furcation. For now, it
+    NOTE: Deprecated due to the wrong spelling of furcation. For now, it
     is just an alias of `CutByFurcationOrder` and raise a warning. It
     will be change to raise an error in the future.
     """

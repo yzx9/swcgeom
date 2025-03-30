@@ -63,40 +63,33 @@ def draw(
 ) -> tuple[Figure, Axes]:
     r"""Draw neuron tree.
 
-    Parameters
-    ----------
-    swc : SWCLike | str
-        If it is str, then it is treated as the path of swc file.
-    fig : ~matplotlib.axes.Figure, optional
-    ax : ~matplotlib.axes.Axes, optional
-    show : bool | None, default `None`
-        Weather to call `plt.show()`. If not specified, it will depend
-        on if ax is passed in, it will not be called, otherwise it will
-        be called by default.
-    camera : CameraOptions | CameraPreset, default "xy"
-        Camera options (position, look-at, up). One, two, or three
-        vectors are supported, if only one vector, then threat it as
-        look-at, so camera is ((0, 0, 0), look-at, (0, 1, 0)); if two
-        vector, then then threat it as (look-at, up), so camera is
-        ((0, 0, 0), look-at, up). An easy way is to use the presets
-        "xy", "yz" and "zx".
-    color : dict[int, str] | "vaa3d" | str, optional
-        Color map. If is dict, segments will be colored by the type of
-        parent node.If is string, the value will be use for any type.
-    label : str | bool, default True
-        Label of legend, disable if False.
-    direction_indicator : str or (float, float), default 'rb'
-        Draw a xyz direction indicator, can be place on 'lt', 'lb',
-        'rt', 'rb', or custom position.
-    unit : str, optional
-        Add unit text, e.g.: r"$\mu m$".
-    **kwargs : dict[str, Unknown]
-        Forwarded to `~matplotlib.collections.LineCollection`.
+    Args:
+        swc: The swc tree to draw.
+            If it is str, then it is treated as the path of swc file.
+        fig: The figure to plot on.
+        ax: The axes to plot on.
+        show: Weather to call `plt.show()`.
+            If not specified, it will depend on if ax is passed in, it will not be
+            called, otherwise it will be called by default.
+        camera: Camera options (position, look-at, up).
+            One, two, or three vectors are supported, if only one vector, then threat
+            it as look-at, so camera is ((0, 0, 0), look-at, (0, 1, 0)); if two vector,
+            then then threat it as (look-at, up), so camera is ((0, 0, 0), look-at, up).
+            An easy way is to use the presets "xy", "yz" and "zx".
+        color: Color map.
+            If is dict, segments will be colored by the type of parent node.If is
+            string, the value will be use for any type.
+        label: Label of legend, disable if False.
+        direction_indicator: Draw a xyz direction indicator.
+            Can be place on 'lt', 'lb', 'rt', 'rb', or custom position.
+        unit: str, optional
+            Add unit text, e.g.: r"$\mu m$".
+        **kwargs: dict[str, Unknown]
+            Forwarded to `~matplotlib.collections.LineCollection`.
 
-    Returns
-    -------
-    fig : ~matplotlib.axes.Figure
-    ax : ~matplotlib.axes.Axes
+    Returns:
+        fig: The figure to plot on.
+        ax: The axes to plot on.
     """
     # pylint: disable=too-many-locals
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc
@@ -142,7 +135,9 @@ def get_ax_swc(ax: Axes) -> list[SWCLike]:
 
 
 def get_ax_color(
-    ax: Axes, swc: SWCLike, color: dict[int, str] | str | None = None
+    ax: Axes,
+    swc: SWCLike,
+    color: dict[int, str] | str | None = None,  # TODO: improve typing
 ) -> str | list[str]:
     if color == "vaa3d":
         color = palette.vaa3d
@@ -177,10 +172,7 @@ def set_ax_legend(ax: Axes, *args, **kwargs) -> Legend | None:
 
 
 def _set_ax_memo(
-    ax: Axes,
-    swc: SWCLike,
-    label: str | bool | None = None,
-    handle: Any | None = None,
+    ax: Axes, swc: SWCLike, label: str | bool | None = None, handle: Any | None = None
 ):
     ax_weak_memo.setdefault(ax, {})
     ax_weak_memo[ax].setdefault("swc", [])

@@ -52,29 +52,24 @@ def draw_trunk(
 ) -> tuple[Figure, Axes]:
     """Draw trunk tree.
 
-    Parameters
-    ----------
-    t : Tree
-    florets : List of (int | list of int)
-        The florets that needs to be removed, each floret can be a
-        subtree or multiple subtrees (e.g., dendrites are a bunch of
-        subtrees), each number is the id of a tree node.
-    fig : ~matplotlib.figure.Figure, optional
-    ax : ~matplotlib.axes.Axes, optional
-    bound : Bounds | (Bounds, dict[str, Any]) | None, default 'ellipse'
-        Kind of bound, support 'aabb', 'ellipse'. If bound is None, no
-        bound will be drawn. If bound is a tuple, the second item will
-        used as kwargs and forward to draw function.
-    point : bool | dict[str, Any], default True
-        Draw point at the start of a subtree. If point is False, no
-        point will be drawn. If point is a dict, this will used a
-        kwargs and forward to draw function.
-    cmap : Any, default 'viridis'
-        Colormap, any value supported by ~matplotlib.cm.Colormap. We
-        will use the ratio of the length of the subtree to the total
-        length of the tree to determine the color.
-    **kwargs : dict[str, Any]
-        Forward to ~swcgeom.analysis.draw.
+    Args:
+        t: Tree
+        florets: The florets that needs to be removed.
+            Each floret can be a subtree or multiple subtrees (e.g., dendrites are a
+            bunch of subtrees), each number is the id of a tree node.
+        fig: Figure to plot on.
+        ax: Axes to plot on.
+        bound: Kind of bound, support 'aabb', 'ellipse'.
+            If bound is None, no bound will be drawn. If bound is a tuple, the second
+            item will used as kwargs and forward to draw function.
+        point: Draw point at the start of a subtree.
+            If point is False, no point will be drawn. If point is a dict, this will
+            used a kwargs and forward to draw function.
+        cmap: Colormap.
+            Any value supported by ~matplotlib.cm.Colormap. We will use the ratio of
+            the length of the subtree to the total length of the tree to determine the
+            color.
+        **kwargs: Forward to ~swcgeom.analysis.draw.
     """
     # pylint: disable=too-many-locals
     trunk, tss = split_florets(t, florets)

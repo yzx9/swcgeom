@@ -15,9 +15,7 @@
 
 """Painter utils.
 
-Notes
------
-This is a experimental function, it may be changed in the future.
+NOTE: This is a experimental function, it may be changed in the future.
 """
 
 import numpy as np
@@ -43,31 +41,26 @@ def draw3d(
     *,
     ax: Axes,
     show: bool | None = None,
-    color: dict[int, str] | str | None = None,
+    color: dict[int, str] | str | None = None,  # TODO: improve typing
     label: str | bool = True,
     **kwargs,
 ) -> tuple[Figure, Axes]:
     r"""Draw neuron tree.
 
-    Parameters
-    ----------
-    swc : SWCLike | str
-        If it is str, then it is treated as the path of swc file.
-    fig : ~matplotlib.axes.Figure, optional
-    ax : ~matplotlib.axes.Axes, optional
-    show : bool | None, default `None`
-        Weather to call `plt.show()`. If not specified, it will depend
-        on if ax is passed in, it will not be called, otherwise it will
-        be called by default.
-    color : dict[int, str] | "vaa3d" | str, optional
-        Color map. If is dict, segments will be colored by the type of
-        parent node.If is string, the value will be use for any type.
-    label : str | bool, default True
-        Label of legend, disable if False.
-    **kwargs : dict[str, Unknown]
-        Forwarded to `~mpl_toolkits.mplot3d.art3d.Line3DCollection`.
+    Args:
+        swc: The swc tree to draw.
+            If it is str, then it is treated as the path of swc file.
+        fig: The figure to plot on.
+        ax: The axes to plot on.
+        show: Weather to call `plt.show()`.
+            If not specified, it will depend on if ax is passed in, it will not be
+            called, otherwise it will be called by default.
+        color: Color map.
+            If is dict, segments will be colored by the type of parent node.If is
+            string, the value will be use for any type.
+        label: Label of legend, disable if False.
+        **kwargs: Forwarded to `~mpl_toolkits.mplot3d.art3d.Line3DCollection`.
     """
-
     assert isinstance(ax, Axes3D), "only support 3D axes."
 
     swc = Tree.from_swc(swc) if isinstance(swc, str) else swc

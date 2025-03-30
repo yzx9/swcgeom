@@ -41,18 +41,14 @@ def draw_lines(
 ) -> LineCollection:
     """Draw lines.
 
-    Parameters
-    ----------
-    ax : ~matplotlib.axes.Axes
-    lines : A collection of coords of lines
-        Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
-        and the axis-3 holds the coordinates (x, y, z).
-    camera : Camera
-        Camera position.
-    **kwargs : dict[str, Unknown]
-        Forwarded to `~matplotlib.collections.LineCollection`.
+    Args:
+        ax: The plot axes.
+        lines: A collection of coords of lines
+            Excepting a ndarray of shape (N, 2, 3), the axis-2 holds two points,
+            and the axis-3 holds the coordinates (x, y, z).
+        camera: Camera position.
+        **kwargs: Forwarded to `~matplotlib.collections.LineCollection`.
     """
-
     T = camera.MVP
     T = translate3d(*camera.position).dot(T)  # keep origin
 

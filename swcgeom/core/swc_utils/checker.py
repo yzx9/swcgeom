@@ -42,7 +42,6 @@ def is_single_root(df: pd.DataFrame, *, names: SWCNames | None = None) -> bool:
 
 def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:
     """Check is it a bifurcate topology."""
-
     children = defaultdict(list)
     for idx, pid in zip(*topology):
         children[pid].append(idx)
@@ -58,8 +57,7 @@ def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:
 def is_sorted(topology: Topology) -> bool:
     """Check is it sorted.
 
-    In a sorted topology, parent samples should appear before any child
-    samples.
+    In a sorted topology, parent samples should appear before any child samples.
     """
     flag = True
 
@@ -102,7 +100,6 @@ def check_single_root(*args, **kwargs) -> bool:
     .. deprecated:: 0.5.0
         Use :meth:`is_single_root` instead.
     """
-
     return is_single_root(*args, **kwargs)
 
 
@@ -115,7 +112,6 @@ def is_binary_tree(
     .. deprecated:: 0.8.0
         Use :meth:`is_bifurcate` instead.
     """
-
     names = get_names(names)
     topo = (df[names.id].to_numpy(), df[names.pid].to_numpy())
     return is_bifurcate(topo, exclude_root=exclude_root)

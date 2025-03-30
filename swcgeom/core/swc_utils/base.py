@@ -64,10 +64,8 @@ def get_names(names: SWCNames | None = None) -> SWCNames:
 class SWCTypes(NamedTuple):
     """SWC format types.
 
-    See Also
-    ---------
-    NeuroMoprho.org - What is SWC format?
-        https://neuromorpho.org/myfaq.jsp
+    See Also:
+        NeuroMoprho.org - What is SWC format?: https://neuromorpho.org/myfaq.jsp
     """
 
     undefined: int = 0
@@ -145,22 +143,18 @@ def traverse(
 def traverse(topology: Topology, *, mode="dfs", **kwargs):
     """Traverse nodes.
 
-    Parameters
-    ----------
-    enter : (id: int, parent: T | None) => T, optional
-        The callback when entering node, which accepts two parameters,
-        the current node id and the return value of it parent node. In
-        particular, the root node receives an `None`.
-    leave : (id: int, children: list[T]) => T, optional
-        The callback when leaving node. When leaving a node, subtree
-        has already been traversed. Callback accepts two parameters,
-        the current node id and list of the return value of children,
-        In particular, the leaf node receives an empty list.
-    root : int, default to `0`
-        Start from the root node of the subtree
-    mode : `dfs`, default to `dfs`
+    Args:
+    enter: (id: int, parent: T | None) => T, optional
+        The callback when entering node, which accepts two parameters, the current node
+        id and the return value of it parent node. In particular, the root node
+        receives an `None`.
+    leave: (id: int, children: list[T]) => T, optional
+        The callback when leaving node. When leaving a node, subtree has already been
+        traversed. Callback accepts two parameters, the current node id and list of the
+        return value of children, In particular, the leaf node receives an empty list.
+    root: Start from the root node of the subtree
+    mode: The traverse mode, only support "dfs" now.
     """
-
     match mode:
         case "dfs":
             return _traverse_dfs(topology, **kwargs)

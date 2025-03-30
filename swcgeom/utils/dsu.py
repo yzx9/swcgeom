@@ -23,8 +23,6 @@ class DisjointSetUnion:
 
     DSU with path compression and union by rank.
 
-    Examples
-    --------
     >>> dsu = DisjointSetUnion(3)
     >>> dsu.is_same_set(0, 1)
     False

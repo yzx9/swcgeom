@@ -59,9 +59,8 @@ def is_binary_tree(tree: Tree, exclude_soma: bool = True) -> bool:
 def sort_tree(tree: Tree) -> Tree:
     """Sort the indices of neuron tree.
 
-    See Also
-    --------
-    ~.core.swc_utils.sort_nodes
+    See Also:
+        ~.core.swc_utils.sort_nodes
     """
     return _sort_tree(tree.copy())
 
@@ -126,9 +125,8 @@ def to_sub_tree(swc_like: SWCLike, sub: Topology) -> tuple[Tree, dict[int, int]]
         Use :meth:`to_subtree` instead.
 
     Returns
-    -------
-    tree : Tree
-    id_map : dict[int, int]
+        tree: Tree
+        id_map: dict[int, int]
     """
 
     sub = propagate_removal(sub)
@@ -154,13 +152,10 @@ def to_subtree(
 ) -> Tree:
     """Create subtree from origin tree.
 
-    Parameters
-    ----------
-    swc_like : SWCLike
-    removals : List of int
-        A list of id of nodes to be removed.
-    out_mapping: List of int or dict[int, int], optional
-        Map new id to old id.
+    Args:
+        swc_like: SWCLike
+        removals: A list of id of nodes to be removed.
+        out_mapping: Map new id to old id.
     """
 
     new_ids = swc_like.id().copy()
@@ -179,13 +174,10 @@ def get_subtree(
 ) -> Tree:
     """Get subtree rooted at n.
 
-    Parameters
-    ----------
-    swc_like : SWCLike
-    n : int
-        Id of the root of the subtree.
-    out_mapping: List of int or dict[int, int], optional
-        Map new id to old id.
+    Args:
+        swc_like: SWCLike
+        n: Id of the root of the subtree.
+        out_mapping: Map new id to old id.
     """
 
     n_nodes, ndata, source, names = get_subtree_impl(
@@ -197,14 +189,10 @@ def get_subtree(
 def redirect_tree(tree: Tree, new_root: int, sort: bool = True) -> Tree:
     """Set root to new point and redirect tree graph.
 
-    Parameter
-    ---------
-    tree : Tree
-        The tree.
-    new_root : int
-        The id of new root.
-    sort : bool, default `True`
-        If true, sort indices of nodes after redirect.
+    Args:
+        tree: The tree.
+        new_root: The id of new root.
+        sort: If true, sort indices of nodes after redirect.
     """
 
     tree = tree.copy()
@@ -235,17 +223,13 @@ def cat_tree(  # pylint: disable=too-many-arguments
 ) -> Tree:
     """Concatenates the second tree onto the first one.
 
-    Parameters
-    ----------
-    tree1 : Tree
-    tree2 : Tree
-    node1 : int, default `0`
-        The node id of the tree to be connected.
-    node2 : int, default `0`
-        The node id of the connection point.
-    translate : bool, default `True`
-        Weather to translate node_2 to node_1. If False, add link
-        between node_1 and node_2 without translate.
+    Args:
+        tree1: Tree
+        tree2: Tree
+        node1: The node id of the tree to be connected.
+        node2: The node id of the connection point.
+        translate: Weather to translate node_2 to node_1.
+            If False, add link between node_1 and node_2 without translate.
     """
     if no_move is not None:
         warnings.warn(

@@ -52,11 +52,9 @@ class LazyLoadingTrees:
 
     def __init__(self, swcs: Iterable[str], **kwargs) -> None:
         """
-        Parameters
-        ----------
-        swcs : List of str
-        kwargs : dict[str, Any]
-            Forwarding to `Tree.from_swc`
+        Args:
+            swcs: List of str
+            kwargs: Forwarding to `Tree.from_swc`
         """
 
         super().__init__()
@@ -139,9 +137,9 @@ class Population:
         if len(swcs) > 0 and isinstance(swcs[0], str):
             warnings.warn(
                 "`Population(swcs)` has been replaced by "
-                "`Population(LazyLoadingTrees(swcs))` since v0.8.0 "
-                "thus we can create a population from a group of trees, "
-                " and this will be removed in next version",
+                "`Population(LazyLoadingTrees(swcs))` since v0.8.0 thus we can create "
+                "a population from a group of trees, and this will be removed in next "
+                "version",
                 DeprecationWarning,
             )
 
@@ -190,10 +188,9 @@ class Population:
     ) -> Iterator[T]:
         """Map a function to all trees in the population.
 
-        This is a straightforward interface for parallelizing
-        computations. The parameters are intentionally kept simple and
-        user-friendly. For more advanced control, consider using
-        `concurrent.futures` directly.
+        This is a straightforward interface for parallelizing computations. The
+        parameters are intentionally kept simple and user-friendly. For more advanced
+        control, consider using `concurrent.futures` directly.
         """
 
         trees = (t for t in self.trees)
@@ -297,19 +294,13 @@ class Populations:
     ) -> Self:
         """Get population from dirs.
 
-        Parameters
-        ----------
-        roots : List of str
-        intersect : bool, default `True`
-            Take the intersection of these populations.
-        check_same : bool, default `False`
-            Check if the directories contains the same swc.
-        labels : List of str, optional
-            Label of populations.
-        **kwargs : Any
-            Forwarding to `Population`.
+        Args:
+            roots: List of str
+            intersect: Take the intersection of these populations.
+            check_same: Check if the directories contains the same swc.
+            labels: Label of populations.
+            **kwargs: Forwarding to `Population`.
         """
-
         fs = [Population.find_swcs(d, ext=ext, relpath=True) for d in roots]
         if intersect:
             inter = list(reduce(lambda a, b: set(a).intersection(set(b)), fs))
@@ -355,7 +346,6 @@ def _get_idx(key: int, length: int) -> int:
 # experimental
 def filter_population(pop: Population, predicate: Callable[[Tree], bool]) -> Population:
     """Filter trees in the population."""
-
     # TODO: how to avoid load trees
     idx = [i for i, t in enumerate(pop) if predicate(t)]
     return Population(NestTrees(pop.trees, idx), root=pop.root)

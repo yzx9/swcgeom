@@ -11,30 +11,22 @@ from swcgeom.transforms import Transform
 class ToDGLGraph(Transform[Tree, dgl.DGLGraph]):
     """Transform tree to dgl graph.
 
-    Notes
-    -----
-    You SHOULD initially decide to construct your own transformation,
-    even if we are attempting to provide additional capabilities for
-    you because there are so many custom initial options in graph and
-    this class is more of a toy and template.
+    NOTE: You SHOULD initially decide to construct your own transformation, even if we
+    are attempting to provide additional capabilities for you because there are so
+    many custom initial options in graph and this class is more of a toy and template.
     """
 
     keys: list[str] | None
     to_bidirected: bool
 
     def __init__(
-        self,
-        to_bidirected: bool = False,
-        keys: list[str] | None = None,
+        self, to_bidirected: bool = False, keys: list[str] | None = None
     ) -> None:
         """Transform tree to dgl graph.
 
-        Parameters
-        ----------
-        to_bidirected : bool, default to `False`
-            If True, return bidirected graph.
-        keys : list[str], optional
-            Copy these keys as ndata of graph.
+        Args:
+            to_bidirected: Whether to return bidirected graph.
+            keys: Copy these keys as ndata of graph.
         """
 
         self.to_bidirected = to_bidirected

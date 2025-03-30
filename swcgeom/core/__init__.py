@@ -20,12 +20,7 @@ from swcgeom.core.branch import *  # noqa: F403
 from swcgeom.core.branch_tree import *  # noqa: F403
 
 # Segment and Segments don't expose
-from swcgeom.core.compartment import (
-    Compartment as Compartment,
-)
-from swcgeom.core.compartment import (
-    Compartments as Compartments,
-)
+from swcgeom.core.compartment import Compartment, Compartments  # noqa: F401
 from swcgeom.core.node import *  # noqa: F403
 from swcgeom.core.path import *  # noqa: F403
 from swcgeom.core.population import *  # noqa: F403

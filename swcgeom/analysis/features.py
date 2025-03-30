@@ -53,22 +53,17 @@ class NodeFeatures:
     def get_count(self) -> npt.NDArray[np.float32]:
         """Get number of nodes.
 
-        Returns
-        -------
-        count : array of shape (1,)
+        Args:
+            count: array of shape (1,)
         """
-
         return np.array([self.tree.number_of_nodes()], dtype=np.float32)
 
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
         """Get the end-to-end straight-line distance to soma.
 
-        Returns
-        -------
-        radial_distance : npt.NDArray[np.float32]
-            Array of shape (N,).
+        Returns:
+            radial_distance: Array of shape (N,).
         """
-
         xyz = self.tree.xyz() - self.tree.soma().xyz()
         radial_distance = np.linalg.norm(xyz, axis=1)
         return radial_distance
@@ -81,12 +76,9 @@ class NodeFeatures:
 
         Criticle node means that soma, bifucation nodes, tips.
 
-        Returns
-        -------
-        order : npt.NDArray[np.int32]
-            Array of shape (N,), which k is the number of branchs.
+        Returns:
+            order: Array of shape (N,), which k is the number of branches.
         """
-
         order = np.zeros_like(self._branch_tree.id(), dtype=np.int32)
 
         def assign_depth(n: Tree.Node, pre_depth: int | None) -> int:
@@ -112,23 +104,17 @@ class _SubsetNodesFeatures(ABC):
     def get_count(self) -> npt.NDArray[np.float32]:
         """Get number of nodes.
 
-        Returns
-        -------
-        count : npt.NDArray[np.float32]
-            Array of shape (1,).
+        Returns:
+            count: Array of shape (1,).
         """
-
         return np.array([np.count_nonzero(self.nodes)], dtype=np.float32)
 
     def get_radial_distance(self) -> npt.NDArray[np.float32]:
         """Get the end-to-end straight-line distance to soma.
 
-        Returns
-        -------
-        radial_distance : npt.NDArray[np.float32]
-            Array of shape (N,).
+        Returns:
+            radial_distance: Array of shape (N,).
         """
-
         return self._features.get_radial_distance()[self.nodes]
 
     @classmethod
@@ -148,11 +134,9 @@ class FurcationFeatures(_SubsetNodesFeatures):
 class BifurcationFeatures(FurcationFeatures):
     """Evaluate bifurcation node feature of tree.
 
-    Notes
-    -----
-    Deprecated due to the wrong spelling of furcation. For now, it
-    is just an alias of `FurcationFeatures` and raise a warning. It
-    will be change to raise an error in the future.
+    NOTE: Deprecated due to the wrong spelling of furcation. For now, it is just an
+    alias of `FurcationFeatures` and raise a warning. It will be change to raise an
+    error in the future.
     """
 
 
@@ -219,24 +203,18 @@ class BranchFeatures:
     def get_angle(self, eps: float = 1e-7) -> npt.NDArray[np.float32]:
         """Get agnle between branches.
 
-        Returns
-        -------
-        angle : npt.NDArray[np.float32]
-            An array of shape (N, N), which N is length of branches.
+        Returns:
+            angle: An array of shape (N, N), which N is length of branches.
         """
-
         return self.calc_angle(self._branches, eps=eps)
 
     @staticmethod
     def calc_angle(branches: list[T], eps: float = 1e-7) -> npt.NDArray[np.float32]:
         """Calc agnle between branches.
 
-        Returns
-        -------
-        angle : npt.NDArray[np.float32]
-            An array of shape (N, N), which N is length of branches.
+        Returns:
+            angle: An array of shape (N, N), which N is length of branches.
         """
-
         vector = np.array([br[-1].xyz() - br[0].xyz() for br in branches])
         vector_dot = np.matmul(vector, vector.T)
         vector_norm = np.linalg.norm(vector, ord=2, axis=1, keepdims=True)

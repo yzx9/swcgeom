@@ -24,13 +24,10 @@ class BranchToTensor(Transform[Branch, torch.Tensor]):
     ):
         """Transform branch to ~torch.Tensor.
 
-        Parameters
-        ----------
-        channels : str, default `xyz`
-            Output channels and order, support `xyz` and `xyzr` now.
-        channel_first : bool
-            Tensor dimension order. If `True`, the tensor is of shape (C, N), otherwise of
-            shape (N, C).
+        Args:
+            channels: Output channels and order, support `xyz` and `xyzr` now.
+            channel_first: Tensor dimension order. If `True`, the tensor is of shape
+                (C, N), otherwise of shape (N, C).
         """
 
         super().__init__()

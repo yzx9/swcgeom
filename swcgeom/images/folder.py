@@ -116,16 +116,12 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     def stat(self, *, transform: bool = False, verbose: bool = False) -> Statistics:
         """Statistics of folder.
 
-        Parameters
-        ----------
-        transform : bool, default to False
-            Apply transform to the images. If True, you need to make
-            sure the transformed data is a ndarray.
-        verbose : bool, optional
+        NOTE: We are asserting that the images are of the same shape.
 
-        Notes
-        -----
-        We are asserting that the images are of the same shape.
+        Args:
+            transform: Apply transform to the images.
+                If True, you need to make sure the transformed data is a ndarray.
+            verbose: Show progress bar.
         """
 
         vmin, vmax = math.inf, -math.inf
@@ -162,13 +158,10 @@ class ImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     @classmethod
     def from_dir(cls, root: str, *, pattern: str | None = None, **kwargs) -> Self:
         """
-        Parameters
-        ----------
-        root : str
-        pattern : str, optional
-            Filter files by pattern.
-        **kwargs
-            Pass to `cls.__init__`
+        Args:
+            root: str
+            pattern: Filter files by pattern.
+            **kwargs: Pass to `cls.__init__`
         """
 
         return cls(cls.scan(root, pattern=pattern), **kwargs)
@@ -221,13 +214,10 @@ class PathImageStackFolder(ImageStackFolderBase[ScalarType, T]):
     @classmethod
     def from_dir(cls, root: str, *, pattern: str | None = None, **kwargs) -> Self:
         """
-        Parameters
-        ----------
-        root : str
-        pattern : str, optional
-            Filter files by pattern.
-        **kwargs
-            Pass to `cls.__init__`
+        Args:
+            root: str
+            pattern: Filter files by pattern.
+            **kwargs: Pass to `cls.__init__`
         """
 
         return cls(cls.scan(root, pattern=pattern), root=root, **kwargs)

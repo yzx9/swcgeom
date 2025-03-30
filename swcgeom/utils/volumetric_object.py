@@ -113,17 +113,12 @@ class VolMCObject(VolObject, ABC):
     def sample(self, n: int) -> tuple[npt.NDArray[np.float32], float]:
         """Sample points.
 
-        Parameters
-        ----------
-        n : int
-            Number of points to sample.
+        Args:
+            n: Number of points to sample.
 
-        Returns
-        -------
-        points : ndarray
-            Sampled points.
-        volume : float
-            Volume of the sample range.
+        Returns:
+            points: Sampled points.
+            volume: Volume of the sample range.
         """
         raise NotImplementedError()
 
@@ -135,21 +130,17 @@ class VolMCObject(VolObject, ABC):
     def is_in(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
         """Is p in the object.
 
-        Returns
-        -------
-        is_in : npt.NDArray[np.bool_]
-            Array of shape (N,), if bounding box is `None`, `True` will
-            be returned.
+        Returns:
+            is_in: Array of shape (N,).
+                If bounding box is `None`, `True` will be returned.
         """
         return np.array([self.inside(pp) for pp in p])
 
     def _get_volume(self, *, n_samples: int | None = None) -> float:
         """Get volume by Monte Carlo integration.
 
-        Parameters
-        ----------
-        n_samples : int, default 1_000_000
-            Number of samples
+        Args:
+            n_samples: Number of samples, default 1_000_000
         """
 
         # legacy
@@ -178,9 +169,7 @@ class VolMCObject(VolObject, ABC):
 class VolSDFObject(VolMCObject):
     """Volumetric SDF Object.
 
-    Notes
-    -----
-    SDF must has a bounding box.
+    NOTE: SDF must has a bounding box.
     """
 
     def __init__(self, sdf: SDF, **kwargs) -> None:
@@ -294,10 +283,8 @@ class VolSphere(VolSDFObject):
         V = \frac{4}{3} * π * r^3
         \end{equation}
 
-        Returns
-        -------
-        volume : float
-            Volume.
+        Returns:
+            volume: volume of sphere.
         """
         return 4 / 3 * np.pi * radius**3
 
@@ -309,17 +296,12 @@ class VolSphere(VolSDFObject):
         V = π * h^2 * (3r - h) / 3
         \end{equation}
 
-        Parameters
-        ----------
-        r : float
-            radius of the sphere
-        h : float
-            height of the spherical cap
+        Args:
+            r: radius of the sphere
+            h: height of the spherical cap
 
-        Returns
-        -------
-        volume : float
-            volume of the spherical cap
+        Returns:
+            volume: volume of the spherical cap
         """
         return np.pi * h**2 * (3 * r - h) / 3
 
@@ -361,10 +343,8 @@ class VolFrustumCone(VolSDFObject):
         V = \frac{1}{3} * π * h * (r^2 + r * R + R^2)
         \end{equation}
 
-        Returns
-        -------
-        volume : float
-            Volume.
+        Returns:
+            volume: volume of frustum.
         """
         return (1 / 3) * np.pi * height * (r1**2 + r1 * r2 + r2**2)
 
@@ -386,10 +366,8 @@ class VolSphere2Intersection(VolSDFIntersection[VolSphere, VolSphere]):
         V = \frac{\pi}{12d} * (r_1 + r_2 - d)^2 (d^2 + 2d r_1 - 3r_1^2 + 2d r_2 - 3r_2^2 + 6 r_1r_2)
         \end{equation}
 
-        Returns
-        -------
-        volume : float
-            Intersect volume.
+        Returns:
+            volume: Intersect volume.
         """
 
         r1, r2 = obj1.radius, obj2.radius
@@ -440,10 +418,8 @@ class VolSphereFrustumConeIntersection(VolSDFIntersection[VolSphere, VolFrustumC
     ) -> float:
         r"""Calculate intersect volume of sphere and frustum cone.
 
-        Returns
-        -------
-        volume : float
-            Intersect volume.
+        Returns:
+            volume: Intersect volume.
         """
 
         h = frustum_cone.height()

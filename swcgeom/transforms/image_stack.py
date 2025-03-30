@@ -15,9 +15,7 @@
 
 """Create image stack from morphology.
 
-Notes
------
-All denpendencies need to be installed, try:
+NOTE: All denpendencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]
@@ -57,12 +55,10 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     def __init__(self, resolution: int | float | npt.ArrayLike = 1) -> None:
         """Transform tree to image stack.
 
-        Parameters
-        ----------
-        resolution : int | (x, y, z), default `(1, 1, 1)`
-            Resolution of image stack.
+        Args:
+            resolution: Resolution of image stack.
+                If a scalar, it will be broadcasted to a vector of 3d.
         """
-
         if isinstance(resolution, (int, float, np.integer, np.floating)):
             resolution = [resolution, resolution, resolution]  # type: ignore
 
@@ -73,11 +69,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     def __call__(self, x: Tree) -> npt.NDArray[np.uint8]:
         """Transform tree to image stack.
 
-        Notes
-        -----
-        This method loads the entire image stack into memory, so it
-        ONLY works for small image stacks, use :meth`transform_and_save`
-        for big image stack.
+        NOTE: This method loads the entire image stack into memory, so it ONLY works
+        for small image stacks, use :meth`transform_and_save` for big image stack.
         """
         return np.stack(list(self.transform(x, verbose=False)), axis=0)
 
@@ -180,10 +173,8 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
     ) -> Iterable[RangeSampler]:
         """Get Samplers.
 
-        Parameters
-        ----------
-        coord_min, coord_max: npt.ArrayLike
-            Coordinates array of shape (3,).
+        Args:
+            coord_min, coord_max: Coordinates array of shape (3,).
         """
 
         eps = 1e-6

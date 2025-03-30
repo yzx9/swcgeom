@@ -115,22 +115,22 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def id(self) -> npt.NDArray[np.int32]:  # pylint: disable=invalid-name
         """Get the ids of shape (n_sample,).
 
-        Returns a consecutively incremented id.
+        Returns:
+            a consecutively incremented id.
 
-        See Also
-        --------
-        self.origin_id
+        See Also:
+            self.origin_id
         """
         return np.arange(len(self.origin_id()), dtype=np.int32)
 
     def pid(self) -> npt.NDArray[np.int32]:
         """Get the ids of shape (n_sample,).
 
-        Returns a consecutively incremented pid.
+        Returns:
+            a consecutively incremented pid.
 
-        See Also
-        --------
-        self.origin_pid
+        See Also:
+            self.origin_pid
         """
         return np.arange(-1, len(self.origin_id()) - 1, dtype=np.int32)
 
@@ -150,17 +150,15 @@ class Path(SWCLike, Generic[SWCTypeVar]):
     def straight_line_distance(self) -> float:
         """Straight-line distance of path.
 
-        The end-to-end straight-line distance between start point and
-        end point.
+        The end-to-end straight-line distance between start point and end point.
         """
         return np.linalg.norm(self.node(-1).xyz() - self.node(0).xyz()).item()
 
     def tortuosity(self) -> float:
         """Tortuosity of path.
 
-        The straight-line distance between two consecutive branch
-        points divided by the length of the neuronal path between
-        those points.
+        The straight-line distance between two consecutive branch points divided by the
+        length of the neuronal path between those points.
         """
         if (length := self.length()) == 0:
             return 1

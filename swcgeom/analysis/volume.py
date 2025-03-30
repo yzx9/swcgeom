@@ -37,45 +37,34 @@ def get_volume(
 ) -> float:
     """Get the volume of the tree.
 
-    Parameters
-    ----------
-    tree : Tree
-        Neuronal tree.
-    method : {"frustum_cone"}, optional
-        Method for volume calculation.
-    accuracy : int or {"low", "middle", "high"}, optional
-        Accuracy level for volume calculation. The higher the accuracy,
-        the more accurate the volume calculation, but the slower the
-        calculation. The accuracy level can be specified either as an
-        integer or as a string.
+    Args:
+        tree: Neuronal tree.
+        method: Method for volume calculation.
+        accuracy: Accuracy level for volume calculation. The higher the accuracy,
+            the more accurate the volume calculation, but the slower the
+            calculation. The accuracy level can be specified either as an
+            integer or as a string.
 
-        The string values correspond to the following accuracy levels:
+            The string values correspond to the following accuracy levels:
 
-        - "low": 3
-        - "middle": 5
-        - "high": 8
+            - "low": 3
+            - "middle": 5
+            - "high": 8
 
-    Returns
-    -------
-    volume : float
-        Volume of the tree.
+    Returns:
+        volume: Volume of the tree.
 
-    Notes
-    -----
-    The SWC format is a method for representing neurons, which includes
-    both the radius of individual points and their interconnectivity.
-    Consequently, there are multiple distinct approaches to
-    representation within this framework.
+    NOTE: The SWC format is a method for representing neurons, which includes both the
+    radius of individual points and their interconnectivity. Consequently, there are
+    multiple distinct approaches to representation within this framework.
 
-    Currently, we support a standard approach to volume calculation.
-    This method involves treating each node as a sphere and
-    representing the connections between them as truncated cone-like
-    structures, or frustums, with varying radii at their top and bottom
-    surfaces.
+    Currently, we support a standard approach to volume calculation. This method
+    involves treating each node as a sphere and representing the connections between
+    them as truncated cone-like structures, or frustums, with varying radii at their
+    top and bottom surfaces.
 
     We welcome additional representation methods through pull requests.
     """
-
     if isinstance(accuracy, str):
         accuracy = ACCURACY_LEVELS[accuracy]
 
@@ -91,18 +80,15 @@ def get_volume(
 def _get_volume_frustum_cone(tree: Tree, *, accuracy: int) -> float:
     """Get the volume of the tree using the frustum cone method.
 
-    Parameters
-    ----------
-    tree : Tree
-        Neuronal tree.
-    accuracy : int
-        1 : Sphere only
-        2 : Sphere and Frustum Cone
-        3 : Sphere, Frustum Cone, and intersection in single-branch
-        5 : Above and Sphere-Frustum Cone intersection in multi-branch
-        10 : Fully calculated by Monte Carlo method
+    Args:
+        tree: Neuronal tree.
+        accuracy: Accuracy level.
+            1 : Sphere only
+            2 : Sphere and Frustum Cone
+            3 : Sphere, Frustum Cone, and intersection in single-branch
+            5 : Above and Sphere-Frustum Cone intersection in multi-branch
+            10 : Fully calculated by Monte Carlo method
     """
-
     if accuracy == 10:
         return _get_volume_frustum_cone_mc_only(tree)
 

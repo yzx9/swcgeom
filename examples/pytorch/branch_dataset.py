@@ -34,20 +34,14 @@ class BranchDataset(torch.utils.data.Dataset, Generic[T]):
     ) -> None:
         """Create branch dataset.
 
-        Parameters
-        ----------
-        swc_dir : str
-            Path of SWC file directory.
-        save : Union[str, bool], default `True`
-            Save branch data to file if not False. If `True`, automatically
-            generate file name.
-        transforms : Transforms[Branch, T], optional
-            Branch transformations.
+        Args:
+            swc_dir: Path of SWC file directory.
+            save: Save branch data to file if not False. If `True`, automatically
+                generate file name.
+            transform: Branch transformations.
 
-        See Also
-        --------
-        ~swcgeom.transforms : module
-            Preset transform set.
+        See Also:
+            ~swcgeom.transforms: Preset transform set.
         """
 
         self.swc_dir = swc_dir

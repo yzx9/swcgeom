@@ -39,13 +39,12 @@ YLABLE = "Count of Intersections"
 class Sholl:
     """Sholl analysis.
 
-    Implementation of original Sholl analysis as described in [1]_. The
-    Sholl analysis is a method to quantify the spatial distribution of
-    neuronal processes. It is based on the number of intersections of
-    concentric circles with the neuronal processes.
+    Implementation of original Sholl analysis as described in [1]_. The Sholl analysis
+    is a method to quantify the spatial distribution of neuronal processes. It is
+    based on the number of intersections of concentric circles with the neuronal
+    processes.
 
-    References
-    ----------
+    References:
     .. [1] Dendritic organization in the neurons of the visual and
        motor cortices of the cat J. Anat., 87 (1953), pp. 387-406
     """
@@ -57,11 +56,7 @@ class Sholl:
     # compat
     step: float | None = None
 
-    def __init__(
-        self,
-        tree: Tree | str,
-        step: float | None = None,
-    ) -> None:
+    def __init__(self, tree: Tree | str, step: float | None = None) -> None:
         tree = Tree.from_swc(tree) if isinstance(tree, str) else tree
         try:
             self.tree = TranslateOrigin.transform(tree)  # shift
@@ -109,18 +104,14 @@ class Sholl:
     ) -> tuple[Figure, Axes]:
         """Plot Sholl analysis.
 
-        Parameters
-        ----------
-        steps : int or list[float], default to 20
-            Steps of raius of circle. If steps is int, then it will be
-            evenly divided into n radii.
-        kind : "bar" | "linechart" | "circles", default `circles`
-        fig : ~matplotlib.figure.Figure
-        ax : ~matplotlib.axes.Axes
-        **kwargs :
-            Forwarding to plot method.
+        Args:
+            steps: Steps of raius of circle.
+                If steps is int, then it will be evenly divided into n radii.
+            kind: Kind of plot.
+            fig: The figure to plot on.
+            ax: The axes to plot on.
+            **kwargs: Forwarding to plot method.
         """
-
         if plot_type is not None:
             warnings.warn(
                 "`plot_type` has been renamed to `kind` since v0.5.0, "
@@ -136,9 +127,11 @@ class Sholl:
             case "bar":
                 sns.barplot(x=xs, y=ys, ax=ax, **kwargs)
                 ax.set_ylabel(YLABLE)
+
             case "linechart":
                 sns.lineplot(x=xs, y=ys, ax=ax, **kwargs)
                 ax.set_ylabel(YLABLE)
+
             case "circles":
                 kwargs.setdefault("y_min", 0)
                 drawtree = kwargs.pop("drawtree", True)
@@ -155,6 +148,7 @@ class Sholl:
                     fig.colorbar(patches, ax=ax, label=YLABLE)
                 elif isinstance(colorbar, (Axes, np.ndarray, list)):
                     fig.colorbar(patches, ax=colorbar, label=YLABLE)
+
             case _:
                 raise ValueError(f"unsupported kind: {kind}")
 

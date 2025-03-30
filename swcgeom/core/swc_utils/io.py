@@ -49,31 +49,23 @@ def read_swc(
 ) -> tuple[pd.DataFrame, list[str]]:
     """Read swc file.
 
-    Parameters
-    ----------
-    swc_file : PathOrIO
-        Path of swc file, the id should be consecutively incremented.
-    extra_cols : Iterable[str], optional
-        Read more cols in swc file.
-    fix_roots : `somas`|`nearest`|False, default `False`
-        Fix multiple roots.
-    sort_nodes : bool, default `False`
-        Sort the indices of neuron tree, the index for parent are
-        always less than children.
-    reset_index : bool, default `True`
-        Reset node index to start with zero, DO NOT set to false if
-        you are not sure what will happend.
-    encoding : str | 'detect', default `utf-8`
-        The name of the encoding used to decode the file. If is
-        `detect`, we will try to detect the character encoding.
-    names : SWCNames, optional
+    NOTE: the id should be consecutively incremented.
 
-    Returns
-    -------
-    df : ~pandas.DataFrame
-    comments : List of string
+    Args:
+        extra_cols: Read more cols in swc file.
+        fix_roots: Fix multiple roots.
+        sort_nodes: Sort the indices of neuron tree.
+            After sorting the nodes, the index for each parent are always less than
+            that of its children.
+        reset_index: Reset node index to start with zero.
+            DO NOT set to false if you are not sure what will happened.
+        encoding: The name of the encoding used to decode the file.
+            If is `detect`, we will try to detect the character encoding.
+
+    Returns:
+        df: ~pandas.DataFrame
+        comments: List of string
     """
-
     names = get_names(names)
     df, comments = parse_swc(
         swc_file, names=names, extra_cols=extra_cols, encoding=encoding
@@ -156,21 +148,14 @@ def parse_swc(
 ) -> tuple[pd.DataFrame, list[str]]:
     """Parse swc file.
 
-    Parameters
-    ----------
-    fname : PathOrIO
-    names : SWCNames
-    extra_cols : List of str, optional
-    encoding : str | 'detect', default `utf-8`
-        The name of the encoding used to decode the file. If is
-        `detect`, we will try to detect the character encoding.
+    Args:
+        encoding: The name of the encoding used to decode the file.
+            If is `detect`, we will try to detect the character encoding.
 
-    Returns
-    -------
-    df : ~pandas.DataFrame
-    comments : List of string
+    Returns:
+        df: ~pandas.DataFrame
+        comments: List of string
     """
-
     # pylint: disable=too-many-locals
     extras = list(extra_cols) if extra_cols else []
 

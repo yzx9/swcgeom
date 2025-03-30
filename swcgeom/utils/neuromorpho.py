@@ -15,10 +15,7 @@
 
 """NeuroMorpho.org.
 
-Examples
---------
-
-Metadata:
+Metadata Example:
 
 ```json
 {
@@ -80,9 +77,7 @@ Metadata:
 }
 ```
 
-Notes
------
-All denpendencies need to be installed, try:
+NOTE: All denpendencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]
@@ -182,11 +177,9 @@ class NeuroMorpho:
         self, root: str, *, url_base: str = URL_BASE, verbose: bool = False
     ) -> None:
         """
-        Parameters
-        ----------
-        root : str
-        verbose : bool, default False
-            Show verbose log.
+        Args:
+            root: str
+            verbose: Show verbose log.
         """
 
         super().__init__()
@@ -260,26 +253,7 @@ class NeuroMorpho:
     ) -> None:
         r"""Convert lmdb format to SWCs.
 
-        Parameters
-        ----------
-        path : str
-        dest : str, optional
-            If None, use `path/swc`.
-        group_by : str | (metadata: dict[str, Any]) -> str | None, optional
-            Group neurons by metadata. If a None is returned then no
-            grouping. If a string is entered, use it as a metadata
-            attribute name for grouping, e.g.: `archive`, `species`.
-        where : (metadata: dict[str, Any]) -> bool, optional
-            Filter neurons by metadata.
-        encoding : str | None, default to `utf-8`
-            Change swc encoding, part of the original data is not utf-8
-            encoded. If is None, keep the original encoding format.
-        verbose : bool, default False
-            Print verbose info.
-
-        Notes
-        -----
-        We are asserting the following folder.
+        NOTE: We are asserting the following folder.
 
         ```text
         |- root
@@ -289,10 +263,23 @@ class NeuroMorpho:
         | | |- groups   # output of groups if grouped
         ```
 
-        See Also
-        --------
-        neuromorpho_is_valid :
-            Recommended filter function, try `where=neuromorpho_is_valid`
+        Args:
+            path: str
+            dest: If None, use `path/swc`.
+            group_by: Group neurons by metadata.
+                If None, no grouping. If a string is entered, use it as a metadata
+                attribute name for grouping, e.g.: `archive`, `species`. If a callable
+                is entered, use it as a function `(metadata: dict[str, Any]) -> str | None\
+                to get the group name.
+            where: Filter neurons by metadata.
+                (metadata: dict[str, Any]) -> bool
+            encoding: Change swc encoding, part of the original data is not utf-8 encoded.
+                If is None, keep the original encoding format.default to `utf-8`
+            verbose: Print verbose info.
+
+        See Also:
+            neuromorpho_is_valid:
+                Recommended filter function, try `where=neuromorpho_is_valid`
         """
 
         import lmdb
@@ -361,21 +348,14 @@ class NeuroMorpho:
     ) -> list[int]:
         r"""Download all neuron metadata.
 
-        Parameters
-        ----------
-        path : str
-            Path to save data.
-        pages : List of int, optional
-            If is None, download all pages.
-        verbose : bool, default False
-            Show verbose log.
-        **kwargs :
-            Forwarding to `get`.
+        Args:
+            path: Path to save data.
+            pages: If is None, download all pages.
+            verbose: Show verbose log.
+            **kwargs: Forwarding to `get`.
 
-        Returns
-        -------
-        err_pages : List of int
-            Failed pages.
+        Returns:
+            err_pages: Failed pages.
         """
 
         # TODO: how to cache between versions?
@@ -417,25 +397,17 @@ class NeuroMorpho:
     ) -> list[bytes]:
         """Download files.
 
-        Parameters
-        ----------
-        url : str
-        path : str
-            Path to save data.
-        path_metadata : str
-            Path to lmdb of metadata.
-        keys : List of bytes, optional
-            If exist, ignore `override` option. If None, download all key.
-        override : bool, default False
-            Override even exists.
-        map_size : int, default 512GB
-        **kwargs :
-            Forwarding to `get`.
+        Args:
+            url: URL of file.
+            path: Path to save data.
+            path_metadata: Path to lmdb of metadata.
+            keys: If exist, ignore `override` option. If None, download all key.
+            override: Override even exists, default to False
+            map_size: int, default 512GB
+            **kwargs: Forwarding to `get`.
 
-        Returns
-        -------
-        err_keys : List of str
-            Failed keys.
+        Returns:
+            err_keys: Failed keys.
         """
 
         import lmdb
@@ -485,10 +457,8 @@ class NeuroMorpho:
     def _get_file(self, url: str, metadata: dict[str, Any], **kwargs) -> bytes:
         """Get file.
 
-        Returns
-        -------
-        bs : bytes
-            Bytes of morphology file, encoding is NOT FIXED.
+        Returns:
+            bs: Bytes of morphology file, encoding is NOT FIXED.
         """
 
         archive = urllib.parse.quote(metadata["archive"].lower())

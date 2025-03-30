@@ -17,10 +17,8 @@
 
 Refs: https://iquilezles.org/articles/distfunctions/
 
-Note
-----
-This module has been deprecated since v0.14.0, and will be removed in
-the future, use `sdflit` instead.
+NOTE: This module has been deprecated since v0.14.0, and will be removed in the future,
+use `sdflit` instead.
 """
 
 import warnings
@@ -60,15 +58,11 @@ class SDF(ABC):
     def distance(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.float32]:
         """Calculate signed distance.
 
-        Parameters
-        ----------
-        p: ArrayLike
-            Hit point p of shape (N, 3).
+        Args:
+            p: Hit point p of shape (N, 3).
 
-        Returns
-        -------
-        distance : npt.NDArray[np.float32]
-            Distance array of shape (3,).
+        Returns:
+            distance: Distance array of shape (3,).
         """
         raise NotImplementedError()
 
@@ -84,11 +78,9 @@ class SDF(ABC):
     def is_in_bounding_box(self, p: npt.NDArray[np.float32]) -> npt.NDArray[np.bool_]:
         """Is p in bounding box.
 
-        Returns
-        -------
-        is_in : npt.NDArray[np.bool_]
-            Array of shape (N,), if bounding box is `None`, `True` will
-            be returned.
+        Returns:
+            is_in: Array of shape (N,).
+                If bounding box is `None`, `True` will be returned.
         """
 
         if self.bounding_box is None:
@@ -285,12 +277,9 @@ class SDFRoundCone(SDF):
     ) -> None:
         """SDF of round cone.
 
-        Parameters
-        ----------
-        a, b : ArrayLike
-            Coordinates of point A/B of shape (3,).
-        ra, rb : float
-            Radius of point A/B.
+        Args:
+            a, b: Coordinates of point A/B of shape (3,).
+            ra, rb: Radius of point A/B.
         """
 
         self.a = np.array(a, dtype=np.float32)

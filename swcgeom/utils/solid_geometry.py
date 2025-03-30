@@ -30,8 +30,6 @@ __all__ = [
 def find_unit_vector_on_plane(normal_vec3: npt.NDArray) -> npt.NDArray:
     """Find a random unit vector on the plane defined by the normal vector.
 
-    Examples
-    --------
     >>> normal = np.array([0, 0, 1])
     >>> u = find_unit_vector_on_plane(normal)
     >>> np.allclose(np.dot(u, normal), 0)  # Should be perpendicular
@@ -58,8 +56,6 @@ def find_sphere_line_intersection(
 ) -> list[tuple[float, npt.NDArray[np.float64]]]:
     """Find intersection points between a sphere and a line.
 
-    Examples
-    --------
     >>> center = np.array([0, 0, 0])
     >>> radius = 1.0
     >>> p1 = np.array([-2, 0, 0])
@@ -108,8 +104,6 @@ def project_point_on_line(
 ) -> npt.NDArray:
     """Project a point onto a line defined by a point and direction vector.
 
-    Examples
-    --------
     >>> a = np.array([0, 0, 0])
     >>> d = np.array([1, 0, 0])
     >>> p = np.array([1, 1, 0])
@@ -130,8 +124,6 @@ def project_point_on_line(
 def project_vector_on_vector(vec: npt.ArrayLike, target: npt.ArrayLike) -> npt.NDArray:
     """Project one vector onto another.
 
-    Examples
-    --------
     >>> v = np.array([1, 1, 0])
     >>> t = np.array([1, 0, 0])
     >>> proj = project_vector_on_vector(v, t)
@@ -152,8 +144,6 @@ def project_vector_on_plane(
 ) -> npt.NDArray:
     """Project a vector onto a plane defined by its normal vector.
 
-    Examples
-    --------
     >>> v = np.array([1, 1, 1])
     >>> n = np.array([0, 0, 1])
     >>> proj = project_vector_on_plane(v, n)

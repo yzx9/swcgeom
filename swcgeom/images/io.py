@@ -83,19 +83,15 @@ class ImageStack(ABC, Generic[ScalarType]):
     def __getitem__(self, key):
         """Get pixel/patch of image stack.
 
-        Returns
-        -------
-        value : ndarray of f32
-            NDArray which shape depends on key. If key is tuple of ints,
+        Returns:
+            value: NDArray which shape depends on key. If key is tuple of ints,
         """
         raise NotImplementedError()
 
     def get_full(self) -> npt.NDArray[ScalarType]:
         """Get full image stack.
 
-        Notes
-        -----
-        this will load the full image stack into memory.
+        NOTE: this will load the full image stack into memory.
         """
         return self[:, :, :, :]
 
@@ -111,18 +107,13 @@ def read_imgs(fname: str, *, dtype: None = ..., **kwargs) -> ImageStack[np.float
 def read_imgs(fname: str, **kwargs):  # type: ignore
     """Read image stack.
 
-    Parameters
-    ----------
-    fname : str
-        The path of image stack.
-    dtype : np.dtype, default to `np.float32`
-        Casting data to specified dtype. If integer and float
-        conversions occur, they will be scaled (assuming floats are
-        between 0 and 1).
-    **kwargs : dict[str, Any]
-        Forwarding to the corresponding reader.
+    Args:
+        fname: The path of image stack.
+        dtype: Casting data to specified dtype.
+            If integer and float conversions occur, they will be scaled (assuming floats
+            are between 0 and 1). Default to `np.float32`.
+        **kwargs: Forwarding to the corresponding reader.
     """
-
     kwargs.setdefault("dtype", np.float32)
     if not os.path.exists(fname):
         raise ValueError(f"image stack not exists: {fname}")
@@ -157,21 +148,16 @@ def save_tiff(
 ) -> None:
     """Save image stack as tiff.
 
-    Parameters
-    ----------
-    data : array
-        The image stack.
-    fname : str
-    dtype : np.dtype, optional
-        Casting data to specified dtype. If integer and float
-        conversions occur, they will be scaled (assuming floats are
-        between 0 and 1).
-    compression : str | False, default `zlib`
-        Compression algorithm, forwarding to `tifffile.imwrite`. If no
-        algorithnm is specify specified, we will use the zlib algorithm
-        with compression level 6 by default.
-    **kwargs : dict[str, Any]
-        Forwarding to `tifffile.imwrite`
+    Args:
+        data: The image stack.
+        fname: str
+        dtype: Casting data to specified dtype.
+            If integer and float conversions occur, they will be scaled (assuming
+            floats are between 0 and 1).
+        compression: Compression algorithm, forwarding to `tifffile.imwrite`.
+            If no algorithnm is specify specified, we will use the zlib algorithm with
+            compression level 6 by default.
+        **kwargs: Forwarding to `tifffile.imwrite`
     """
     if isinstance(data, ImageStack):
         data = data.get_full()  # TODO: avoid load full imgs to memory
@@ -304,21 +290,17 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     TeraFly is a terabytes of multidimensional volumetric images file
     format as described in [1]_.
 
-    References
-    ----------
-    .. [1] Bria, Alessandro, Giulio Iannello, Leonardo Onofri, and
-       Hanchuan Peng. “TeraFly: Real-Time Three-Dimensional
-       Visualization and Annotation of Terabytes of Multidimensional
-       Volumetric Images.” Nature Methods 13,
-       no. 3 (March 2016): 192-94. https://doi.org/10.1038/nmeth.3767.
-
-    Notes
-    -----
-    Terafly and Vaa3d use a especial right-handed coordinate system
+    NOTE: Terafly and Vaa3d use a especial right-handed coordinate system
     (with origin point in the left-top and z-axis points front), but we
     flip y-axis to makes it a left-handed coordinate system (with origin
     point in the left-bottom and z-axis points front). If you need to
     use its coordinate system, remember to FLIP Y-AXIS BACK.
+
+    References:
+    .. [1] Bria, Alessandro, Giulio Iannello, Leonardo Onofri, and Hanchuan Peng.
+       “TeraFly: Real-Time Three-Dimensional Visualization and Annotation of Terabytes
+       of Multidimensional Volumetric Images.” Nature Methods 13, no. 3 (March 2016):
+       192-94. https://doi.org/10.1038/nmeth.3767.
     """
 
     _listdir: Callable[[str], list[str]]
@@ -328,17 +310,13 @@ class TeraflyImageStack(ImageStack[ScalarType]):
         self, root: str, *, dtype: ScalarType, lru_maxsize: int | None = 128
     ) -> None:
         r"""
-        Parameters
-        ----------
-        root : str
-            The root of terafly which contains directories named as
-            `RES(YxXxZ)`.
-        dtype : np.dtype
-        lru_maxsize : int or None, default to 128
-            Forwarding to `functools.lru_cache`. A decompressed array
-            size of (256, 256, 256, 1), which is the typical size of
-            terafly image stack, takes about 256 * 256 * 256 * 1 *
-            4B = 64MB. A cache size of 128 requires about 8GB memory.
+        Args:
+            root: The root of terafly which contains directories named as `RES(YxXxZ)`.
+            dtype: np.dtype
+            lru_maxsize: Forwarding to `functools.lru_cache`.
+                A decompressed array size of (256, 256, 256, 1), which is the typical
+                size of terafly image stack, takes about 256 * 256 * 256 * 1 * 4B = 64MB.
+                A cache size of 128 requires about 8GB memory.
         """
 
         super().__init__()
@@ -364,8 +342,6 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     def __getitem__(self, key):
         """Get images in max resolution.
 
-        Examples
-        --------
         >>> imgs[0, 0, 0, 0]            # get value # doctest: +SKIP
         >>> imgs[0:64, 0:64, 0:64, :]   # get patch # doctest: +SKIP
         ```
@@ -390,9 +366,8 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     ) -> npt.NDArray[ScalarType]:
         """Get patch of image stack.
 
-        Returns
-        -------
-        patch : array of shape (X, Y, Z, C)
+        Returns:
+            patch: array of shape (X, Y, Z, C)
         """
         if isinstance(strides, int):
             strides = (strides, strides, strides)
@@ -412,10 +387,9 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     def find_correspond_imgs(self, p, res_level=-1):
         """Find the image which contain this point.
 
-        Returns
-        -------
-        patch : array of shape (X, Y, Z, C)
-        patch_offset : (int, int, int)
+        Returns:
+            patch: array of shape (X, Y, Z, C)
+            patch_offset: (int, int, int)
         """
         p = np.array(p)
         self._check_params(res_level, p)
@@ -433,14 +407,10 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     def get_resolutions(cls, root: str) -> tuple[list[Vec3i], list[str], list[Vec3i]]:
         """Get all resolutions.
 
-        Returns
-        -------
-        resolutions : List of (int, int, int)
-            Sequence of sorted resolutions (from small to large).
-        roots : list[str]
-            Sequence of root of resolutions respectively.
-        patch_sizes : List of (int, int, int)
-            Sequence of patch size of resolutions respectively.
+        Returns:
+            resolutions: Sequence of sorted resolutions (from small to large).
+            roots: Sequence of root of resolutions respectively.
+            patch_sizes: Sequence of patch size of resolutions respectively.
         """
 
         roots = list(cls.get_resolution_dirs(root))
@@ -597,9 +567,7 @@ class GrayImageStack:
     def get_full(self) -> npt.NDArray[np.float32]:
         """Get full image stack.
 
-        Notes
-        -----
-        this will load the full image stack into memory.
+        NOTE: this will load the full image stack into memory.
         """
         return self.imgs.get_full()[:, :, :, 0]
 

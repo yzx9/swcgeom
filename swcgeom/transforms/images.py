@@ -117,15 +117,13 @@ class ImagesFlip(Transform[NDArrayf32, NDArrayf32]):
 class ImagesFlipY(ImagesFlip):
     """Flip image stack along Y-axis.
 
-    See Also
-    --------
-    ~.images.io.TeraflyImageStack:
-        Terafly and Vaa3d use a especial right-handed coordinate system
-        (with origin point in the left-top and z-axis points front),
-        but we flip y-axis to makes it a left-handed coordinate system
-        (with orgin point in the left-bottom and z-axis points front).
-        If you need to use its coordinate system, remember to FLIP
-        Y-AXIS BACK.
+    See Also:
+        ~.images.io.TeraflyImageStack:
+            Terafly and Vaa3d use a especial right-handed coordinate system (with
+            origin point in the left-top and z-axis points front), but we flip y-axis
+            to makes it a left-handed coordinate system (with origin point in the
+            left-bottom and z-axis points front). If you need to use its coordinate
+            system, remember to FLIP Y-AXIS BACK.
     """
 
     def __init__(self, axis: int = 1, /) -> None:
@@ -145,9 +143,8 @@ class ImagesNormalizer(Transform[NDArrayf32, NDArrayf32]):
 class ImagesMeanVarianceAdjustment(Transform[NDArrayf32, NDArrayf32]):
     """Adjust image stack mean and variance.
 
-    See Also
-    --------
-    ~swcgeom.images.ImageStackFolder.stat
+    See Also:
+        ~swcgeom.images.ImageStackFolder.stat
     """
 
     def __init__(self, mean: float, variance: float) -> None:
@@ -170,14 +167,10 @@ class ImagesScaleToUnitRange(Transform[NDArrayf32, NDArrayf32]):
     def __init__(self, vmin: float, vmax: float, *, clip: bool = True) -> None:
         """Scale image stack to unit range.
 
-        Parameters
-        ----------
-        vmin : float
-            Minimum value.
-        vmax : float
-            Maximum value.
-        clip : bool, default True
-            Clip values to [0, 1] to avoid numerical issues.
+        Args:
+            vmin: Minimum value.
+            vmax: Maximum value.
+            clip: Clip values to [0, 1] to avoid numerical issues.
         """
 
         super().__init__()
@@ -199,9 +192,8 @@ class ImagesScaleToUnitRange(Transform[NDArrayf32, NDArrayf32]):
 class ImagesHistogramEqualization(Transform[NDArrayf32, NDArrayf32]):
     """Image histogram equalization.
 
-    References
-    ----------
-    http://www.janeriksolem.net/histogram-equalization-with-python-and.html
+    References:
+        http://www.janeriksolem.net/histogram-equalization-with-python-and.html
     """
 
     def __init__(self, bins: int = 256) -> None:

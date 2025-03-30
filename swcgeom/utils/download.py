@@ -15,9 +15,7 @@
 
 """Download helpers.
 
-Notes
------
-All denpendencies need to be installed, try:
+NOTE: All denpendencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]
@@ -67,16 +65,11 @@ def clone_index_page(
 
     E.g: `https://download.brainimagelibrary.org/biccn/zeng/luo/fMOST/cells/`
 
-    Parameters
-    ----------
-    index_url : str
-        URL of index page.
-    dist_dir : str
-        Directory of dist.
-    override : bool, default `False`
-        Override existing file, skip file if `False`.
-    multiprocess : int, default `4`
-        How many process are available for download.
+    Args:
+        index_url: URL of index page.
+        dist_dir: Directory of dist.
+        override: Override existing file, skip file if `False`.
+        multiprocess: How many process are available for download.
     """
     files = get_urls_in_index_page(index_url)
     logging.info("downloader: search `%s`, found %s files.", index_url, len(files))

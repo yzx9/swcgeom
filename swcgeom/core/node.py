@@ -119,11 +119,9 @@ class Node(Generic[SWCTypeVar]):
     def is_bifurcation(self) -> bool:
         """Is furcation node.
 
-        Notes
-        -----
-        Deprecated due to the wrong spelling of furcation. For now, it
-        is just an alias of `is_furcation` and raise a warning. It will
-        be change to raise an error in the future.
+        NOTE: Deprecated due to the wrong spelling of furcation. For now, it is just an
+        alias of `is_furcation` and raise a warning. It will be change to raise an
+        error in the future.
         """
         return self.is_furcation()
 
@@ -132,7 +130,6 @@ class Node(Generic[SWCTypeVar]):
 
     def detach(self) -> "Node[DictSWC]":
         """Detach from current attached object."""
-        # pylint: disable=consider-using-dict-items
         attact = DictSWC(
             **{k: np.array([self[k]]) for k in self.keys()},
             source=self.attach.source,

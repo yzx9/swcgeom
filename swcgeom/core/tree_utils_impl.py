@@ -15,9 +15,7 @@
 
 """SWC util wrapper for tree, split to avoid circle imports.
 
-Notes
------
-Do not import `Tree` and keep this file minimized.
+NOTE: Do not import `Tree` and keep this file minimized.
 """
 
 from typing import Any
