@@ -44,3 +44,4 @@ dev = [
 target-version = "py310"
 src = [ "tests", "swcgeom" ]
 format.docstring-code-format = true
+lint.pydocstyle.convention = "google"

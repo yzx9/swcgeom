@@ -14,7 +14,7 @@
 
 
 import numpy as np
-
+import pytest
 from swcgeom.utils.numpy_helper import padding1d
 
 
@@ -54,8 +54,5 @@ class TestPadding1d:
     def test_input_is_multidimensional(self):
         n = 5
         v = np.array([[1, 2, 3], [4, 5, 6]])
-        try:
-            padding1d(n, v)
-            assert False
-        except:
-            pass
+        with pytest.raises(AssertionError):
+            assert padding1d(n, v)

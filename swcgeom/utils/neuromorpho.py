@@ -289,9 +289,19 @@ class NeuroMorpho:
             where = where or (lambda _: True)
             if isinstance(group_by, str):
                 key = group_by
-                group_by = lambda v: v[key]  # pylint: disable=unnecessary-lambda-assignment
+
+                def group_by_key(v):
+                    return v[key]
+
+                group_by = group_by_key
+
             elif group_by is None:
-                group_by = lambda _: None  # pylint: disable=unnecessary-lambda-assignment
+
+                def no_group(v):
+                    return None
+
+                group_by = no_group
+
             items = []
             for k, v in tx_m.cursor():
                 metadata = json.loads(v)
