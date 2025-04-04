@@ -342,8 +342,8 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     def __getitem__(self, key):
         """Get images in max resolution.
 
-        >>> imgs[0, 0, 0, 0]            # get value # doctest: +SKIP
-        >>> imgs[0:64, 0:64, 0:64, :]   # get patch # doctest: +SKIP
+        >>> imgs[0, 0, 0, 0]  # get value # doctest: +SKIP
+        >>> imgs[0:64, 0:64, 0:64, :]  # get patch # doctest: +SKIP
         ```
         """
         if not isinstance(key, tuple):

@@ -38,14 +38,14 @@ Vec3f = tuple[float, float, float]
 def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
     """Get the signed angle between two vectors.
 
-    The angle is positive if the rotation from a to b is counter-clockwise,
-    and negative if clockwise.
+    The angle is positive if the rotation from a to b is counter-clockwise, and
+    negative if clockwise.
 
-    >>> angle([1, 0, 0], [1, 0, 0])     # identical
+    >>> angle([1, 0, 0], [1, 0, 0])  # identical
     0.0
-    >>> angle([1, 0, 0], [0, 1, 0])     # 90 degrees counter-clockwise
+    >>> angle([1, 0, 0], [0, 1, 0])  # 90 degrees counter-clockwise
     1.5707963267948966
-    >>> angle([1, 0, 0], [0, -1, 0])    # 90 degrees clockwise
+    >>> angle([1, 0, 0], [0, -1, 0])  # 90 degrees clockwise
     -1.5707963267948966
 
     Returns:
@@ -73,11 +73,15 @@ def angle(a: npt.ArrayLike, b: npt.ArrayLike) -> float:
 def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float32]:
     """Get the 3D scale transformation matrix.
 
-    >>> np.allclose(scale3d(2, 3, 4),
-    ...    [[2., 0., 0., 0.],
-    ...     [0., 3., 0., 0.],
-    ...     [0., 0., 4., 0.],
-    ...     [0., 0., 0., 1.]])
+    >>> np.allclose(
+    ...     scale3d(2, 3, 4),
+    ...     [
+    ...         [2.0, 0.0, 0.0, 0.0],
+    ...         [0.0, 3.0, 0.0, 0.0],
+    ...         [0.0, 0.0, 4.0, 0.0],
+    ...         [0.0, 0.0, 0.0, 1.0],
+    ...     ],
+    ... )
     True
 
     Returns:
@@ -97,11 +101,15 @@ def scale3d(sx: float, sy: float, sz: float) -> npt.NDArray[np.float32]:
 def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float32]:
     """Get the 3D translate transformation matrix.
 
-    >>> np.allclose(translate3d(1, 2, 3),
-    ...    [[1., 0., 0., 1.],
-    ...     [0., 1., 0., 2.],
-    ...     [0., 0., 1., 3.],
-    ...     [0., 0., 0., 1.]])
+    >>> np.allclose(
+    ...     translate3d(1, 2, 3),
+    ...     [
+    ...         [1.0, 0.0, 0.0, 1.0],
+    ...         [0.0, 1.0, 0.0, 2.0],
+    ...         [0.0, 0.0, 1.0, 3.0],
+    ...         [0.0, 0.0, 0.0, 1.0],
+    ...     ],
+    ... )
     True
 
     Returns:
@@ -121,8 +129,8 @@ def translate3d(tx: float, ty: float, tz: float) -> npt.NDArray[np.float32]:
 def rotate3d(n: npt.ArrayLike, theta: float) -> npt.NDArray[np.float32]:
     r"""Get the 3D rotation transformation matrix.
 
-    Rotate v with axis n by an angle theta according to the right hand rule,
-    follow rodrigues' rotation formula.
+    Rotate v with axis n by an angle theta according to the right hand rule, follow 
+    rodrigues' rotation formula.
 
     .. math::
 
@@ -169,11 +177,15 @@ def rotate3d_x(theta: float) -> npt.NDArray[np.float32]:
     Rotate 3D vector `v` with `x`-axis by an angle theta according to the right
     hand rule.
 
-    >>> np.allclose(rotate3d_x(np.pi/2),  # 90 degree rotation
-    ...    [[ 1.,  0.,  0.,  0.],
-    ...     [ 0.,  0., -1.,  0.],
-    ...     [ 0.,  1.,  0.,  0.],
-    ...     [ 0.,  0.,  0.,  1.]])
+    >>> np.allclose(
+    ...     rotate3d_x(np.pi / 2),  # 90 degree rotation
+    ...     [
+    ...         [+1.0, +0.0, +0.0, +0.0],
+    ...         [+0.0, +0.0, -1.0, +0.0],
+    ...         [+0.0, +1.0, +0.0, +0.0],
+    ...         [+0.0, +0.0, +0.0, +1.0],
+    ...     ],
+    ... )
     True
 
     Args:
@@ -201,11 +213,15 @@ def rotate3d_y(theta: float) -> npt.NDArray[np.float32]:
     Rotate 3D vector `v` with `y`-axis by an angle theta according to the right
     hand rule.
 
-    >>> np.allclose(rotate3d_y(np.pi/2),  # 90 degree rotation
-    ...    [[ 0.,  0.,  1.,  0.],
-    ...     [ 0.,  1.,  0.,  0.],
-    ...     [-1.,  0.,  0.,  0.],
-    ...     [ 0.,  0.,  0.,  1.]])
+    >>> np.allclose(
+    ...     rotate3d_y(np.pi / 2),  # 90 degree rotation
+    ...     [
+    ...         [+0.0, +0.0, +1.0, +0.0],
+    ...         [+0.0, +1.0, +0.0, +0.0],
+    ...         [-1.0, +0.0, +0.0, +0.0],
+    ...         [+0.0, +0.0, +0.0, +1.0],
+    ...     ],
+    ... )
     True
 
     Args:
@@ -228,14 +244,18 @@ def rotate3d_y(theta: float) -> npt.NDArray[np.float32]:
 def rotate3d_z(theta: float) -> npt.NDArray[np.float32]:
     """Get the 3D rotation transformation matrix.
 
-    Rotate 3D vector `v` with `z`-axis by an angle theta according to the right
-    hand rule.
+    Rotate 3D vector `v` with `z`-axis by an angle theta according to the right hand
+    rule.
 
-    >>> np.allclose(rotate3d_z(np.pi/2),  # 90 degree rotation
-    ...    [[ 0., -1.,  0.,  0.],
-    ...     [ 1.,  0.,  0.,  0.],
-    ...     [ 0.,  0.,  1.,  0.],
-    ...     [ 0.,  0.,  0.,  1.]])
+    >>> np.allclose(
+    ...     rotate3d_z(np.pi / 2),  # 90 degree rotation
+    ...     [
+    ...         [+0.0, -1.0, +0.0, +0.0],
+    ...         [+1.0, +0.0, +0.0, +0.0],
+    ...         [+0.0, +0.0, +1.0, +0.0],
+    ...         [+0.0, +0.0, +0.0, +1.0],
+    ...     ],
+    ... )
     True
 
     Args:
@@ -260,11 +280,12 @@ def rotate3d_z(theta: float) -> npt.NDArray[np.float32]:
 def to_homogeneous(xyz: npt.ArrayLike, w: float) -> npt.NDArray[np.float32]:
     """Fill xyz to homogeneous coordinates.
 
-    >>> np.allclose(to_homogeneous([1, 2, 3], 1), [1., 2., 3., 1.])
+    >>> np.allclose(to_homogeneous([1, 2, 3], 1), [1.0, 2.0, 3.0, 1.0])
     True
-    >>> np.allclose(to_homogeneous([[1, 2, 3], [4, 5, 6]], 0),
-    ...    [[1., 2., 3., 0.],
-    ...     [4., 5., 6., 0.]])
+    >>> np.allclose(
+    ...     to_homogeneous([[1, 2, 3], [4, 5, 6]], 0),
+    ...     [[1.0, 2.0, 3.0, 0.0], [4.0, 5.0, 6.0, 0.0]],
+    ... )
     True
 
     Args:
@@ -334,11 +355,15 @@ def model_view_transformation(
 def orthographic_projection_simple() -> npt.NDArray[np.float32]:
     """Simple orthographic projection by drop z-axis
 
-    >>> np.allclose(orthographic_projection_simple(),
-    ...    [[1., 0., 0., 0.],
-    ...     [0., 1., 0., 0.],
-    ...     [0., 0., 0., 0.],
-    ...     [0., 0., 0., 0.]])
+    >>> np.allclose(
+    ...     orthographic_projection_simple(),
+    ...     [
+    ...         [1.0, 0.0, 0.0, 0.0],
+    ...         [0.0, 1.0, 0.0, 0.0],
+    ...         [0.0, 0.0, 0.0, 0.0],
+    ...         [0.0, 0.0, 0.0, 0.0],
+    ...     ],
+    ... )
     True
     """
     return np.array(

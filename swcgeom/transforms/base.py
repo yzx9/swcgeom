@@ -63,10 +63,11 @@ class Transform(ABC, Generic[T, K]):
         architecture introspection.
 
         >>> class Foo(Transform[T, K]):
-        ...    def __init__(self, my_parameter: int = 1):
-        ...        self.my_parameter = my_parameter
-        ...    def extra_repr(self) -> str:
-        ...        return f"my_parameter={self.my_parameter}"
+        ...     def __init__(self, my_parameter: int = 1):
+        ...         self.my_parameter = my_parameter
+        ...
+        ...     def extra_repr(self) -> str:
+        ...         return f"my_parameter={self.my_parameter}"
 
         NOTE: This method should be overridden in custom modules to provide
         specific details relevant to the module's functionality and

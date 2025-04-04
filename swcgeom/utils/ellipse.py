@@ -97,7 +97,7 @@ def mvee(points: npt.NDArray[np.floating], tol: float = 1e-3) -> Ellipse:
 
     >>> # Check ellipse properties
     >>> rx, ry = ellipse.radii
-    >>> np.allclose([rx, ry], [np.sqrt(2)/2, np.sqrt(2)/2], rtol=1e-5)
+    >>> np.allclose([rx, ry], [np.sqrt(2) / 2, np.sqrt(2) / 2], rtol=1e-5)
     True
 
     Reference:
