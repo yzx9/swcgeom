@@ -5,7 +5,7 @@ description = "Neuron geometry library for swc format"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "yzx9", email = "pypi@yzx9.xyz" }]
-keywords = ["neuronscience", "neuron", "neuroanatomy", "neuron-morphology"]
+keywords = ["neuroscience", "neuron", "neuroanatomy", "neuron-morphology"]
 license = { text = "Apache-2.0" }
 dependencies = [
     "imagecodecs >= 2023.3.16",
