@@ -26,6 +26,7 @@ import os
 import re
 import time
 from collections.abc import Iterable
+from typing import Sequence
 
 import numpy as np
 import numpy.typing as npt
@@ -76,21 +77,32 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
     def transform(
         self,
-        x: Tree,
+        x: Tree | Sequence[Tree],
         verbose: bool = True,
         *,
         ranges: tuple[npt.ArrayLike, npt.ArrayLike] | None = None,
     ) -> Iterable[npt.NDArray[np.uint8]]:
+        trees = [x] if isinstance(x, Tree) else x
+        if not trees:
+            return iter([])  # Return empty iterator if sequence is empty
+
+        time_start = None
         if verbose:
-            print("To image stack: " + x.source)
+            sources = ", ".join(t.source for t in trees if t.source)
+            print(f"To image stack: {sources if sources else 'unnamed trees'}")
             time_start = time.time()
 
-        scene = self._get_scene(x)
+        scene = self._get_scene(trees)
 
         if ranges is None:
-            xyz, r = x.xyz(), x.r().reshape(-1, 1)
-            coord_min = np.floor(np.min(xyz - r, axis=0))
-            coord_max = np.ceil(np.max(xyz + r, axis=0))
+            all_xyz = np.concatenate([t.xyz() for t in trees], axis=0)
+            all_r = np.concatenate([t.r() for t in trees], axis=0).reshape(-1, 1)
+            if all_xyz.size == 0:  # Handle empty trees
+                coord_min = np.zeros(3, dtype=np.float32)
+                coord_max = np.zeros(3, dtype=np.float32)
+            else:
+                coord_min = np.floor(np.min(all_xyz - all_r, axis=0))
+                coord_max = np.ceil(np.max(all_xyz + all_r, axis=0))
         else:
             assert len(ranges) == 2
             coord_min = np.array(ranges[0])
@@ -99,12 +111,12 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
 
         samplers = self._get_samplers(coord_min, coord_max)
 
-        if verbose:
+        if verbose and time_start is not None:
             total = (coord_max[2] - coord_min[2]) / self.resolution[2]
             samplers = tqdm(samplers, total=total.astype(np.int64).item())
 
             time_end = time.time()
-            print("Prepare in: ", time_end - time_start, "s")  # type: ignore
+            print("Prepare in: ", time_end - time_start, "s")
 
         for sampler in samplers:
             voxel = sampler.sample(scene)  # should be shape of (x, y, z, 3) and z = 1
@@ -122,7 +134,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         return self.transform(x, verbose, ranges=ranges)
 
     def transform_and_save(
-        self, fname: str, x: Tree, verbose: bool = True, **kwargs
+        self, fname: str, x: Tree | Sequence[Tree], verbose: bool = True, **kwargs
     ) -> None:
         self.save_tif(fname, self.transform(x, verbose=verbose, **kwargs))
 
@@ -149,7 +161,7 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
         res = ",".join(f"{a:.4f}" for a in self.resolution)
         return f"resolution=({res})"
 
-    def _get_scene(self, x: Tree) -> Scene:
+    def _get_scene(self, trees: Sequence[Tree]) -> Scene:
         material = ColoredMaterial((1, 0, 0)).into()
         scene = ObjectsScene()
         scene.set_background((0, 0, 0))
@@ -158,10 +170,11 @@ class ToImageStack(Transform[Tree, npt.NDArray[np.uint8]]):
             for c in children:
                 sdf = RoundCone(_tp3f(n.xyz()), _tp3f(c.xyz()), n.r, c.r).into()
                 scene.add_object(SDFObject(sdf, material).into())
-
             return n
 
-        x.traverse(leave=leave)
+        for tree in trees:
+            tree.traverse(leave=leave)
+
         scene.build_bvh()
         return scene.into()
 
