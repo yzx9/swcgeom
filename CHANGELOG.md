@@ -1,5 +1,26 @@
 # Changelog
 
+## **0.19.1**&emsp;<sub><sup>2025-04-15 ([8e7f0c5...5de8afd](https://github.com/yzx9/swcgeom/compare/8e7f0c579b6159b65de7d725345912fa211f18b6...5de8afde073378ee020753a3000e8e65668e133b?diff=split))</sup></sub>
+
+_no relevant changes_
+<br>
+
+## **0.19.0**&emsp;<sub><sup>2025-04-15 ([fc9a784...a05f74e](https://github.com/yzx9/swcgeom/compare/fc9a7843224dc7233fd63f147941e5579db2542e...a05f74e0ede2a16f2d575b3bf2bd5e626475f939?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`transforms`
+
+- support transform multiple trees to image stack ([2bb4e6f](https://github.com/yzx9/swcgeom/commit/2bb4e6f9fad18da0fce4175e484452eae7804b85))
+
+### Bug Fixes
+
+##### &ensp;`utils/transforms`
+
+- determine sign in right way ([b17b74c](https://github.com/yzx9/swcgeom/commit/b17b74c54cce7a94c6801a1d0cfba39424431ac6))
+
+<br>
+
 ## **0.18.3**&emsp;<sub><sup>2025-01-15 ([053715c...053715c](https://github.com/yzx9/swcgeom/compare/053715c0673fd2d75a8350cea6cbdfd117c19f39...053715c0673fd2d75a8350cea6cbdfd117c19f39?diff=split))</sup></sub>
 
 _no relevant changes_

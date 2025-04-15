@@ -139,6 +139,7 @@
               python
               pkgs.uv
               pkgs.just
+              pkgs.git-conventional-commits
             ];
             env =
               {
