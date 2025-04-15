@@ -8,28 +8,28 @@ authors = [{ name = "yzx9", email = "pypi@yzx9.xyz" }]
 keywords = ["neuronscience", "neuron", "neuroanatomy", "neuron-morphology"]
 license = { text = "Apache-2.0" }
 dependencies = [
-    "imagecodecs>=2023.3.16",
-    "matplotlib>=3.5.2",
-    "numpy>=1.22.3",
-    "pandas>=1.4.2",
-    "pynrrd>=1.1.0",
-    "scipy>=1.9.1",
-    "sdflit>=0.2.6",
-    "seaborn>=0.12.0",
-    "tifffile>=2022.8.12",
-    "typing-extensions>=4.4.0",
-    "tqdm>=4.46.1",
-    "v3d-py-helper>=0.4.1; python_version < '3.13'",
+    "imagecodecs >= 2023.3.16",
+    "matplotlib >= 3.5.2",
+    "numpy >= 1.22.3",
+    "pandas >= 1.4.2",
+    "pynrrd >= 1.1.0",
+    "scipy >= 1.9.1",
+    "sdflit >= 0.2.6",
+    "seaborn >= 0.12.0",
+    "tifffile >= 2022.8.12",
+    "typing-extensions >= 4.4.0",
+    "tqdm >= 4.46.1",
+    "v3d-py-helper >= 0.4.1; python_version < '3.13'",
 ]
 
 [project.optional-dependencies]
 all = [
-    "beautifulsoup4>=4.11.1",
-    "certifi>=2023.5.7",
-    "chardet>=5.2.0",
-    "lmdb>=1.4.1",
-    "requests>=2.0.0",
-    "urllib3>=1.26.0",
+    "beautifulsoup4 >= 4.11.1",
+    "certifi >= 2023.5.7",
+    "chardet >= 5.2.0",
+    "lmdb >= 1.4.1",
+    "requests >= 2.0.0",
+    "urllib3 >= 1.26.0",
 ]
 
 [project.urls]
@@ -37,7 +37,7 @@ repository = "https://github.com/yzx9/swcgeom"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
+    "pytest >= 8.3.4",
 ]
 
 [tool.ruff]
