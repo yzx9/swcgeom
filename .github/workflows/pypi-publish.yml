@@ -23,8 +23,8 @@ jobs:
           mkdir final-dist
           find dist -name '*.whl' -exec cp {} final-dist/ \;
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
-          packages-dir: final-dist
+          packages-dir: final-dist/
