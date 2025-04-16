@@ -15,15 +15,20 @@ jobs:
       - name: Get version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-      - name: Download release
+      - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
-          name: release
           path: dist
-      - name: Pack release
-        run: tar czf swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz dist/
+      - name: Flatten dist folder
+        run: |
+          mkdir final-dist
+          find dist -name '*.whl' -exec cp {} final-dist/ \;
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          files: swcgeom-${{ steps.get_version.outputs.VERSION }}.tgz
+          name: "swcgeom v${{ steps.get_version.outputs.VERSION }}"
+          tag_name: ${{ github.ref }}
+          files: |
+            final-dist/*.whl
+            final-dist/*.tar.gz

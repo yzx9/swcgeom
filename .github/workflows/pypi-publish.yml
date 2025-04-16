@@ -1,6 +1,5 @@
 # This workflow will upload a Python Package using Twine when a release is created
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
 name: Release to PyPI
 on:
   push:
@@ -15,13 +14,17 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Download release
+      - name: Download all wheels
         uses: actions/download-artifact@v4
         with:
-          name: release
           path: dist
+      - name: Flatten dist folder
+        run: |
+          mkdir final-dist
+          find dist -name '*.whl' -exec cp {} final-dist/ \;
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: final-dist
