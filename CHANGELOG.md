@@ -1,5 +1,10 @@
 # Changelog
 
+## **0.19.2**&emsp;<sub><sup>2025-04-16 ([260665c...9310590](https://github.com/yzx9/swcgeom/compare/260665c23cdea631a6e9902f9b7744daf548bab1...9310590da979b43a3823fdbc44f9b4edde3b33db?diff=split))</sup></sub>
+
+_no relevant changes_
+<br>
+
 ## **0.19.1**&emsp;<sub><sup>2025-04-15 ([8e7f0c5...5de8afd](https://github.com/yzx9/swcgeom/compare/8e7f0c579b6159b65de7d725345912fa211f18b6...5de8afde073378ee020753a3000e8e65668e133b?diff=split))</sup></sub>
 
 _no relevant changes_
