@@ -17,7 +17,6 @@
 
 import os
 import re
-import sys
 import warnings
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
@@ -29,6 +28,8 @@ import numpy as np
 import numpy.typing as npt
 import tifffile
 from typing_extensions import deprecated
+
+from swcgeom.images.loaders import PBD, Raw
 
 __all__ = ["read_imgs", "save_tiff", "read_images"]
 
@@ -263,48 +264,25 @@ class NrrdImageStack(NDArrayImageStack[ScalarType]):
         self.header = header
 
 
-if sys.version_info < (3, 13):
-    from v3dpy.loaders import PBD, Raw
+class V3dImageStack(NDArrayImageStack[ScalarType]):
+    """v3d image stack."""
 
-    class V3dImageStack(NDArrayImageStack[ScalarType]):
-        """v3d image stack."""
+    def __init_subclass__(cls, loader: Raw | PBD) -> None:
+        super().__init_subclass__()
+        cls._loader = loader
 
-        def __init_subclass__(cls, loader: Raw | PBD) -> None:
-            super().__init_subclass__()
-            cls._loader = loader
+    def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
+        r = self._loader()
+        imgs = r.load(fname)
+        super().__init__(imgs, dtype=dtype, **kwargs)
 
-        def __init__(self, fname: str, *, dtype: ScalarType, **kwargs) -> None:
-            r = self._loader()
-            imgs = r.load(fname)
-            super().__init__(imgs, dtype=dtype, **kwargs)
 
-    class V3drawImageStack(V3dImageStack[ScalarType], loader=Raw):
-        """v3draw image stack."""
+class V3drawImageStack(V3dImageStack[ScalarType], loader=Raw):
+    """v3draw image stack."""
 
-    class V3dpbdImageStack(V3dImageStack[ScalarType], loader=PBD):
-        """v3dpbd image stack."""
 
-else:
-
-    def _v3d_not_supported(*args, **kwargs):
-        raise RuntimeError(
-            "v3d-py-helper is not supported in Python 3.13 or newer. See #33"
-        )
-
-    class V3dImageStack:
-        """v3d image stack (disabled due to unsupported Python version)."""
-
-        __init__ = _v3d_not_supported
-
-    class V3drawImageStack:
-        """v3draw image stack (disabled due to unsupported Python version)."""
-
-        __init__ = _v3d_not_supported
-
-    class V3dpbdImageStack:
-        """v3dpbd image stack (disabled due to unsupported Python version)."""
-
-        __init__ = _v3d_not_supported
+class V3dpbdImageStack(V3dImageStack[ScalarType], loader=PBD):
+    """v3dpbd image stack."""
 
 
 class TeraflyImageStack(ImageStack[ScalarType]):

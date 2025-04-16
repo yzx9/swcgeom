@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "yzx9", email = "pypi@yzx9.xyz" }]
 keywords = ["neuroscience", "neuron", "neuroanatomy", "neuron-morphology"]
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
 dependencies = [
     "imagecodecs >= 2023.3.16",
     "matplotlib >= 3.5.2",
@@ -19,7 +19,6 @@ dependencies = [
     "tifffile >= 2022.8.12",
     "typing-extensions >= 4.4.0",
     "tqdm >= 4.46.1",
-    "v3d-py-helper >= 0.4.1; python_version < '3.13'",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +37,16 @@ repository = "https://github.com/yzx9/swcgeom"
 [dependency-groups]
 dev = [
     "pytest >= 8.3.4",
+]
+
+[build-system]
+requires = ["setuptools", "wheel", "Cython", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+ext-modules = [
+  { name = "swcgeom.images.loaders.pbd", sources = ["./swcgeom/images/loaders/pbd.pyx"]},
+  { name = "swcgeom.images.loaders.raw", sources = ["./swcgeom/images/loaders/raw.pyx"]},
 ]
 
 [tool.ruff]
