@@ -27,8 +27,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
-          name: "swcgeom v${{ steps.get_version.outputs.VERSION }}"
-          tag_name: ${{ github.ref }}
           files: |
             final-dist/*.whl
             final-dist/*.tar.gz
