@@ -36,100 +36,77 @@
     let
       inherit (nixpkgs) lib;
 
+      transposeAttrs =
+        attrs:
+        let
+          keys = lib.attrNames attrs;
+          subkeys = lib.attrNames (lib.head (lib.attrValues attrs));
+        in
+        lib.genAttrs subkeys (subkey: lib.genAttrs keys (key: attrs.${key}.${subkey}));
+
       supportedSystems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      forEachSupportedSystem = lib.genAttrs supportedSystems;
-
-      # Load a uv workspace from a workspace root.
-      # Uv2nix treats all uv projects as workspace projects.
-      workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
-
-      # Create package overlay from workspace.
-      overlay = workspace.mkPyprojectOverlay {
-        # Prefer prebuilt binary wheels as a package source.
-        # Sdists are less likely to "just work" because of the metadata missing from uv.lock.
-        # Binary wheels are more likely to, but may still require overrides for library dependencies.
-        sourcePreference = "wheel"; # or sourcePreference = "sdist";
-        # Optionally customise PEP 508 environment
-        # environ = {
-        #   platform_release = "5.10.65";
-        # };
-      };
-
-      # Extend generated overlay with build fixups
-      #
-      # Uv2nix can only work with what it has, and uv.lock is missing essential metadata to perform some builds.
-      # This is an additional overlay implementing build fixups.
-      # See:
-      # - https://pyproject-nix.github.io/uv2nix/FAQ.html
-      pyprojectOverrides = _final: _prev: {
-        # Implement build fixups here.
-        # Note that uv2nix is _not_ using Nixpkgs buildPythonPackage.
-        # It's using https://pyproject-nix.github.io/pyproject.nix/build.html
-      };
-
-      mkPkgs =
-        system:
-
-        let
-          pkgs = nixpkgs.legacyPackages."${system}";
-          python = pkgs.python313;
-        in
-        {
-          inherit pkgs python;
-
-          # Construct package set
-          #
-          # Use base package set from pyproject.nix builders
-          pythonSet =
-            (pkgs.callPackage pyproject-nix.build.packages {
-              inherit python;
-            }).overrideScope
-              (
-                lib.composeManyExtensions [
-                  pyproject-build-systems.overlays.default
-                  overlay
-                  pyprojectOverrides
-                ]
-              );
-        };
+      forEachSupportedSystem = f: transposeAttrs (lib.genAttrs supportedSystems f);
     in
-    {
-      packages = forEachSupportedSystem (system: {
-        # Package a virtual environment as our main application.
+    forEachSupportedSystem (
+      system:
+
+      let
+        pkgs = nixpkgs.legacyPackages."${system}";
+        python = pkgs.python313;
+
+        # Load a uv workspace from a workspace root.
+        # Uv2nix treats all uv projects as workspace projects.
+        workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+
+        # Create package overlay from workspace.
+        overlay = workspace.mkPyprojectOverlay {
+          # Prefer prebuilt binary wheels as a package source.
+          # Sdists are less likely to "just work" because of the metadata missing from uv.lock.
+          # Binary wheels are more likely to, but may still require overrides for library dependencies.
+          sourcePreference = "wheel"; # or sourcePreference = "sdist";
+          # Optionally customise PEP 508 environment
+          # environ = {
+          #   platform_release = "5.10.65";
+          # };
+        };
+
+        # Extend generated overlay with build fixups
         #
-        # Enable no optional dependencies for production build.
-        default = (mkPkgs system).pythonSet.mkVirtualEnv "swcgeom-env" workspace.deps.default;
-      });
+        # Uv2nix can only work with what it has, and uv.lock is missing essential metadata to perform some builds.
+        # This is an additional overlay implementing build fixups.
+        # See:
+        # - https://pyproject-nix.github.io/uv2nix/FAQ.html
+        pyprojectOverrides = _final: _prev: {
+          # Implement build fixups here.
+          # Note that uv2nix is _not_ using Nixpkgs buildPythonPackage.
+          # It's using https://pyproject-nix.github.io/pyproject.nix/build.html
+        };
 
-      # Make hello runnable with `nix run`
-      apps = forEachSupportedSystem (
-        system:
-
-        let
-          packages = self.packages."${system}".default;
-        in
-        {
-          default = {
-            type = "app";
-            program = "${packages}/bin/hello";
-          };
-        }
-      );
-
-      # This example provides two different modes of development:
-      # - Impurely using uv to manage virtual environments
-      # - Pure development using uv2nix to manage virtual environments
-      devShells = forEachSupportedSystem (
-        system:
-        let
-          inherit (mkPkgs system) pkgs python pythonSet;
-        in
-        {
+        # Construct package set
+        #
+        # Use base package set from pyproject.nix builders
+        pythonSet =
+          (pkgs.callPackage pyproject-nix.build.packages {
+            inherit python;
+          }).overrideScope
+            (
+              lib.composeManyExtensions [
+                pyproject-build-systems.overlays.default
+                overlay
+                pyprojectOverrides
+              ]
+            );
+      in
+      {
+        # This example provides two different modes of development:
+        # - Impurely using uv to manage virtual environments
+        # - Pure development using uv2nix to manage virtual environments
+        devShells = {
           default = self.devShells."${system}".impure;
 
           # It is of course perfectly OK to keep using an impure virtualenv workflow and only use uv2nix to build packages.
@@ -210,7 +187,7 @@
                 export REPO_ROOT=$(git rev-parse --show-toplevel)
               '';
             };
-        }
-      );
-    };
+        };
+      }
+    );
 }
