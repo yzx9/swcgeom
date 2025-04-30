@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -60,31 +59,33 @@ def read_swc(
     df, comments = parse_swc(
         swc_file, names=names, extra_cols=extra_cols, encoding=encoding
     )
+    if df.empty:
+        raise ValueError(f"SWC file '{swc_file}' is empty or contains no valid nodes.")
 
     # fix swc
-    if fix_roots is not False and np.count_nonzero(df[names.pid] == -1) > 1:
+    if not is_single_root(df, names=names):
         match fix_roots:
             case "somas":
                 mark_roots_as_somas_(df)
             case "nearest":
                 link_roots_to_nearest_(df)
+            case False:
+                warnings.warn(f"not a simple tree in `{swc_file}`")
             case _:
                 raise ValueError(f"unknown fix type `{fix_roots}`")
 
-    if sort_nodes:
-        sort_nodes_(df)
-    elif reset_index:
-        reset_index_(df)
-
     # check swc
-    if not is_single_root(df, names=names):
-        warnings.warn(f"not a simple tree in `{swc_file}`")
-
     if (df[names.pid] == -1).argmax() != 0:
         warnings.warn(f"root is not the first node in `{swc_file}`")
 
     if (df[names.r] <= 0).any():
         warnings.warn(f"non-positive radius in `{swc_file}`")
+
+    # post processing
+    if sort_nodes:
+        sort_nodes_(df)
+    elif reset_index:
+        reset_index_(df)
 
     return df, comments
 
