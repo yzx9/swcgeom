@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -15,6 +14,7 @@ from swcgeom.core.swc_utils.base import SWCNames, Topology, get_dsu, get_names, 
 from swcgeom.utils import DisjointSetUnion
 
 __all__ = [
+    "get_num_of_roots",
     "is_single_root",
     "is_bifurcate",
     "is_sorted",
@@ -25,9 +25,14 @@ __all__ = [
 ]
 
 
+def get_num_of_roots(df: pd.DataFrame, *, names: SWCNames | None = None) -> int:
+    """Get number of roots."""
+    return len(np.unique(get_dsu(df, names=names)))
+
+
 def is_single_root(df: pd.DataFrame, *, names: SWCNames | None = None) -> bool:
     """Check is it only one root."""
-    return len(np.unique(get_dsu(df, names=names))) == 1
+    return get_num_of_roots(df, names=names) == 1
 
 
 def is_bifurcate(topology: Topology, *, exclude_root: bool = True) -> bool:

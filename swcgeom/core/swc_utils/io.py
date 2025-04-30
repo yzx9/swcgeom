@@ -14,16 +14,16 @@ import numpy.typing as npt
 import pandas as pd
 
 from swcgeom.core.swc_utils.base import SWCNames, get_names
-from swcgeom.core.swc_utils.checker import is_single_root
+from swcgeom.core.swc_utils.checker import get_num_of_roots, is_single_root
 from swcgeom.core.swc_utils.normalizer import (
     link_roots_to_nearest_,
     mark_roots_as_somas_,
     reset_index_,
     sort_nodes_,
 )
-from swcgeom.utils import FileReader, PathOrIO
+from swcgeom.utils import DisjointSetUnion, FileReader, PathOrIO
 
-__all__ = ["read_swc", "to_swc"]
+__all__ = ["read_swc", "read_swc_components", "to_swc"]
 
 
 def read_swc(
@@ -88,6 +88,117 @@ def read_swc(
         reset_index_(df)
 
     return df, comments
+
+
+def read_swc_components(
+    swc_file: PathOrIO,
+    /,
+    *,
+    extra_cols: Iterable[str] | None = None,
+    encoding: Literal["detect"] | str = "utf-8",
+    names: SWCNames | None = None,
+    reset_index_per_subtree: bool = True,
+) -> tuple[list[pd.DataFrame], list[str]]:
+    """Read swc file, splitting multi-root files into separate DataFrames.
+
+    If the SWC file contains multiple roots (disconnected components),
+    each component is extracted into its own pandas DataFrame.
+
+    Args:
+        swc_file: Path to the SWC file.
+        extra_cols: Read more cols in swc file.
+        reset_index_per_subtree: Reset node index for each subtree
+            to start with zero. Defaults to True.
+        encoding: The name of the encoding used to decode the file.
+            If 'detect', attempts to detect the character encoding.
+        names: SWCNames configuration.
+
+    Returns:
+        dfs: A list of pandas DataFrames, each representing a
+            connected component (potential tree) from the SWC file.
+        comments: List of comment lines from the SWC file.
+    """
+    names = get_names(names)
+    df, comments = parse_swc(
+        swc_file, names=names, extra_cols=extra_cols, encoding=encoding
+    )
+    if df.empty:
+        warnings.warn(f"SWC file '{swc_file}' is empty or contains no valid nodes.")
+        return [], comments
+
+    num_roots = get_num_of_roots(df, names=names)
+    if num_roots == 0:
+        warnings.warn(f"SWC file '{swc_file}' contains no root nodes (pid = -1).")
+        return [], comments
+
+    elif num_roots == 1:
+        warnings.warn(
+            f"SWC file '{swc_file}' has only one root. Consider using `read_swc` for single trees."
+        )
+        # Return the original DataFrame wrapped in a list
+        return [df], comments
+
+    # Multiple roots: Split into components
+    sub_dfs = []
+    num_nodes = len(df)
+    dsu = DisjointSetUnion(num_nodes)
+
+    # Map original node IDs to 0..N-1 indices for DSU
+    id_to_idx = {node_id: i for i, node_id in enumerate(df[names.id])}
+    for i, row in df.iterrows():
+        parent_id = row[names.pid]
+        if parent_id == -1:
+            continue
+
+        child_idx = i  # Use DataFrame index which is 0..N-1
+        parent_idx = id_to_idx.get(parent_id)
+        if parent_idx is None:
+            warnings.warn(
+                f"Parent ID {parent_id} for node ID {row[names.id]} not found "
+                f"in '{swc_file}'. Treating node as root of a component."
+            )
+            continue
+
+        # Ensure indices are valid before union (should always be if df is consistent)
+        if not dsu.validate_node(child_idx) or not dsu.validate_node(parent_idx):
+            # This case should ideally not happen with well-formed input
+            warnings.warn(
+                f"Internal error: Invalid node index for node id "
+                f"{row[names.id]} or parent id {parent_id} in '{swc_file}'.",
+                stacklevel=2,
+            )
+            continue
+
+        dsu.union_sets(child_idx, parent_idx)
+
+    # Group nodes by component representative index
+    components: dict[int, list[int]] = {}
+    for i in range(num_nodes):
+        parent_repr = dsu.find_parent(i)
+        if parent_repr not in components:
+            components[parent_repr] = []
+        components[parent_repr].append(i)  # Store original DataFrame indices (0..N-1)
+
+    # Create a DataFrame for each component
+    for component_indices in components.values():
+        sub_df = df.iloc[component_indices].copy()
+
+        if reset_index_per_subtree:
+            # Remap IDs and PIDs for the subtree to be 0..M-1
+            old_id_to_new_id = {
+                old_id: new_id for new_id, old_id in enumerate(sub_df[names.id])
+            }
+
+            # Apply mapping, ensuring the root's PID becomes -1
+            sub_df[names.id] = sub_df[names.id].map(old_id_to_new_id)
+            sub_df[names.pid] = sub_df[names.pid].map(
+                lambda old_pid: old_id_to_new_id.get(old_pid, -1)
+            )
+        # else: IDs remain as they were in the original file subset.
+
+        sub_dfs.append(sub_df)
+
+    return sub_dfs, comments
 
 
 def to_swc(
@@ -181,21 +292,40 @@ def parse_swc(
     with FileReader(fname, encoding=encoding) as f:
         try:
             for i, line in enumerate(f):
-                if (match := re_swc.search(line)) is not None:
-                    if flag and match.group(last_group):
-                        warnings.warn(
-                            f"some fields are ignored in row {i + 1} of `{fname}`"
-                        )
-                        flag = False
+                original_line = line  # Keep for error messages/comments
+                line_content = original_line.split("#", 1)[0].strip()  # Process content part
 
-                    for i, trans in enumerate(transforms):
-                        vals[i].append(trans(match.group(i + 1)))
-                elif match := RE_COMMENT.match(line):
-                    comment = line[len(match.group(0)) :].removesuffix("\n")
-                    if not comment.startswith(ignored_comment):
-                        comments.append(comment)
-                elif not line.isspace():
-                    raise ValueError(f"invalid row {i + 1} in `{fname}`")
+                if not line_content:  # Skip empty lines or lines that become empty
+                    # Handle full comment lines using original_line
+                    if match := RE_COMMENT.match(original_line):
+                        comment = original_line[len(match.group(0)) :].removesuffix("\n").strip()
+                        if comment and not comment.startswith(ignored_comment):
+                            comments.append(comment)
+                    continue  # Move to next line
+
+                if (match := re_swc.search(line_content)) is not None:
+                    # Check for extra numerical fields captured by the last group
+                    # Warn if the captured group exists and contains non-whitespace
+                    if flag and match.group(last_group) and match.group(last_group).strip():
+                        warnings.warn(
+                            f"Extra fields detected and ignored in row {i + 1} of `{fname}`"
+                        )
+                        flag = False  # Only warn once
+
+                    for j, trans in enumerate(transforms):
+                        try:
+                            vals[j].append(trans(match.group(j + 1)))
+                        except ValueError as e:
+                            raise ValueError(
+                                f"Invalid data format in row {i + 1}, column {j+1} ('{keys[j]}') in `{fname}`: {match.group(j + 1)}"
+                            ) from e
+
+                else:  # If re_swc didn't match the line_content
+                    # It's not a valid SWC data line. We already handled empty/comment lines.
+                    raise ValueError(
+                        f"Invalid SWC data format in row {i + 1} in `{fname}`: {original_line.strip()}"
+                    )
+
         except UnicodeDecodeError as e:
             raise ValueError(
                 "decode failed, try to enable auto detect `encoding='detect'`"
