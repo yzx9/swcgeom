@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022-2025 Zexin Yuan <pypi@yzx9.xyz>
+#
+# SPDX-License-Identifier: unlicense
+
 """Transformations in branch requires pytorch."""
 
 from collections.abc import Callable

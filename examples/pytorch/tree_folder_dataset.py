@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2022-2025 Zexin Yuan <pypi@yzx9.xyz>
+#
+# SPDX-License-Identifier: unlicense
+
 """Tree Folder Dataset."""
 
 from typing import Generic, TypeVar, cast
