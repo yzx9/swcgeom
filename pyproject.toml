@@ -1,6 +1,6 @@
 [project]
 name = "swcgeom"
-version = "0.19.3"
+version = "0.19.4"
 description = "Neuron geometry library for swc format"
 readme = "README.md"
 requires-python = ">=3.10"
