@@ -15,10 +15,14 @@ from typing import Any, Protocol, TypeVar, cast, overload
 import numpy as np
 import numpy.typing as npt
 from tqdm.contrib.concurrent import process_map
+from typing import Literal
 from typing_extensions import Self
 
 from swcgeom.core.swc import eswc_cols
+from swcgeom.core.swc_utils.base import SWCNames
+from swcgeom.core.swc_utils.io import read_swc_components
 from swcgeom.core.tree import Tree
+from swcgeom.utils import PathOrIO
 
 __all__ = ["LazyLoadingTrees", "ChainTrees", "Population", "Populations"]
 
@@ -225,6 +229,55 @@ class Population:
             swcs.extend(os.path.join(rr, f) for f in fs)
 
         return swcs
+
+    @classmethod
+    def from_multi_roots_swc(
+        cls,
+        swc_file: PathOrIO,
+        *,
+        extra_cols: Iterable[str] | None = None,
+        encoding: Literal["detect"] | str = "utf-8",
+        names: SWCNames | None = None,
+        reset_index_per_subtree: bool = True,
+        **kwargs,
+    ) -> Self:
+        """Create a population from an SWC file containing multiple roots.
+
+        Each root in the SWC file will be treated as the start of a
+        separate tree in the resulting population.
+
+        Args:
+            swc_file: Path to the SWC file.
+            extra_cols: Read more cols in swc file. Passed to
+                `read_swc_components`.
+            encoding: The name of the encoding used to decode the file.
+                Passed to `read_swc_components`.
+            names: SWCNames configuration. Passed to `read_swc_components`.
+            reset_index_per_subtree: Reset node index for each subtree
+                to start with zero. Passed to `read_swc_components`.
+            **kwargs: Additional keyword arguments passed to `Tree.from_data_frame`
+                for each component tree.
+
+        Returns:
+            A Population object where each tree corresponds to a connected
+            component from the input SWC file.
+        """
+        dfs, comments = read_swc_components(
+            swc_file,
+            extra_cols=extra_cols,
+            encoding=encoding,
+            names=names,
+            reset_index_per_subtree=reset_index_per_subtree,
+        )
+
+        trees = [
+            Tree.from_data_frame(df, source=f"{swc_file}#component_{i}", comments=comments, **kwargs)
+            for i, df in enumerate(dfs)
+        ]
+
+        # Use the file path as the 'root' for the population representation
+        root_repr = str(swc_file) if not hasattr(swc_file, "name") else swc_file.name
+        return cls(trees, root=root_repr)
 
 
 class Populations:
