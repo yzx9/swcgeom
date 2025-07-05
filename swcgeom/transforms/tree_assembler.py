@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 from typing_extensions import override
 
-from swcgeom.core import Tree
 from swcgeom.core.swc_utils import (
     SWCNames,
     get_names,
@@ -23,7 +22,7 @@ from swcgeom.transforms.base import Transform
 EPS = 1e-5
 
 
-class LinesToTree(Transform[list[pd.DataFrame], Tree]):
+class LinesToTree(Transform[Iterable[pd.DataFrame], pd.DataFrame]):
     """Assemble lines to swc."""
 
     def __init__(self, *, thre: float = 0.2, undirected: bool = True):
@@ -39,9 +38,9 @@ class LinesToTree(Transform[list[pd.DataFrame], Tree]):
 
     @override
     def __call__(
-        self, lines: Iterable[pd.DataFrame], *, names: SWCNames | None = None
-    ):  # TODO check this
-        return self.assemble(lines, names=names)
+        self, x: Iterable[pd.DataFrame], *, names: SWCNames | None = None
+    ) -> pd.DataFrame:
+        return self.assemble(x, names=names)
 
     def assemble(
         self,
