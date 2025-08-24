@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -233,22 +232,26 @@ class Tree(DictSWC):
             node: "Tree.Node", pre: list[tuple[list[Tree.Branch], list[int]]]
         ) -> tuple[list[Tree.Branch], list[int]]:
             if len(pre) == 1:
-                branches, child = pre[0]
-                child.append(node.id)
-                return branches, child
+                branches, children = pre[0]
+                children.append(node.id)
+                return branches, children
 
             branches: list[Tree.Branch] = []
-
-            for sub_branches, child in pre:
-                child.append(node.id)
-                child.reverse()
-                sub_branches.append(Tree.Branch(self, np.array(child, dtype=np.int32)))
+            for sub_branches, children in pre:
+                children.append(node.id)
+                children.reverse()
+                sub_branches.append(
+                    Tree.Branch(self, np.array(children, dtype=np.int32))
+                )
                 sub_branches.reverse()
                 branches.extend(sub_branches)
 
             return branches, [node.id]
 
-        branches, _ = self.traverse(leave=collect_branches)
+        branches, children = self.traverse(leave=collect_branches)
+        if len(children) > 0:
+            branches.append(Tree.Branch(self, np.array(children, dtype=np.int32)))
+
         return branches
 
     def get_paths(self) -> list[Path]:
