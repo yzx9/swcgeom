@@ -4,7 +4,24 @@ import warnings
 
 import pandas as pd
 import pytest
-from swcgeom.core.swc_utils.io import read_swc_components
+from swcgeom.core.swc_utils.io import read_swc, read_swc_components
+
+
+class TestReadSWC:
+    def test_line(self):
+        LINE_SWC = inspect.cleandoc("""
+            # A comment line
+            1 1 0 0 0 1 -1
+            2 1 1 0 0 1 1
+            3 1 2 0 0 1 2
+            4 1 3 0 0 1 3
+        """)
+        swc_content = io.StringIO(LINE_SWC)
+        df, comments = read_swc(swc_content)
+
+        assert isinstance(df, pd.DataFrame)
+        assert len(df) == 4
+        assert comments == ["A comment line"]
 
 
 class TestReadSWCComponents:
