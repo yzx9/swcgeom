@@ -30,7 +30,7 @@ def read_swc(
     swc_file: PathOrIO,
     extra_cols: Iterable[str] | None = None,
     fix_roots: Literal["somas", "nearest", False] = False,
-    sort_nodes: bool = False,
+    sort_nodes: bool = True,
     reset_index: bool = True,
     *,
     encoding: Literal["detect"] | str = "utf-8",
@@ -44,12 +44,12 @@ def read_swc(
         extra_cols: Read more cols in swc file.
         fix_roots: Fix multiple roots.
         sort_nodes: Sort the indices of neuron tree.
-            After sorting the nodes, the index for each parent are always less than
-            that of its children.
+            After sorting the nodes, the index for each parent are always less than that of its children, default to
+            True.
         reset_index: Reset node index to start with zero.
-            DO NOT set to false if you are not sure what will happened.
+            DO NOT set to false if you are not sure what will happened, default to True.
         encoding: The name of the encoding used to decode the file.
-            If is `detect`, we will try to detect the character encoding.
+            If is `detect`, we will try to detect the character encoding, default to "utf-8".
 
     Returns:
         df: ~pandas.DataFrame
