@@ -1,5 +1,31 @@
 # Changelog
 
+## **0.20.0**&emsp;<sub><sup>2025-08-24 ([97a93b6...a3ea7ce](https://github.com/yzx9/swcgeom/compare/97a93b6bdb599b8c1ec097ead5f56df7094d0faf...a3ea7cedb4125489ee0d0c9e0c4c4c94b937db1f?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`core`
+
+- Add from_multi_roots_swc to Population ([3cc548a](https://github.com/yzx9/swcgeom/commit/3cc548a57681363120124d955d1d2eb9d96de965))
+- sort SWC nodes by default ([03e9f95](https://github.com/yzx9/swcgeom/commit/03e9f95cc734aabe3fe7bcdab5acefaaee5d6d1a))
+- add read_swc_components ([2146670](https://github.com/yzx9/swcgeom/commit/2146670c4f502d3ca983a15b71f5787e9de52461))
+
+### Bug Fixes
+
+##### &ensp;`core`
+
+- should works if only single child in soma (close #20) ([7b27691](https://github.com/yzx9/swcgeom/commit/7b2769117e18d3333a041cbfc8358ccb8e78d2c5))
+
+##### &ensp;`transforms`
+
+- correct types ([1c16e89](https://github.com/yzx9/swcgeom/commit/1c16e8966f728f6b3644f66782f5f38d589d8672))
+
+### Merges
+
+- pull request [#35](https://github.com/yzx9/swcgeom/issues/#35) from yzx9/feature/sort-nodes ([f4e0540](https://github.com/yzx9/swcgeom/commit/f4e0540ce42789e0402071b1c4a6bd331dab3bae))
+
+<br>
+
 ## **0.19.4**&emsp;<sub><sup>2025-04-30 ([20147af...38bc2e9](https://github.com/yzx9/swcgeom/compare/20147af43d14cd5c7fc9549acfbea6307339ff3b...38bc2e972c7df88d5f1c8b9ee83a8fcdf86b55f3?diff=split))</sup></sub>
 
 _no relevant changes_

@@ -1,6 +1,6 @@
 [project]
 name = "swcgeom"
-version = "0.19.4"
+version = "0.20.0"
 description = "Neuron geometry library for swc format"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -21,37 +21,34 @@ classifiers = [
 ]
 license = "Apache-2.0"
 dependencies = [
-    "imagecodecs >= 2023.3.16",
-    "matplotlib >= 3.5.2",
-    "numpy >= 1.22.3",
-    "pandas >= 1.4.2",
-    "pynrrd >= 1.1.0",
-    "scipy >= 1.9.1",
-    "sdflit >= 0.2.6",
-    "seaborn >= 0.12.0",
-    "tifffile >= 2022.8.12",
-    "typing-extensions >= 4.4.0",
-    "tqdm >= 4.46.1",
+  "imagecodecs >= 2023.3.16",
+  "matplotlib >= 3.5.2",
+  "numpy >= 1.22.3",
+  "pandas >= 1.4.2",
+  "pynrrd >= 1.1.0",
+  "scipy >= 1.9.1",
+  "sdflit >= 0.2.6",
+  "seaborn >= 0.12.0",
+  "tifffile >= 2022.8.12",
+  "typing-extensions >= 4.4.0",
+  "tqdm >= 4.46.1",
 ]
 
 [project.optional-dependencies]
 all = [
-    "beautifulsoup4 >= 4.11.1",
-    "certifi >= 2023.5.7",
-    "chardet >= 5.2.0",
-    "lmdb >= 1.4.1",
-    "requests >= 2.0.0",
-    "urllib3 >= 1.26.0",
+  "beautifulsoup4 >= 4.11.1",
+  "certifi >= 2023.5.7",
+  "chardet >= 5.2.0",
+  "lmdb >= 1.4.1",
+  "requests >= 2.0.0",
+  "urllib3 >= 1.26.0",
 ]
 
 [project.urls]
 repository = "https://github.com/yzx9/swcgeom"
 
 [dependency-groups]
-dev = [
-    "ipykernel>=6.29.5",
-    "pytest >= 8.3.4",
-]
+dev = ["ipykernel>=6.29.5", "pytest >= 8.3.4"]
 
 [build-system]
 requires = ["setuptools", "wheel", "Cython", "numpy"]
@@ -59,12 +56,16 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 ext-modules = [
-  { name = "swcgeom.images.loaders.pbd", sources = ["./swcgeom/images/loaders/pbd.pyx"]},
-  { name = "swcgeom.images.loaders.raw", sources = ["./swcgeom/images/loaders/raw.pyx"]},
+  { name = "swcgeom.images.loaders.pbd", sources = [
+    "./swcgeom/images/loaders/pbd.pyx",
+  ] },
+  { name = "swcgeom.images.loaders.raw", sources = [
+    "./swcgeom/images/loaders/raw.pyx",
+  ] },
 ]
 
 [tool.ruff]
 target-version = "py310"
-src = [ "tests", "swcgeom" ]
+src = ["tests", "swcgeom"]
 format.docstring-code-format = true
 lint.pydocstyle.convention = "google"
