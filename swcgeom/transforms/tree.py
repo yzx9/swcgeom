@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -26,6 +25,7 @@ __all__ = [
     "CutAxonTree",
     "CutDendriteTree",
     "CutByFurcationOrder",
+    "CutByAABB",
     "CutShortTipBranch",
     "IsometricResampler",
 ]
@@ -175,6 +175,39 @@ class CutByBifurcationOrder(CutByFurcationOrder):
 
     def __repr__(self) -> str:
         return f"CutByBifurcationOrder-{self.max_furcation_order}"
+
+
+class CutByAABB(Transform[Tree, Tree]):
+    """Cut tree by axis-aligned bounding box (AABB).
+
+    In order to preserve the tree structure, all ancestor nodes of the node to be preserved will be preserved.
+
+    NOTE: Not all reserved nodes are inside the specified AABB.
+    """
+
+    def __init__(
+        self,
+        min_bound: tuple[float, float, float],
+        max_bound: tuple[float, float, float],
+    ) -> None:
+        assert len(min_bound) == 3 and len(max_bound) == 3
+        assert all(min_b < max_b for min_b, max_b in zip(min_bound, max_bound)), (
+            "min_bound must be less than max_bound"
+        )
+
+        super().__init__()
+        self.min_bound = np.array(min_bound)
+        self.max_bound = np.array(max_bound)
+
+    @override
+    def __call__(self, x: Tree) -> Tree:
+        return cut_tree(x, enter=self.enter)
+
+    def enter(self, node: Tree.Node, _: None) -> tuple[None, bool]:
+        out_of_aabb = (
+            np.any(node.xyz() < self.min_bound) or np.any(node.xyz() > self.max_bound)
+        ).item()
+        return None, out_of_aabb
 
 
 class CutShortTipBranch(Transform[Tree, Tree]):
