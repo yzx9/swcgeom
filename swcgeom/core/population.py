@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -10,12 +9,11 @@ import warnings
 from collections.abc import Callable, Iterable, Iterator
 from concurrent.futures import ProcessPoolExecutor
 from functools import reduce
-from typing import Any, Protocol, TypeVar, cast, overload
+from typing import Any, Literal, Protocol, TypeVar, cast, overload
 
 import numpy as np
 import numpy.typing as npt
 from tqdm.contrib.concurrent import process_map
-from typing import Literal
 from typing_extensions import Self
 
 from swcgeom.core.swc import eswc_cols
@@ -271,7 +269,13 @@ class Population:
         )
 
         trees = [
-            Tree.from_data_frame(df, source=f"{swc_file}#component_{i}", comments=comments, **kwargs)
+            Tree.from_data_frame(
+                df,
+                source=f"{swc_file}#component_{i}",
+                comments=comments,
+                names=names,
+                **kwargs,
+            )
             for i, df in enumerate(dfs)
         ]
 
