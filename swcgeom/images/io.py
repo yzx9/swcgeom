@@ -1,4 +1,3 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
@@ -108,23 +107,31 @@ def read_imgs(fname: str, **kwargs):  # type: ignore
     kwargs.setdefault("dtype", np.float32)
     if not os.path.exists(fname):
         raise ValueError(f"image stack not exists: {fname}")
-
-    # match file extension
-    match os.path.splitext(fname)[-1]:
-        case ".tif" | ".tiff":
-            return TiffImageStack(fname, **kwargs)
-        case ".nrrd":
-            return NrrdImageStack(fname, **kwargs)
-        case ".v3dpbd":
-            return V3dpbdImageStack(fname, **kwargs)
-        case ".v3draw":
-            return V3drawImageStack(fname, **kwargs)
-        case ".npy":
-            return NDArrayImageStack(np.load(fname), **kwargs)
-
-    # try to read as terafly
-    if TeraflyImageStack.is_root(fname):
-        return TeraflyImageStack(fname, **kwargs)
+    elif os.path.isdir(fname):
+        # try to read as terafly
+        if TeraflyImageStack.is_root(fname):
+            return TeraflyImageStack(fname, **kwargs)
+    else:
+        # match file extension
+        match os.path.splitext(fname)[-1]:
+            case ".tif" | ".tiff":
+                return TiffImageStack(fname, **kwargs)
+            case ".nrrd":
+                return NrrdImageStack(fname, **kwargs)
+            case ".v3dpbd":
+                return V3dpbdImageStack(fname, **kwargs)
+            case ".v3draw":
+                return V3drawImageStack(fname, **kwargs)
+            case ".npy":
+                return NDArrayImageStack(np.load(fname), **kwargs)
+            case ".raw":
+                with open(fname, "rb") as f:
+                    header = f.read(24)
+                    if header in (
+                        b"raw_image_stack_by_hpeng",
+                        b"raw5image_stack_by_hpeng",
+                    ):
+                        return V3drawImageStack(fname, **kwargs)
 
     raise ValueError("unsupported image stack")
 
@@ -321,12 +328,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         @lru_cache(maxsize=lru_maxsize)
         def read_patch(path: str) -> npt.NDArray[ScalarType]:
-            match os.path.splitext(path)[-1]:
-                case "raw":
-                    # Treat it as a v3draw file
-                    return V3drawImageStack(path, dtype=dtype).get_full()
-                case _:
-                    return read_imgs(path, dtype=dtype).get_full()
+            return read_imgs(path, dtype=dtype).get_full()
 
         self._listdir, self._read_patch = listdir, read_patch
 
