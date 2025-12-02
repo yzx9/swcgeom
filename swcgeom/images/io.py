@@ -129,7 +129,7 @@ def read_imgs(fname: str, **kwargs):  # type: ignore
                     header = f.read(24)
                     if header in (
                         b"raw_image_stack_by_hpeng",
-                        b"raw5image_stack_by_hpeng",
+                        b"raw5image_stack_by_hpeng",  # TODO: full support for 5 channels
                     ):
                         return V3drawImageStack(fname, **kwargs)
 
@@ -328,7 +328,18 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         @lru_cache(maxsize=lru_maxsize)
         def read_patch(path: str) -> npt.NDArray[ScalarType]:
-            return read_imgs(path, dtype=dtype).get_full()
+            imgs = read_imgs(path, dtype=dtype)
+            data = imgs.get_full()
+            if (
+                isinstance(imgs, (V3dpbdImageStack, V3drawImageStack))
+                and data.ndim == 4
+            ):
+                # (C, Z, Y, X) -> (X, Y, Z, C) for v3d raw/pbd
+                return data.reshape(
+                    data.shape[3], data.shape[2], data.shape[1], data.shape[0]
+                )
+
+            return data
 
         self._listdir, self._read_patch = listdir, read_patch
 
@@ -337,7 +348,6 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         >>> imgs[0, 0, 0, 0]  # get value # doctest: +SKIP
         >>> imgs[0:64, 0:64, 0:64, :]  # get patch # doctest: +SKIP
-        ```
         """
         if not isinstance(key, tuple):
             raise IndexError(
@@ -350,7 +360,21 @@ class TeraflyImageStack(ImageStack[ScalarType]):
             offset = [key[i] for i in range(3)]
             return self.get_patch(offset, np.add(offset, 1)).item()
 
-        slices = [k.indices(self.res[-1][i]) for i, k in enumerate(key)]
+        # TODO: support multi-channels
+        # TODO: support imgs[0:64, 0, 0, 0]?
+        if len(key) == 4:
+            if not (
+                key[3] == 0
+                or (
+                    isinstance(key[3], slice) and list(range(*key[3].indices(1))) == [0]
+                )
+            ):
+                raise ValueError("currently only support single channel")
+
+            slices = [k.indices(self.res[-1][i]) for i, k in enumerate(key[:3])]
+        else:
+            slices = [k.indices(self.res[-1][i]) for i, k in enumerate(key)]
+
         starts, ends, strides = np.array(slices).transpose()
         return self.get_patch(starts, ends, strides)
 
@@ -394,7 +418,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
     @property
     def shape(self) -> tuple[int, int, int, int]:
         res_max = self.res[-1]
-        return res_max[0], res_max[1], res_max[2], 1
+        return res_max[0], res_max[1], res_max[2], 1  # TODO: support multi-channels
 
     @classmethod
     def get_resolutions(cls, root: str) -> tuple[list[Vec3i], list[str], list[Vec3i]]:
@@ -451,7 +475,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
 
         res = self.res[res_level]
         for p in coords:
-            assert np.less([0, 0, 0], p).all(), (
+            assert np.less_equal([0, 0, 0], p).all(), (
                 f"indices ({p[0]}, {p[1]}, {p[2]}) out of range (0, 0, 0)"
             )
 
