@@ -1,5 +1,15 @@
 # Changelog
 
+## **0.21.1**&emsp;<sub><sup>2025-12-02 ([ca39072...ca39072](https://github.com/yzx9/swcgeom/compare/ca3907221ff253107eccf9149a8d65928f8a85e0...ca3907221ff253107eccf9149a8d65928f8a85e0?diff=split))</sup></sub>
+
+### Bug Fixes
+
+##### &ensp;`images`
+
+- should transpose patch ([ca39072](https://github.com/yzx9/swcgeom/commit/ca3907221ff253107eccf9149a8d65928f8a85e0))
+
+<br>
+
 ## **0.21.0**&emsp;<sub><sup>2025-12-02 ([b62aac9...559ad67](https://github.com/yzx9/swcgeom/compare/b62aac95198d68222543285b94048eb1e7e9b887...559ad675a1fb0e8503f80a503f38caf86aae9dc7?diff=split))</sup></sub>
 
 ### Features
