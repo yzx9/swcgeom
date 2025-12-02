@@ -1,5 +1,29 @@
 # Changelog
 
+## **0.21.0**&emsp;<sub><sup>2025-12-02 ([b62aac9...559ad67](https://github.com/yzx9/swcgeom/compare/b62aac95198d68222543285b94048eb1e7e9b887...559ad675a1fb0e8503f80a503f38caf86aae9dc7?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`images`
+
+- detect v3draw format ([615f182](https://github.com/yzx9/swcgeom/commit/615f182eef54ae0cf0ddc66bc9d86ddb11ccb8f8))
+
+##### &ensp;`transforms`
+
+- add CutByAABB transform for axis\-aligned bounding box cutting ([b62aac9](https://github.com/yzx9/swcgeom/commit/b62aac95198d68222543285b94048eb1e7e9b887))
+
+### Bug Fixes
+
+##### &ensp;`core`
+
+- forward names ([790fe13](https://github.com/yzx9/swcgeom/commit/790fe13ed2c5d62713f242ea5f0dcc310cb9befd))
+
+##### &ensp;`images`
+
+- reshape v3dpbd/raw file in terafly ([559ad67](https://github.com/yzx9/swcgeom/commit/559ad675a1fb0e8503f80a503f38caf86aae9dc7))
+
+<br>
+
 ## **0.20.0**&emsp;<sub><sup>2025-08-24 ([97a93b6...a3ea7ce](https://github.com/yzx9/swcgeom/compare/97a93b6bdb599b8c1ec097ead5f56df7094d0faf...a3ea7cedb4125489ee0d0c9e0c4c4c94b937db1f?diff=split))</sup></sub>
 
 ### Features
