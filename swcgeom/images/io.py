@@ -335,9 +335,7 @@ class TeraflyImageStack(ImageStack[ScalarType]):
                 and data.ndim == 4
             ):
                 # (C, Z, Y, X) -> (X, Y, Z, C) for v3d raw/pbd
-                return data.reshape(
-                    data.shape[3], data.shape[2], data.shape[1], data.shape[0]
-                )
+                return data.transpose(3, 2, 1, 0)
 
             return data
 
