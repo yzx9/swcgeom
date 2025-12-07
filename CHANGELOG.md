@@ -1,5 +1,15 @@
 # Changelog
 
+## **0.21.2**&emsp;<sub><sup>2025-12-07 ([a5f2486...160f994](https://github.com/yzx9/swcgeom/compare/a5f2486a2d9b2192c5a264b4c19b7c655f241183...160f9942f20004e9ca01787697ce32daac15a9e2?diff=split))</sup></sub>
+
+### Bug Fixes
+
+##### &ensp;`core`
+
+- should not eat error ([a5f2486](https://github.com/yzx9/swcgeom/commit/a5f2486a2d9b2192c5a264b4c19b7c655f241183))
+
+<br>
+
 ## **0.21.1**&emsp;<sub><sup>2025-12-02 ([ca39072...ca39072](https://github.com/yzx9/swcgeom/compare/ca3907221ff253107eccf9149a8d65928f8a85e0...ca3907221ff253107eccf9149a8d65928f8a85e0?diff=split))</sup></sub>
 
 ### Bug Fixes
