@@ -290,46 +290,45 @@ def parse_swc(
 
     comments = []
     with FileReader(fname, encoding=encoding) as f:
-        try:
-            for i, line in enumerate(f):
-                original_line = line  # Keep for error messages/comments
-                line_content = original_line.split("#", 1)[0].strip()  # Process content part
+        for i, line in enumerate(f):
+            original_line = line  # Keep for error messages/comments
+            line_content = original_line.split("#", 1)[
+                0
+            ].strip()  # Process content part
 
-                if not line_content:  # Skip empty lines or lines that become empty
-                    # Handle full comment lines using original_line
-                    if match := RE_COMMENT.match(original_line):
-                        comment = original_line[len(match.group(0)) :].removesuffix("\n").strip()
-                        if comment and not comment.startswith(ignored_comment):
-                            comments.append(comment)
-                    continue  # Move to next line
-
-                if (match := re_swc.search(line_content)) is not None:
-                    # Check for extra numerical fields captured by the last group
-                    # Warn if the captured group exists and contains non-whitespace
-                    if flag and match.group(last_group) and match.group(last_group).strip():
-                        warnings.warn(
-                            f"Extra fields detected and ignored in row {i + 1} of `{fname}`"
-                        )
-                        flag = False  # Only warn once
-
-                    for j, trans in enumerate(transforms):
-                        try:
-                            vals[j].append(trans(match.group(j + 1)))
-                        except ValueError as e:
-                            raise ValueError(
-                                f"Invalid data format in row {i + 1}, column {j+1} ('{keys[j]}') in `{fname}`: {match.group(j + 1)}"
-                            ) from e
-
-                else:  # If re_swc didn't match the line_content
-                    # It's not a valid SWC data line. We already handled empty/comment lines.
-                    raise ValueError(
-                        f"Invalid SWC data format in row {i + 1} in `{fname}`: {original_line.strip()}"
+            if not line_content:  # Skip empty lines or lines that become empty
+                # Handle full comment lines using original_line
+                if match := RE_COMMENT.match(original_line):
+                    comment = (
+                        original_line[len(match.group(0)) :].removesuffix("\n").strip()
                     )
+                    if comment and not comment.startswith(ignored_comment):
+                        comments.append(comment)
+                continue  # Move to next line
 
-        except UnicodeDecodeError as e:
-            raise ValueError(
-                "decode failed, try to enable auto detect `encoding='detect'`"
-            ) from e
+            match = re_swc.search(line_content)
+            if match is None:
+                # If re_swc didn't match the line_content
+                # It's not a valid SWC data line. We already handled empty/comment lines.
+                raise ValueError(
+                    f"Invalid SWC data format in row {i + 1} in `{fname}`: {original_line.strip()}"
+                )
+
+            # Check for extra numerical fields captured by the last group
+            # Warn if the captured group exists and contains non-whitespace
+            if flag and match.group(last_group) and match.group(last_group).strip():
+                warnings.warn(
+                    f"Extra fields detected and ignored in row {i + 1} of `{fname}`"
+                )
+                flag = False  # Only warn once
+
+            for j, trans in enumerate(transforms):
+                try:
+                    vals[j].append(trans(match.group(j + 1)))
+                except ValueError as e:
+                    raise ValueError(
+                        f"Invalid data format in row {i + 1}, column {j + 1} ('{keys[j]}') in `{fname}`: {match.group(j + 1)}"
+                    ) from e
 
     df = pd.DataFrame.from_dict(dict(zip(keys, vals)))
     return df, comments

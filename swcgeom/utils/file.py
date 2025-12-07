@@ -13,7 +13,8 @@ pip install swcgeom[all]
 
 import warnings
 from io import BytesIO, TextIOBase, TextIOWrapper
-from typing import Literal
+from types import TracebackType
+from typing import Literal, Optional, Type
 
 __all__ = ["FileReader", "PathOrIO"]
 
@@ -62,9 +63,19 @@ class FileReader:
 
         return self.f
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         if self.f:
             self.f.close()
+
+        if exc_type is not None and issubclass(exc_type, UnicodeDecodeError):
+            raise ValueError(
+                "decode failed, try to enable auto detect `encoding='detect'`"
+            ) from exc_val
 
 
 def detect_encoding(fname: PathOrIO, *, low_confidence: float = 0.9) -> str:
