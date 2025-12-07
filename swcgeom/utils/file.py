@@ -62,10 +62,9 @@ class FileReader:
 
         return self.f
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         if self.f:
             self.f.close()
-        return True
 
 
 def detect_encoding(fname: PathOrIO, *, low_confidence: float = 0.9) -> str:
