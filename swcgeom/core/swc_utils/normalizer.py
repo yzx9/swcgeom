@@ -107,7 +107,7 @@ def sort_nodes_(df: pd.DataFrame, *, names: SWCNames | None = None) -> None:
     ids, pids = df[names.id].to_numpy(), df[names.pid].to_numpy()
     (new_ids, new_pids), indices = sort_nodes_impl((ids, pids))
     for col in df.columns:
-        df[col] = df[col][indices].to_numpy()
+        df.loc[:, col] = df[col].iloc[indices].to_numpy()
 
     df[names.id], df[names.pid] = new_ids, new_pids
 
