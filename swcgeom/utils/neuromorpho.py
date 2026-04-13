@@ -555,7 +555,9 @@ if __name__ == "__main__":
     sub = subparsers.add_parser("download")
     sub.add_argument("-o", "--path", type=str)
     sub.add_argument("--retry", type=int, default=3)
-    sub.add_argument("--metadata", type=bool, default=True)
+    sub.add_argument("--metadata", dest="metadata", action="store_true")
+    sub.add_argument("--no-metadata", dest="metadata", action="store_false")
+    sub.set_defaults(metadata=True)
     sub.add_argument(
         "--resources",
         type=str,
@@ -564,7 +566,9 @@ if __name__ == "__main__":
         choices=["morpho_cng", "morpho_source", "log_cng", "log_source"],
     )
     sub.add_argument("--proxy", type=str, default=None)
-    sub.add_argument("--verbose", type=bool, default=True)
+    sub.add_argument("--verbose", dest="verbose", action="store_true")
+    sub.add_argument("--quiet", dest="verbose", action="store_false")
+    sub.set_defaults(verbose=True)
     sub.set_defaults(func=download_neuromorpho)
 
     sub = subparsers.add_parser("convert")
@@ -572,7 +576,9 @@ if __name__ == "__main__":
     sub.add_argument("-o", "--dest", type=str, default=None)
     sub.add_argument("--group_by", type=str, default=None)
     sub.add_argument("--encoding", type=str, default="utf-8")
-    sub.add_argument("--verbose", type=bool, default=True)
+    sub.add_argument("--verbose", dest="verbose", action="store_true")
+    sub.add_argument("--quiet", dest="verbose", action="store_false")
+    sub.set_defaults(verbose=True)
     sub.set_defaults(func=neuromorpho_convert_lmdb_to_swc)
 
     args = parser.parse_args()
