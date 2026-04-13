@@ -1,5 +1,21 @@
 # Changelog
 
+## **0.21.5**&emsp;<sub><sup>2026-04-13 ([f2390d3...1390a17](https://github.com/yzx9/swcgeom/compare/f2390d3443d157e639a193c2a550567c299bc9c9...1390a17e8d7c72245c4a43ce17b865c64de4eda5?diff=split))</sup></sub>
+
+### Features
+
+##### &ensp;`utils`
+
+- improve cli ([4d8c930](https://github.com/yzx9/swcgeom/commit/4d8c9309eeea9cc339a41d582a799d99dabd2cb1))
+
+### Bug Fixes
+
+##### &ensp;`core`
+
+- use \.loc to avoid pandas chained assignment warning ([6a6d6cb](https://github.com/yzx9/swcgeom/commit/6a6d6cb4cf4c0dd81b6f361ea9539aba3898c1f1))
+
+<br>
+
 ## **0.21.4**&emsp;<sub><sup>2026-04-13 ([859f149...3cf987e](https://github.com/yzx9/swcgeom/compare/859f1492e2aeba64333fa6bd1307acb3403fa010...3cf987ebb137bdfdc48a2d0c2c1c0dadba35117e?diff=split))</sup></sub>
 
 _no relevant changes_
