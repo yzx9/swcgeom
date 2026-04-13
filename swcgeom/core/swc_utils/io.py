@@ -190,8 +190,8 @@ def read_swc_components(
             }
 
             # Apply mapping, ensuring the root's PID becomes -1
-            sub_df[names.id] = sub_df[names.id].map(old_id_to_new_id)
-            sub_df[names.pid] = sub_df[names.pid].map(
+            sub_df.loc[:, names.id] = sub_df[names.id].map(old_id_to_new_id)
+            sub_df.loc[:, names.pid] = sub_df[names.pid].map(
                 lambda old_pid: old_id_to_new_id.get(old_pid, -1)
             )
         # else: IDs remain as they were in the original file subset.
