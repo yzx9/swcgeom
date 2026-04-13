@@ -383,5 +383,5 @@ class Tree(DictSWC):
             ~swcgeom.Tree.from_swc
         """
         extra_cols = extra_cols or []
-        extra_cols.extend(k for k, t in eswc_cols)
+        extra_cols.extend(k for k, _ in eswc_cols)
         return cls.from_swc(swc_file, extra_cols=extra_cols, **kwargs)

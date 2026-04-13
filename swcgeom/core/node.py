@@ -1,9 +1,8 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
 
-"""Nueron node."""
+"""Neuron node."""
 
 from collections.abc import Iterable
 from typing import Any, Generic

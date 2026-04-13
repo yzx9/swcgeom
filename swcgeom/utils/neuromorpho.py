@@ -66,7 +66,7 @@ Metadata Example:
 }
 ```
 
-NOTE: All denpendencies need to be installed, try:
+NOTE: All dependencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]

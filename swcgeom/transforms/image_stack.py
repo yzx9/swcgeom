@@ -1,11 +1,10 @@
-
 # SPDX-FileCopyrightText: 2022 - 2025 Zexin Yuan <pypi@yzx9.xyz>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """Create image stack from morphology.
 
-NOTE: All denpendencies need to be installed, try:
+NOTE: All dependencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]

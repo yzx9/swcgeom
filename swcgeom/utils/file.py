@@ -4,7 +4,7 @@
 
 """File related utils.
 
-NOTE: If character coding is enabled, all denpendencies need to be installed, try:
+NOTE: If character coding is enabled, all dependencies need to be installed, try:
 
 ```sh
 pip install swcgeom[all]
@@ -37,7 +37,7 @@ class FileReader:
             encoding: The name of the encoding used to decode the file.
                 If is `detect`, we will try to detect the character encoding.
             low_confidence: The confidence threshold for character encoding detection.
-                Used for detect character endocing, raising warning when parsing with
+                Used for detect character encoding, raising warning when parsing with
                 low confidence.
         """
         # TODO: support StringIO
