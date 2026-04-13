@@ -1426,7 +1426,7 @@ wheels = [
 
 [[package]]
 name = "swcgeom"
-version = "0.21.3"
+version = "0.21.4"
 source = { editable = "." }
 dependencies = [
     { name = "imagecodecs" },
