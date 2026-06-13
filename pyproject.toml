@@ -23,7 +23,8 @@ classifiers = [
 license = "Apache-2.0"
 dependencies = [
   "imagecodecs==2025.3.30; python_version == '3.10'",
-  "imagecodecs==2026.3.6; python_version >= '3.11'",
+  "imagecodecs==2026.3.6; python_version == '3.11'",
+  "imagecodecs>=2026.6.6; python_version >= '3.12'",
   "matplotlib>=3.5.2",
   "numpy>=1.22.3",
   "pandas>=1.4.2",
