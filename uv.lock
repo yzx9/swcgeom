@@ -1567,7 +1567,7 @@ wheels = [
 
 [[package]]
 name = "swcgeom"
-version = "0.21.5"
+version = "0.21.6"
 source = { editable = "." }
 dependencies = [
     { name = "imagecodecs", version = "2025.3.30", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
