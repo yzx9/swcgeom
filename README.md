@@ -1,3 +1,5 @@
+
+
 # SWCGEOM
 
 [![Run tests](https://github.com/yzx9/swcgeom/actions/workflows/test.yml/badge.svg)](https://github.com/yzx9/swcgeom/actions/workflows/test.yml)
@@ -25,9 +27,9 @@ pip install build
 pip install --editable .
 ```
 
-Static analysis don't support import hook used in editable install for
-[PEP660](https://peps.python.org/pep-0660/) since upgrade to setuptools v64+,
-detail information at [setuptools#3518](https://github.com/pypa/setuptools/issues/3518),
+Static analysis doesn't support import hooks used in editable installs for
+[PEP660](https://peps.python.org/pep-0660/) since the upgrade to setuptools v64+,
+detailed information at [setuptools#3518](https://github.com/pypa/setuptools/issues/3518),
 a workaround for vscode with pylance:
 
 ```json
