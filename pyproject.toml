@@ -3,14 +3,13 @@ name = "swcgeom"
 version = "0.21.6"
 description = "Neuron geometry library for swc format"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "yzx9", email = "pypi@yzx9.xyz" }]
 keywords = ["neuroscience", "neuron", "neuroanatomy", "neuron-morphology"]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
@@ -22,15 +21,13 @@ classifiers = [
 ]
 license = "Apache-2.0"
 dependencies = [
-  "imagecodecs==2025.3.30; python_version == '3.10'",
   "imagecodecs==2026.3.6; python_version == '3.11'",
   "imagecodecs>=2026.6.6; python_version >= '3.12'",
   "matplotlib>=3.5.2",
   "numpy>=1.22.3",
   "pandas>=1.4.2",
   "pynrrd>=1.1.0",
-  "scipy>=1.15.3; python_version == '3.10'",
-  "scipy>=1.17.1; python_version >= '3.11'",
+  "scipy>=1.17.1",
   "sdflit>=0.2.8",
   "seaborn>=0.12.0",
   "tifffile>=2022.8.12",
@@ -59,7 +56,7 @@ requires = ["setuptools", "wheel", "Cython", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 src = ["tests", "swcgeom"]
 format.docstring-code-format = true
 lint.pydocstyle.convention = "google"
